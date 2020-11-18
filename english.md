@@ -3,7 +3,7 @@
 ### 英语句子成分
 ![](../notes/pictures/english/句子成分.png)
 
-![](../notes/pictures/english/主语.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/english/%E4%B8%BB%E8%AF%AD.png)
 
 ![](../notes/pictures/english/谓语.png)
 
