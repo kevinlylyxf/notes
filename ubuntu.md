@@ -18,7 +18,7 @@
 ![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/%E7%B3%BB%E7%BB%9F%E4%BF%A1%E6%81%AF%E6%8D%95%E8%8E%B7%E5%91%BD%E4%BB%A4.png)
 ![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/%E5%85%B6%E4%BB%96%E5%91%BD%E4%BB%A4.png)
 ![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B.png)
-![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/man%E6%89%8B%E5%86%8C%E6%95%B0%E5%AD%97%E5%90%AB%E4%B9%89.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/man%E6%89%8B%E5%86%8C%E6%95%B0%E5%AD%97%E5%90%AB%E4%B9%89.png)  
 man -f   man -key
 - 通配符 ？代表单个任意字符，\*代表多个任意字符，[]代表匹配任意单个字符，例如ls [0-9].c {}匹配字符串
 - 任务管理
@@ -31,9 +31,30 @@ man -f   man -key
    - bg 执行bg，可以将挂起的命令后台执行。
 ---
 - 管道、重定向
-   - > 输出重定向，将内容重定向到另一个地方，文件会覆盖，>> 跟>大体相同，只是会在后面添加，不会覆盖
+   - \> 输出重定向，将内容重定向到另一个地方，文件会覆盖，>> 跟>大体相同，只是会在后面添加，不会覆盖
    - < 输入重定向，将一个文件的内容输入到前面的文件，例./a.out < input <<用来指示结尾 例如cat >>a.log << haha 此时会在终端里向a.log输入数据，当输入haha时结束。主要用在脚本里自动生成一些数据
    - '' 硬转移，其括起来的元字符，通配符都会被关掉，""软转义其内部可以出现特定的元字符如\ `
    - \ 反斜杠，转义，去除其后紧跟的元字符或通配符的特殊含义，只是一个字符。例如写程序时另起一行就可以用\回车来进行，此时回车只是回车，没有特殊含义。
 - env 查看所有的环境变量，PATH，SHELL
-- export 增加环境变量的值，在.bashrc中增加会一直存在。export PATH="...:$PATH"，环境变量中以：分隔，所以：$PATH是以前的环境变量
+- export 增加环境变量的值，在.bashrc中增加会一直存在。export PATH="...:\$PATH"，环境变量中以：分隔，所以：$PATH是以前的环境变量
+- man bash 查看bash手册，通过/FILES可以查看配置文件，n是查找下一个。
+- ls --help 可以查看选项参数，好多命令可以这样查看。
+- w命令展示谁登录系统以及正在做什么的一些信息
+- tmux命令
+---
+### shell编程
+- ./sh可以执行脚本，也可以bash .sh 使用bash执行脚本
+- \$n，用来获取当前脚本执行的第n个参数，类似./a.out <input，此时input就是参数，只是写在程序执行时候，在shell脚本中不需要写<符号，可以在后面写几个参数，每一个都会与$匹配。
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/shell%E7%89%B9%E6%AE%8A%E5%8F%98%E9%87%8F.png)
+- \$? 判断上一条指令是否执行成功，0为成功，非0为不成功，这是判断指令是否执行成功时用的，而0，1，2是指指令的输入输出结果的，可以在指令中使用1>或2>重定向输出，但是其成功与否使用$? 
+- read -s -p "请输入密码:" -t 2 pw 命令解释-p就是显示提示信息，-s就是输入时不显示在屏幕上，-t 2就是超时2s结束命令，pw就是输入的密码存入到pw
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA.png)
+- echo -e ，使用\转义，\n换行的意思，使某些字母有特殊的含义。 backslash反斜杠的意思
+- man test可以查看判断时的语句类似与-eq之类的判断语句写法
+- 函数写法
+- 判断分支
+- 变量名外面的花括号是可选的，加不加都行，加花括号时候为了帮助解释器识别变量的边界，使用变量是加$
+- 条件表达式要放在中括号里面，并且需要有空格。中括号也进行基本的算数运算。
+- ${a[@]}  ${a[*]}，输出数组里所有元素。${#a[*]}，输出数组中元素个数。#换成!找到数组下标。
+- unset删除数据或数组里的值，或是直接删除一个数组
+- > ```last | grep -v "wtmp begins" | grep -v "^$" | cut -d ' ' -f 1 | sort | uniq -c | sort -n -r |  head -n 1 ```
