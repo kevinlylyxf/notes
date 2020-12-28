@@ -42,17 +42,87 @@ void PreOrder(BiTree T) {
 - 任何一个改变vector对象容量的操作，都会使该vector对象的迭代器失效。
 
 # 第9章 顺序容器
-- 快速随机访问就是使用下标访问，string和vector可以使用下标访问 string[], 使用下标访问可以更改
-    访问元素的值，但是不能使用下标访问给vector添加元素  
-
-- 标准容器迭代器的运算符 *iter　 iter->mem　 ++iter　--iter　相等和不相等*
-
-- 迭代器支持的运算 iter + n　iter - n　类的 迭代器加减
-
+- 顺序容器类型
+   - vector 可变大小数组，支持快速随机访问，在尾部之外的位置插入或删除元素可能很慢
+   - deque 双端队列，支持快速随机访问，在头尾位置插入删除速度很快
+   - list 双向链表，只支持双向顺序访问，在list中任何位置进行插入删除速度都很快
+   - forward_list 单向链表，只支持单向顺序访问，在链表任何位置进行插入删除操作都很快
+   - array 固定大小数组，支持快速随机访问，不能添加或删除元素
+   - string 与vector相似的容器，但专门用于保存字符，随机访问快，在尾部插入删除速度快
+- string和vector将元素保存在连续的内存空间中，在中间插入删除要移动很多数据，所以很慢
+- forward_list没有size操作，为了实现最大性能。
+- 如果不确定使用哪种容器，在程序中只使用vector和list公共的操作:使用迭代器，不使用下标操作，避免随机访问。
+- 容器操作
+   - 类型别名 
+      - iterator 此容器类型的迭代器类型
+      - cosnt_iterator 可以读取元素，但不能修改元素的迭代器类型。
+      - size_tyoe 无符号整数类型，足够保存此种容器类型最大可能容器的大小
+      - difference_type 带符号整数类型，足够保存两个迭代器之间的距离
+      - value_type 元素类型
+      - reference 元素的左值类型，与value_type&含义相同
+      - const_reference 元素的const左值类型，即const value_type&
+   - 构造函数
+      - C c;默认构造函数，构造空容器(array看后面)
+      - C c1(c2);构造c2的拷贝c1
+      - C c(b, e);构造c，将迭代器b和e指定的范围内的元素拷贝到c(array不支持)
+      - C c{a, b, c...};列表初始化c
+   - 赋值与swap
+      - c1 = c2;将c1中的元素替换为c2中元素
+      - c1 = {a, b, c...};将c1中的元素替换为列表中元素(array不适用)
+      - a.swap(b);交换a和b的元素
+      - swap(a,b)
+   - 大小
+      - c.size();c中元素的数目，不支持forward_list
+      - c.max_size();c可保存的最大元素数目
+      - c.empty();
+   - 添加删除元素，不适用array
+      - c.insert(args);将args中的元素拷贝进c
+      - c.emplace(inits);使用inits构造c中的一个元素
+      - c.erase(args);删除args指定的元素
+      - c.clear();删除c中的所有元素，返回void
+- 快速随机访问就是使用下标访问，string和vector可以使用下标访问 string[], 使用下标访问可以更改访问元素的值，但是不能使用下标访问给vector添加元素  
+- 标准容器迭代器的运算符 \*iter　 iter->mem　 ++iter　--iter　相等和不相等
+- 迭代器的算数运算 iter+=n这样的，iter + n　iter - n　类的 迭代器加减
 - forward_list 不支持--iter操作，链表不支持迭代器运算，只能顺序调整迭代器
+- 算数运算只能应用于string,vector,deque和array
+- 与顺序容器大小相关的构造函数，vector<int> iver(10, -1);10个int元素每个都是-1;string s(10, 'c');string是一个类，只存一个字符串，所以是string字符串有10个字符每个都是c，string初始化方式 string s3("value");string s2(s1)
+- array定义 array<int, 42>,除了指定元素类型，还要指定容器大小，数组是不允许拷贝的，但是array允许拷贝赋值，大小和类型要一样。
+- 赋值，c1 = c2,c1 = {a, b, c},如果两个容器原来大小不同，赋值运算后两者的大小都与右边容器的原大小相同，列表赋值时，c1的大小为3。array不允许右侧是列表初始化，两边大小可能不一样。array不支持assign
+- 赋值相关运算会导致指向左边容器内部的迭代器、引用和指针失效，而swap不会(array和string的情况除外)
+- 容器赋值运算
+   - c1 = c2;将c1中的元素替换为c2中的元素，c1和c2必须具有相同的类型
+   - c = {a, b, c...} 将c中元素替换为初始化列表中元素的拷贝(array除外)
+   - c1.swap(c2) swap(c1, c2)交换c1和c2中的元素，c1和c2必须具有相同的类型，swap通常比从c2向c1拷贝快的多
+   - seq.assign(b,e)将seq中的元素替换为迭代器b和e所表示的范围中的元素，迭代器b和e不能指向seq中的元素
+   - seq.assign(n, t)将seq中的元素替换为n个值为t的元素
+- 容器赋值是将左侧的容器看成一个空的重新赋值，即便原来有值如果右侧的比它少也是少的东西。
+- swap两个array会真正交换他们的元素。
+- 每个容器都支持相等和不相等运算符，除了无序关联外的所有容器都支持关系运算符(> >= < <=)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E5%AE%B9%E5%99%A8%E8%B5%8B%E5%80%BC%E8%BF%90%E7%AE%97.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E9%A1%BA%E5%BA%8F%E5%AE%B9%E5%99%A8%E6%B7%BB%E5%8A%A0%E5%85%83%E7%B4%A0.png)
+- vector和string不支持push_front，但是可以使用insert插入，不用考虑是否支持push_front
+- c.insert(p,b,e) 其中b和e支持的是其他容器，只要元素类型一样就可以。
+- emplace理解:emplace是构造而不是拷贝元素，当调用push和insert成员函数时，将元素类型的对象传递给他们，这些对象被拷贝到容器中，当调用一个emplace成员函数时，则是将参数传递给元素类型的构造函数，emplace成员使用这些参数在容器管理的内存空间中直接构造元素。例如，c中保存Sales_data对象，c.emplace("978", 25, 15.99),emplace使用Sales_data构造函数来初始化一个对象然后加到c里面，而push_back是直接加一个对象进去。
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E9%A1%BA%E5%BA%8F%E5%AE%B9%E5%99%A8%E8%AE%BF%E9%97%AE%E5%85%83%E7%B4%A0.png)
+- 返回引用的意思是其可以作为左值直接修改值，例c.front() = 42;返回引用也可以在右边，auto &v = c.back();意思是获得了最后一个元素的引用，可以通过v改变最后一个元素的值。
+- 下标运算符不检查越界，而at检查。
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E9%A1%BA%E5%BA%8F%E5%AE%B9%E5%99%A8%E5%88%A0%E9%99%A4%E6%93%8D%E4%BD%9C.png)
+- pop_front返回的是void，不能赋值，需要使用时先用c.front()保存一下。
+- 顺序容器大小操作c.resize(n), c.resize(n,t)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/forward_list.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E5%AE%B9%E5%99%A8%E8%BF%AD%E4%BB%A3%E5%99%A8%E5%A4%B1%E6%95%88.png)
+- end迭代器肯定会失效，所以不要保存尾后迭代器，直接使用c.end()
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/string%E6%9E%84%E9%80%A0.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/substr.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/string.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/string%E6%90%9C%E7%B4%A2.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/string%E6%90%9C%E7%B4%A2%E5%8F%82%E6%95%B0.png)
 
-- 容器适配器的理解：顺序容器提供了一些基本的接口，比如插入，删除等，但是栈、队列这种数据结构表现出来的形式跟普通的数据结构不一样，但是我们又不用重新定义数据结构，只需要根据他们的接口重新写一下栈队。列的数据结构就可以了，这就是容器适配器
-
+- 容器适配器的理解：顺序容器提供了一些基本的接口，比如插入，删除等，但是栈、队列这种数据结构表现出来的形式跟普通的数据结构不一样，但是我们又不用重新定义数据结构，只需要根据他们的接口重新写一下栈队列的数据结构就可以了，这就是容器适配器
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E5%AE%B9%E5%99%A8%E9%80%82%E9%85%8D%E5%99%A8.png)
+- 容器适配器都定义两个构造函数 一个创建空的 另一个拷贝 deque<int> deq ; stack<int> stk(deq);
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E6%A0%88.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E9%98%9F%E5%88%97.png)
 # 容器的使用
 - queue 队列 queu\<int\> que; que.push(5);入队 que.pop();出队 que.front(); 队首元素 que.size();元素个数 que.empty();是否为空
 - stack stack\<int\> sta; sta.push(5); sta.pop(); sta.top();栈顶元素 sta.size(); sta.empty();
@@ -64,6 +134,9 @@ void PreOrder(BiTree T) {
    - unordered_map 底层基于hash表，无需排序
 - set ; 底层基于RBtree，要存储自定义数据结构要重载，和map类似
 - pair
+---
+# 泛型算法
+
 ---
 # 算法
 - 素数筛，素数筛就是用素数将合数标记出来，prime[++prime[0]] = i;功能为prime[0]标记素数的数量，然后将素数放在1开始的数组中依次存放。
