@@ -56,7 +56,7 @@ void PreOrder(BiTree T) {
    - 类型别名 
       - iterator 此容器类型的迭代器类型
       - cosnt_iterator 可以读取元素，但不能修改元素的迭代器类型。
-      - size_tyoe 无符号整数类型，足够保存此种容器类型最大可能容器的大小
+      - size_type 无符号整数类型，足够保存此种容器类型最大可能容器的大小
       - difference_type 带符号整数类型，足够保存两个迭代器之间的距离
       - value_type 元素类型
       - reference 元素的左值类型，与value_type&含义相同
@@ -80,10 +80,11 @@ void PreOrder(BiTree T) {
       - c.emplace(inits);使用inits构造c中的一个元素
       - c.erase(args);删除args指定的元素
       - c.clear();删除c中的所有元素，返回void
+- size_t是sizeof运算符所返回的无符号整数类型，可以存放理论上可能存在对象的最大大小，该对象可以是任何类型，包括数组，作用为适应于程序的移植，64位系统使用unsigned int有时就会出错。size_t通常用于数组索引和循环计数。size_type是基于容器的，没有容器不能单独使用，其和size_t定义相同，size()函数返回的是size_type类型的，相当于int但是可以移植
 - 快速随机访问就是使用下标访问，string和vector可以使用下标访问 string[], 使用下标访问可以更改访问元素的值，但是不能使用下标访问给vector添加元素  
 - 标准容器迭代器的运算符 \*iter　 iter->mem　 ++iter　--iter　相等和不相等
 - 迭代器的算数运算 iter+=n这样的，iter + n　iter - n　类的 迭代器加减
-- forward_list 不支持--iter操作，链表不支持迭代器运算，只能顺序调整迭代器
+- forward_list 不支持--iter操作，链表不支持迭代器运算，只能顺序调整迭代器,但是list有list.begin()和list.end()
 - 算数运算只能应用于string,vector,deque和array
 - 与顺序容器大小相关的构造函数，vector<int> iver(10, -1);10个int元素每个都是-1;string s(10, 'c');string是一个类，只存一个字符串，所以是string字符串有10个字符每个都是c，string初始化方式 string s3("value");string s2(s1)
 - array定义 array<int, 42>,除了指定元素类型，还要指定容器大小，数组是不允许拷贝的，但是array允许拷贝赋值，大小和类型要一样。
@@ -136,6 +137,67 @@ void PreOrder(BiTree T) {
 - pair
 ---
 # 泛型算法
+- 大多数算法都定义在algorithm中，标准库还在头文件中定义了一组数值泛型算法。
+- 泛型算法不直接操作容器，而是遍历由两个迭代器指定的一个元素范围来进行操作，特殊的数组类型的,其迭代器begin(ia),end(ia), ia+1,ia+4
+- 泛型算法中的输入范围中的参数分别是指向要处理的第一个元素和尾元素之后位置的迭代器。所以要处理三个数组元素auto result = find(ia + 1, ia + 4, val),如果找到不就会返回尾后迭代器，和尾后迭代器比较就能知道找到没
+- 只读算法，find,count,accumulate,读取其输入范围内的元素，而不改变元素，accumulate接受三个参数，前两个指出了求和的范围，第三个参数是求和的范围，int sum = accumulate(vec.begin(),vec.end(),0),第三个参数确定了求和的起点，即从0开始求，string sum = accumulate(v.begin(), v.end(), string ("")); 字符串相加，字符串存在vector中，第三个参数要显示指出来是string，否则字符串常量是const char\*的，const char\*没有重载+运算符，equal只读算法，三个参数是前两个表示容器的范围，第三个参数是第二个容器的首元素，编程假定第二个比第一个要长
+- 写容器元素的算法，算法不会执行容器操作，所以要保证以前有元素，然后重新赋值，fill,fill_n，fill_n接受三个参数，第一个参数是迭代器起始位置，第二个参数是要赋值的个数n，第三个是赋值的值。
+   - 拷贝(copy)算法，前两个表示一个输入范围，第三个表示目的序列的起始位置，两个容器的元素要一样多。auto ret = copy(begin(ia), end(ia), a2);这是数组举例，迭代器一样，a2代表第二容器的起始位置，所以用数组名，别的用迭代器。copy返回的是其目的位置迭代器(递增后)的值，即ret恰好指向拷贝后a2的尾元素之后的位置。
+   - replace接受4个参数，replace_copy接受五个参数。replace是在原有的容器上替换，原容器被破坏，replace_copy会新建一个拷贝，原容器会保存下来。好多算法会有这种形式算法。
+- 重排容器元素的算法，sort，unique(算法将sort排序完相邻出现的重复的放在后面，前面只放出现一次的单词，返回的是指向重复出现的单词的第一个位置)
+- sort参数是默认的使用\<运算符来进行比较的，如果比较的是类，其使用的\<是重载过的，如果比较的是数值的就默认的，如果比较类时没有重载小于号，就要给函数传递参数
+- 谓词是一个可调用的表达式，其返回结果是一个能用作条件的值，谓词分为一元谓词和二元谓词(参数的不一样)，接受谓词参数的算法对输入系列中的元素调用谓词。有的算法只能接受一元谓词，如find_if，其谓词中只能有一个参数
+```c++
+bool isShorter(const string &s1, const string &s2) {return s1.size() < s2.size();}
+sort(words.begin(), words.end(), isShorter)按长度由短至长排序words，
+```
+- sort使用了第三个参数，其是一个二元谓词，谓词的作用主要是寻找一些特定的条件，函数的主要功能还是原函数的功能，此函数即为排序，主要的是按什么排序，我们找到vector中的两个元素，我们不知道按什么排序，但是根据谓词我们就知道了按字符长度排序，其它的函数谓词的意思有区别但是主要就是找这个条件，让两个元素根据这个条件来达到函数功能。
+- 我们可以向一个算法传递任何类别的可调用对象，对于一个对象或一个表达式，如果可以对其使用调用运算符(即.)则称其可以是调用的。函数和函数指针，lambda和重载了函数调用运算符的类。
+- 一个lambda表达式表示一个可调用的代码单元，可以将其理解为一个未命名的内联函数。
+- [capture list] (parameter list) -> return type {function body},必须使用尾置返回类型。可以忽略参数列表和返回类型，但必须永远包含捕获列表和函数体
+- 参数捕获中的值捕获和引用捕获，值捕获是创建一个新值，引用捕获不是创建新值。
+```
+void func() {
+    size_t v1 = 42;
+    auto f = [v1] {return v1;}; auto f = [&v1] {return v1;}
+    v1 = 0;
+    auto j = f(); 如果是值捕获的话为42，引用捕获为0，引用捕获是捕获谁&后面写谁
+}
+```
+- 隐式捕获，让编译器推断需要使用哪些变量
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/lambda%E6%8D%95%E8%8E%B7%E5%88%97%E8%A1%A8.png)
+---
+# 关联容器
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E5%85%B3%E8%81%94%E5%AE%B9%E5%99%A8%E7%B1%BB%E5%9E%8B.png)
+- 关联容器不支持顺序容器的位置相关的操作，例如push_back,因为没有意义。关联容器也不支持构造函数或插入操作这些接受一个元素值和一个数量值的操作。
+- 对于有序容器map,multimap,set,multiset关键字类型必须定义元素比较的方法，默认情况下使用关键字类型的<运算符来比较两个关键字。
+- map中的元素是pair的
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/pair.png)
+- 使用作用域运算符来提取一个类型的成员，map<string , int>::key_type
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E5%85%B3%E8%81%94%E5%AE%B9%E5%99%A8%E7%B1%BB%E5%9E%8B%E5%88%AB%E5%90%8D.png)
+- 当解引用一个关联容器时，会得到一个类型为容器的value_type的值的引用，对map而说，value_type是一个pair类型的，其first成员保存const的关键字，second成员保存值，所以不能修改const，map->first = "new key"是错误的，即能改变pair的值，但不能改变关键字成员的值。
+- set的迭代器是const的，所以不能修改
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/map_insert.png)
+- ++ret.first->second,first是迭代器就好理解了
+- multiset和multimap总是会插入，无需返回bool值
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E5%85%B3%E8%81%94%E5%AE%B9%E5%99%A8%E5%88%A0%E9%99%A4%E6%93%8D%E4%BD%9C.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/map%E4%B8%8B%E6%A0%87%E8%8C%83%E6%96%87.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E5%85%B3%E8%81%94%E5%AE%B9%E5%99%A8%E6%9F%A5%E6%89%BE.png)
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/cpp/%E6%97%A0%E5%BA%8F%E5%AE%B9%E5%99%A8.png)
+---
+# 动态内存和智能指针
+- 静态内存和栈内存，定义了一个内存池被称为自由空间或堆。
+- 忘记释放内存，就会导致内存泄露
+- 标准库提供了两种智能指针，shared_ptr允许多个指针指向同一对象，unique_ptr独占所指的对象，标准库还定义了一个weak_ptr的伴随类，它是一种弱引用，指向shared_ptr所管理的对象，智能指针也是模板，shared_ptr<string> p1,shared_ptr<list<int>> p2;
+- make_shared函数定义在memory头文件中，shared_ptr\<int> p3 = make_shared\<int>(42),最好用auto
+- 智能指针会自动释放自己管理的对象，即把指针指向的区域给释放掉了，当有别的指针指向这块，指针不会释放其指向的内存
+- 使用动态内存的一个常见原因是允许多个对象共享相同的状态，在一个StrBlob类中设置vector存储东西，如果这个类消失这个vector容器也消失，所以设置一个智能指针指向这个vector，如果有指针指向就不会释放。
+- new的使用，int \*pi1 = new int; int \*pi2 = new int();后面跟括号可以进行值初始化，里面可以放值，不放值也得有，默认为0，如果不加括号是未定义的值。
+- new和auto的使用，auto p1 = new auto(obj);系统自动判断obj的类型，然后p1指针指向的类型是系统自动判断出来的
+- delete指针必须是动态分配的内存，或者是一个空指针，释放的指针必须是new的，内置类型的指针不能delete，删除空指针可以这样
+- shared_ptr和new结合使用，shared_ptr\<double> p2(new int(1024)),这样定义，不能shared_ptr\<double> p1 = new int(1024),这样是不对的，智能指针构造函数是explicit的，必须使用直接初始化的方式。
+---
+# 模板编程
 
 ---
 # 算法
@@ -182,6 +244,8 @@ void PreOrder(BiTree T) {
 - 类的静态成员:有时候类需要和它的一些成员与类本身直接相关，而不是与类的各个对象都保持关系。例如银行账户类需要一个数据成员标志基准利率，希望基准利率与类相关，而非与类的每个对象相关。类的静态成员存在于任何对象之外。
 - 可以使用作用域运算符直接访问静态成员r = Account::rate();而一般的不可以，通过实例化类可以直接访问静态成员。
 - 静态成员初始化一般在类外进行，跟类外定义成员函数类似，指明作用域运算符。
+- 隐式的类类型转换，如果构造函数只接受一个实参，它实际上定义了转换为此类类型的隐士转换机制。例如在Sales_data中有一个接受string的实参 item.combine(null_book);null_book是string类型的，combine是非成员函数，null_book应该是类类型的，发生了隐士转化
+- 抑制构造函数定义的隐式转换，将构造函数声明成explicit，关键字只对一个实参的构造函数有效，需要多个实参的构造函数不能用于隐式转换，也就无需指定为explicit。
 ---
 ### 拷贝、赋值与销毁类
 - 如果用等号初始化一个变量，执行的是拷贝初始化即将等号右侧的初始值拷贝到新创建的对象中去，不使用等号执行的是直接初始化。string s = "hiya";拷贝初始化，string s(10, 'c')；直接初始化。拷贝初始化相当于拷贝了一份有两份数据，直接初始化就一份数据。使用拷贝的含义就是对其中一份数据的改变不会影响另一份数据。例如容器的push和insert是拷贝初始化，相当于拷贝一份数据将其放进去，对容器中数据的操作不会影响到原始数据。emplace是直接初始化。

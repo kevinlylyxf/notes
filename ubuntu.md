@@ -18,7 +18,8 @@
 ![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/%E7%B3%BB%E7%BB%9F%E4%BF%A1%E6%81%AF%E6%8D%95%E8%8E%B7%E5%91%BD%E4%BB%A4.png)
 ![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/%E5%85%B6%E4%BB%96%E5%91%BD%E4%BB%A4.png)
 ![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B.png)
-![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/man%E6%89%8B%E5%86%8C%E6%95%B0%E5%AD%97%E5%90%AB%E4%B9%89.png)  
+![](https://raw.githubusercontent.com/kevinlylyxf/notes/master/pictures/ubuntu/man%E6%89%8B%E5%86%8C%E6%95%B0%E5%AD%97%E5%90%AB%E4%B9%89.png)
+- usermod 是修改用户所属组的，修改用户的信息，chgrp修改文件的所属组,chown是修改文件的所属用户所属组的,-g是修改组，-G是添加附加组
 man -f   man -key
 - 通配符 ？代表单个任意字符，\*代表多个任意字符，[]代表匹配任意单个字符，例如ls [0-9].c {}匹配字符串
 - 任务管理
