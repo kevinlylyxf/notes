@@ -258,6 +258,84 @@
 看一下连接代词和连接副词和连词，主要看一下从属连词(引导名词性从句的和引导状语从句的，)看一下名词性从。看一下连接代词和连接副词，看一下疑问代词和疑问副词，看一下每个都有什么词
 
 ---
+#### 倒装句
+- 为了强调、突出等语的目的而颠倒原有语序的句式叫做倒装句。
+   - 全部倒装，谓语动词提前至主语之前为全部倒装。
+   - 部分倒装，助动词或情态动词提至主语之前，谓语动词位置不变，即为部分倒装。如果句子的谓语没有助动词或者情态动词，需要添加助动词do, does, did在放到主语前面
+   - 否定词提前倒装，否定词用于句首时，句子应进行部分倒装。
+- 全部倒装
+   - there be句型
+      - There is a cat = A cat is there. 
+   - in, out, down, up, away, off, here, there, over等副词提前，全部倒装。
+   - so, nor, either 全部倒装
+      - So do I
+- 部分倒装
+   - only + 副词(when, before, if, after等)或only+介词状语(由in, under, by, on, after等引导)提前，必须部分倒装。
+      - Only in this way can you have plenty of chances to make new friends
+      - Only then did I begin to like her.
+   - 某些否定意义的词在句首 never, hardly, little, not, nowhere
+      - Never before I have I seen her
+      - Nowhere can you find a good quality school
+   - Not only...but also, No sooner...than, hardly...when,只是前半句倒装
+      - No sooner had he said that we would do the job.
+   - 省略if的虚拟条件句，were, had, should等在主语前放在句首
+      - If I were you, I must try it.= Were I you, I must try it.
+   - so加形容词或副词放在句首
+      - So quickly does light travel that we can hardly image its speed
+      - So sudden was the attack that we had no time to escape
+   - 表达祝愿的一些句子
+      - May you success.
+
+---
+#### 祈使句
+- 用于表达命令、请求、劝告、警告、禁止等的句子，祈使句最常用于表达命令
+- 肯定的祈使句
+   - be+形容词/名词 Be quiet for a moment.请安静一会
+   - 实义动词原形+其他成分 Make your own rules.给自己制定规划
+   - let+宾语+动词原形+其他 Let's run to the police station on fourth street.我们跑去第四大街上的警察局吧
+- 否定句的祈使句
+   - Don't+动词原形 Don't eat in the classroom.不要在教室里吃东西
+   - Let's+ not+动词原形 Let's not say anything about it.对于这件事，咱们什么也不要说
+   - 用否定副词never构成，以加强否定含义 Never judge a person by looks.绝不能以貌取人
+
+---
+#### 疑问句
+- 一般疑问句，提前助动词，情态动词，系动词，可以用yes，no回答
+   - Are you an idiot?
+   - Have you got light bulbs?have是后加的
+   - Can you play foodball?
+- 特殊疑问句，不可以用yes，no回答
+   - who提问人 Who's next?
+   - Whose提问所属 Whose's car is this?
+   - whom提问宾格人 Whom did you choose for our team leader?
+   - what提问事情属性 What time is it?
+   - when提问时间 When can we start working?
+   - where提问地点 Where is the bathroom?
+   - why提问原因 Why did he do it?
+   - how提问方式数量 How heavy is it?
+   - which提问选择 Which is your choice?
+- 特殊疑问句倒装情况，做主语不倒装 who，修饰主语不倒装 whose
+- 疑问词+动词不定式
+   - 疑问词与动词不定式连用形成一个短语，这个短语相当于一个名词，可做句子的主语、宾语、表语、同位语
+   - 做主语 What to do is not decided yet
+   - 做宾语 Do you know when to start?
+   - 做表语 The question is how to carry out the plan
+   - 同位语 We had never experienced this kind of holiday before and had no idea what to expect
+- what time, what color, what job, how fast, how many, how long, how much, how far, how soon
+- 助动词的作用是协助谓语动词构成时态，语态，否定句，强调句，疑问句
+   - Do you like college life? Did you study English before you came here? 时态在助动词里体现出来了
+- 感叹句
+   - what + a,an + 形容词 + 可数名词单数 + 主语 + 谓语
+      - What a beautiful photo it is
+   - what + 形容词 + 不可数名词/名词复数 + 主语 + 谓语
+      - What cleanly water it is!
+      - What brilliant dogs they are!
+   - how + 形容词/副词 + 主语 + 谓语
+      - How careful he is!
+      - How fast he runs!
+   - how + 形容词 + a,an + 可数名词单数 + 主语 + 谓语
+      - How cute a dog it is!
+---
 ## 英语词性
 ### 动词
 - 有些时态是有明显的表示时间的副词的，如过去完成时，有明显的时间作为参考
@@ -323,7 +401,13 @@
    - 表语 The meeting is over
    - 定语 The shops around are very cheap
    - 宾补 You come so late.
-
+- 副词做表语用法
+   - 说明主语的方向，方位，地点，状态等
+   - The light is on.此时on 的意思:亮着;但介词是:在……上面
+   - The girl is here. here 没有介词：在这里
+   - Is anybody in? 此时in 的意思:里面;但介词是:在……里面
+   - I think we must be off now.此时off 的意思:离开;但介词是:从……离开
+- here, there 副词放在句首用倒装 Here is Tom.
 
 ---
 # 英语语法
