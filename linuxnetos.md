@@ -1,4 +1,12 @@
-##linux网络编程
+#linux网络编程
+##基础知识理解
+- 在创建好socket并accept后，新建一个子进程进行操作，当在父进程中close()accept返回的sockfd时连接不会断开，因为父子进程同时打开了这个socket，inode变为2，只有变为0才会关闭，在父进程中关了就相当于父进程不连接了，子进程自己去连接
+- getchar是干掉回车\n，scanf输入时会在末尾加入回车
+- int sprintf(char \*str, const char \*format, ...);将format中的字符写到str中
+- strlen和sizeof不一样，strlen是字符数组，sizeof可以是类类型，在服务器端send时需要使用strlen(buff)，因为存在分包和粘包的情况
+- int kill(pid_t pid, int sig);给进程发信号，linux系统有64个信号，使用kill -l查看
+- ctrl + c发送的是SIGINT信号2，signal函数signal(,)里面两个参数，第一个是kill -l的，第二个是捕获之后要干的事情，一般为一个函数
+## socket编程
 - void bzero(void \*s, size_t n);n为字节数，一般为sizeof()
 - void \*memset(void \*s, int c, size_t n);
 - struct sockaddr, struct sockaddr_in, in代表internet
