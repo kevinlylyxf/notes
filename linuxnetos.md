@@ -6,6 +6,7 @@
 - strlen和sizeof不一样，strlen是字符数组，sizeof可以是类类型，在服务器端send时需要使用strlen(buff)，因为存在分包和粘包的情况
 - int kill(pid_t pid, int sig);给进程发信号，linux系统有64个信号，使用kill -l查看
 - ctrl + c发送的是SIGINT信号2，signal函数signal(,)里面两个参数，第一个是kill -l的，第二个是捕获之后要干的事情，一般为一个函数
+- argc和argv，argument count的缩写，表示传入main函数的参数个数，argv是argument vector的缩写，arg[0]是程序的名称，包含了程序的完整路径，剩下的是传进去的参数。
 ## socket编程
 - void bzero(void \*s, size_t n);n为字节数，一般为sizeof()
 - void \*memset(void \*s, int c, size_t n);
@@ -217,7 +218,91 @@ int main(int argc, char const *argv[])
 ```
 ---
 ## 五种I/O模式
+- IO操作并不直接操作磁盘而是和内存进行交互，即在内存中设置buffer来进行操作，buffer很小，数据很大时就需要多次操作buffer，但是这是内核自动操作的。
+- select函数，int select(int nfds, fd_set \*readfds, fd_set \*writefds, fd_set \*exceptfds, struct timeval \*timeout);read的集合，写的集合，异常的集合。变成ready的方式，无阻塞的read或者足够小的写。没有集合去监控可以设置为NULL
+   - FD_ZERO()  clears  a set.   FD_SET()  and  FD_CLR() respectively add and remove a given file descriptor from a set.  FD_ISSET() tests to see if a file descriptor is part of the set; this is useful after select() returns.
+   - nfds应该是3个集合中最大的加1，表示遍历到这不遍历了
+   - timeout设置为NULL将会无限期阻塞 timeval结构体struct timeval { long tv_sec;/* seconds */ long tv_usec; /* microseconds */ };两个设置为0是不阻塞直接返回，设置为>0就是阻塞时间到了就返回。
+   - 返回值，-1代表错误，0代表超时返回，正数代表成功。
+   - 有事件发生后，使用FD_ISSET来判断事件的发生，在进行后续的IO操作
+- 数组作为函数的参数会退化为指针，所以数组要当函数参数传递时，要传进去数组的大小，查看影响范围，指针不知道影响范围  
+- poll函数，int poll(struct pollfd \*fds, nfds_t nfds, int timeout);
+   - struct pollfd {
+               int   fd;         /* file descriptor */
+               short events;     /* requested events */
+               short revents;    /* returned events */
+           };
+   - 其中events和revents是bit mask，有一些全是大写字母的bit mask，revents是返回的，当有事件发生时系统内核设置revents，revents有3个值，所以要查看是哪个需要将revents&POLLERR == POLLERR这样，要不然得写很多循环一个一个判断。  
+[epoll理解](https://zhuanlan.zhihu.com/p/159135478)
+- epoll
+   - 边缘触发(ET)和水平触发(LT)，边缘触发只响应一次，水平触发响应好多次
+   - epoll_create函数 int epoll_create(int size);  int epoll_create1(int flags);返回不epfd如果不用需要close关掉
+   - epoll_ctl函数 int epoll_ctl(int epfd, int op, int fd, struct epoll_event \*event);epfd是epoll_create创建后返回的，op是操作有三个位掩码，fd是需要检测的，0成功，-1失败
+   - epoll_wait函数 int epoll_wait(int epfd, struct epoll_event \*events, int maxevents, int timeout);
+   - 结构体
+```c++
+typedef union epoll_data {
+     void    *ptr;
+     int      fd;
+     uint32_t u32;
+     uint64_t u64;
+ } epoll_data_t;
 
+ struct epoll_event {
+     uint32_t     events;    /* Epoll events */
+     epoll_data_t data;      /* User data variable */
+ };
+```
+```c++
+#define MAX_EVENTS 10
+struct epoll_event ev, events[MAX_EVENTS];
+int listen_sock, conn_sock, nfds, epollfd;
+
+/* Code to set up listening socket, 'listen_sock',
+   (socket(), bind(), listen()) omitted */
+
+epollfd = epoll_create1(0);
+if (epollfd == -1) {
+    perror("epoll_create1");
+    exit(EXIT_FAILURE);
+}
+
+ev.events = EPOLLIN;
+ev.data.fd = listen_sock;
+if (epoll_ctl(epollfd, EPOLL_CTL_ADD, listen_sock, &ev) == -1) {
+    perror("epoll_ctl: listen_sock");
+    exit(EXIT_FAILURE);
+}
+
+for (;;) {
+    nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+    if (nfds == -1) {
+        perror("epoll_wait");
+        exit(EXIT_FAILURE);
+    }
+
+    for (n = 0; n < nfds; ++n) {
+        if (events[n].data.fd == listen_sock) {
+            conn_sock = accept(listen_sock,
+                               (struct sockaddr *) &addr, &addrlen);
+            if (conn_sock == -1) {
+                perror("accept");
+                exit(EXIT_FAILURE);
+            }
+            setnonblocking(conn_sock);
+            ev.events = EPOLLIN | EPOLLET;
+            ev.data.fd = conn_sock;
+            if (epoll_ctl(epollfd, EPOLL_CTL_ADD, conn_sock,
+                        &ev) == -1) {
+                perror("epoll_ctl: conn_sock");
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            do_use_fd(events[n].data.fd);
+        }
+    }
+}
+```
 
 ---
 ## 多线程编程
