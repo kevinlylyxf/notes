@@ -1,0 +1,4 @@
+- [单机、集群、分布式的理解](https://blog.csdn.net/weixin_42369687/article/details/89914131)
+- 关系型数据库，相当于表格有行和列，很多的数据类型用户的个人信息，社交网络，地理位置这些数据不需要一个固定的格式存储，所以要用到非关系型数据库Nosql
+- redis的默认安装路径/usr/local/bin
+- redis默认不是后台启动的，需要将redis.conf中daemonize 改为yes 
