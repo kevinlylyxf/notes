@@ -1,4 +1,68 @@
 - [单机、集群、分布式的理解](https://blog.csdn.net/weixin_42369687/article/details/89914131)
 - 关系型数据库，相当于表格有行和列，很多的数据类型用户的个人信息，社交网络，地理位置这些数据不需要一个固定的格式存储，所以要用到非关系型数据库Nosql
-- redis的默认安装路径/usr/local/bin
+- docker中redis的默认安装路径/usr/local/bin
 - redis默认不是后台启动的，需要将redis.conf中daemonize 改为yes 
+- docker run -p 6379:6379 -v /usr/local/docker/redis.conf:/etc/redis/redis.conf -v /usr/local/docker/data:/data -d redis redis-server /etc/redis/redis.conf
+- redis-cli -p 6379测试连接，输入ping回复pong， redis-cli是Redis命令行界面，它是一个允许向Redis发送命令、并直接从终端读取服务器发送的回复的简单的程序。
+- 在连接的情况下，输入shutdown关闭redis
+- redis默认有16个数据库，redis.conf里面databases 16，select 3切换数据库，dbsize查看数据库大小，flushdb清空当前数据库，flushall清空所有的数据库
+---
+- 设置key的过期时间expire，单位是秒，查看key的剩余时间ttl，查看当前key的一个类型type，查看当前key是否存在exists，查看所有的key，keys\*
+- set name liyunliang,name是key，liyunliang是value
+- string类型
+   - 键和值都是字符串类型，其他的类型都是在字符串类型上构建的，字符串类型的值实际上可以是字符串(包括json，xml)，数字，甚至是二进制(图片音频视频)
+   - 一个中文存储的时候是三个字节，strlen获取value的长度
+   - append,追加字符串
+   - incr，值加1，decr，值减1，设置步长，incrby name 10,加步长，decrby，减步长
+   - getrange，截取字符串，获取全部字符串，getrange name 0 -1, setrange,替换字符串，setrange name 1 xx，只替换2个剩下的原样输出
+   - setex，为指定的key设置值及过期时间，如果key已经存在，将会替换，setex mykey 10 hello
+   - setnx，只有不存在的时候才设置，可以实现锁的效果，若key存在不做任何操作,不设置过期时间
+   - mset，mget，msetnx，设置多个值，msetnx要不一起成功一起失败，不可能有的成功，有的失败
+   - getset，先get在set
+   - key中可以用冒号分隔来实现多重的意思，Redis官方建议我们用:来分隔我们的key的各个层次，比如在咱们的User表中id为1000的人的名字，在Redis里面就应该表示为: user : 1000 : name，我们的命名方式应该在能完整阐释我们的键之余再尽可能的简洁明了
+- list列表，其实就是一个链表
+   - LPUSH，RPUSH，LRANGE，LPOP，RPOP，lpush从左边插入，相当于头部，左边的会显示在前面
+   - LINDEX，获取列表中的值lindex list 0
+   - LLEN，获取列表长度
+   - LREM，移除指定的值，lrem list 2 threee，列表中可以存在相同的值
+   - LTRIM，截取指定长度的列表，列表被修改
+   - RPOPLPUSH，从一个列表中弹出然后移动到一个新的列表中
+   - LSET，指定位置设置值，更新值，如果位置上没有就会报错
+   - LINSERT，插入数据，linsert mylist after(before) world new,在world前面插入new
+- set集合，里面的值不能重复
+   - SADD，加入
+   - SMEMBERS，查看成员
+   - SISMEMBERS，查看是否是一个集合的成员，如果是返回1，否则返回0
+   - SCARD，获取集合中元素个数
+   - SREM，移除元素
+   - SRANDMEMBER，获取一个随机的元素
+   - SPOP，随机移除元素，因为set是无序不重复的
+   - SMOVE，将一个set中的指定元素移动到另一个元素
+   - SDIFF，差集，sdiff key1 key2，以key1为标准，将不相同的找出来
+   - SINTER，交集，是基于集合的操作，后面会是集合
+   - SUNION，并集
+- hash(哈希)
+   - key-map模型，key是哈希表，里面存的是map集合，map有自己的键值对
+   - hset，hget，hmset，hmget
+   - hgetall，得到键值对都输出来
+   - hdel 删除 hdel myhash field1
+   - hlen，查看有几个键值对，一个键值对算一个
+   - HEXISTS，判断hash中指定字段是否存在
+   - hkeys \* ，hvals \*
+   - hincrby,hdecrby
+   - hsetnx
+   - hash的使用场景，hash更适合对象的存储，user里面有name age，hset user:1 name liyunliang,hset user:1 age 25
+- zset(有序集合) sorted set
+   - 带权重进行判断，普通消息设为1，重要消息设为2，工资表排序，成绩单排序，排行榜排序
+   - 在set的基础上增加了一个值score，通过这个值进行排序什么的操作
+   - zadd，zrange，zadd myzset 1 one
+- Geospatial(存储地理位置信息)(可以用于查询两地距离，方圆半径的人)
+   - 添加进去的是 经度 纬度 位置名称
+   - geoadd，geoadd china:city 116.40 39.30 beijing
+   - geopos,获取指定的位置名称的经纬度 geopos china:city beijing
+   - geodist,获取指定距离，geodist china:city beijing chongqing km
+   - georadius,以某个位置为中心查找周围指定距离的人，后面可以带参数，指定查多少人，显示距离什么的
+   - georadiusbymember 以某一个元素为中心查找方圆距离的值，这个元素一般是beijing这样存在key中的
+   - geo里面没有删除，可以通过zset来操作删除，zrem命令，zrange查看所有元素
+
+
