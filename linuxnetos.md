@@ -1,4 +1,13 @@
 #linux网络编程
+- 函数指针
+   - 定义方法，将函数名换成指针,void myfun(int x), void(\*func)(int),func是一个指针，通过这个指针就能用这个函数，typedef定义一个新类型，typedef void(\*func)(int),此时func是一个新类型代表一个指向函数的指针，在用时需要通过func fun来定义一个对象，通过对象对函数进行操作，在函数指针作为参数时，直接将函数名传进去进行了。函数指针在定义时说明了函数参数，函数返回类型，没有说明函数名，所以可以将函数指针指向不同的函数，但是函数的参数类型和返回类型必须要一样，来调用不同的函数实现不同的方法。
+   - 回调函数，就是函数指针的一种用法，回调函数就是一个通过函数指针调用的函数。如果你把函数的指针（地址）作为参数传递给另一个函数，当这个指针被用来调用其所指向的函数时，我们就说这是回调函数。回调函数不是由该函数的实现方直接调用，而是在特定的事件或条件发生时由另外的一方调用的，用于对该事件或条件进行响应。
+   - 回调函数，只管实现，不管调用，epoll使用回调函数
+      - 回调函数在什么场景有用？我要在特定时候执行一个任务，至于是什么时候我自己都不知道。比如某一时间到了或者某一事件发生或者某一中断触发。
+      - 回调函数怎么起作用？把我要执行的这个任务写成一个函数，将这个函数和某一时间或者事件或者中断建立关联。当这个关联完成的时候，这个函数华丽的从普通函数变身成为回调函数。
+      - 回调函数什么时候执行？当该回调函数关心的那个时间或者事件或者中断触发的时候，回调函数将被执行。一般是触发这个时间、事件或中断的程序主体（通常是个函数或者对象）观察到有一个关注这个东东的回调函数的时候，这个主体负责调用这个回调函数。
+      - 回调函数有什么好处？最大的好处是你的程序变成异步了。也就是你不必再调用这个函数的时候一直等待这个时间的到达、事件的发生或中断的发生（万一一直不发生，你的程序会怎么样？）。再此期间你可以做做别的事情，或者四处逛逛。当回调函数被执行时，你的程序重新得到执行的机会，此时你可以继续做必要的事情了。
+   - [epoll](https://blog.csdn.net/zxh2075/article/details/79308157)
 ##基础知识理解
 - 在创建好socket并accept后，新建一个子进程进行操作，当在父进程中close()accept返回的sockfd时连接不会断开，因为父子进程同时打开了这个socket，inode变为2，只有变为0才会关闭，在父进程中关了就相当于父进程不连接了，子进程自己去连接
 - getchar是干掉回车\n，scanf输入时会在末尾加入回车
@@ -275,14 +284,14 @@ if (epoll_ctl(epollfd, EPOLL_CTL_ADD, listen_sock, &ev) == -1) {
 }
 
 for (;;) {
-    nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+    nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);//将返回的事件放到events里面
     if (nfds == -1) {
         perror("epoll_wait");
         exit(EXIT_FAILURE);
     }
 
     for (n = 0; n < nfds; ++n) {
-        if (events[n].data.fd == listen_sock) {
+        if (events[n].data.fd == listen_sock) { //如果监听的listen套接字返回了，就执行下面的说明要bind，否则执行 else里面do_use_fd
             conn_sock = accept(listen_sock,
                                (struct sockaddr *) &addr, &addrlen);
             if (conn_sock == -1) {
@@ -292,7 +301,7 @@ for (;;) {
             setnonblocking(conn_sock);
             ev.events = EPOLLIN | EPOLLET;
             ev.data.fd = conn_sock;
-            if (epoll_ctl(epollfd, EPOLL_CTL_ADD, conn_sock,
+            if (epoll_ctl(epollfd, EPOLL_CTL_ADD, conn_sock, //将accpet套接字加入到epoll实例中，conn_sock每次都是不一样的，所以用一个变量就可以
                         &ev) == -1) {
                 perror("epoll_ctl: conn_sock");
                 exit(EXIT_FAILURE);
@@ -306,20 +315,123 @@ for (;;) {
 
 ---
 ## 多线程编程
+- fork, pid_t fork(void);子进程和父进程基本一样，包括fork之前定义的数据，子进程和父进程不同的在man手册里有显示，子进程不会继承父进程内存锁
+- top可以查看僵尸进程,Z是僵尸进程，ps -aux | grep Z
+- wait, pid_t wait(int \*wstatus); wait函数阻塞自己，收集子进程的信息，回收子进程资源，当参数为NULL时不管如何死的，如何有参数就是可以观察如何死的
+- exec一组函数，用新的进程替代当前进程，进程ID不会改变
+- 父进程中的数据子进程会继承，但是其不是一样的，相当于赋值了一份，叫一个名字，但是相互不影响
+- 进程是一个一个执行的，cpu时间片
+- 原子操作:不可被中断的一个或一系列操作
+- 进程间通信，共享内存
+   - shmget，int shmget(key_t key, size_t size, int shmflg);
+   - shmat，  void \*shmat(int shmid, const void \*shmaddr, int shmflg);
+   - ftok, key_t ftok(const char \*pathname, int proj_id);
 - 判断线程是否相等不能用线程ID，需要使用pthread_equal. int pthread_equal(pthread_t t1, pthread_t t2);相等返回非0，不相等返回0；
 - pthread_create,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+---
+- pthread_create.int pthread_create(pthread_t \*thread, const pthread_attr_t \*attr,void \*(\*start_routine) (void \*), void \*arg);void \*(\*start_routine)(void \*),是线程函数，线程创建之后要执行的，后面的arg是给线程函数的参数，用来初始化的，arrt是用来创建线程属性的，NULL表示默认的线程属性，arg可以是结构体
+- 线程函数的写法
+```
+void *sell_ticket(void *arg)
+{
+    for(int i=0; i<20; i++)
+    {
+        if(ticket_sum>0)
+        {
+            sleep(1);
+            cout<<"sell the "<<20-ticket_sum+1<<"th"<<endl;
+            ticket_sum--;
+        }
+    }
+    return 0;
+}
+```
+- 线程结束，可以调用pthread_exit(),或者线程函数return，如果其他线程调用exit也会牵连到
+- int pthread_join(pthread_t thread, void \*\*retval);此函数会等待新创建的线程执行完线程函数，会一直阻塞着等待结束，此函数可以放在return 0前面，return 0 返回后主线程就结束了，引发错误
+---
+## 一些函数
+- fseek, int fseek(FILE \*stream, long offset, int whence);whence选项有SEEK_SET,SEEK_CUR, SEEK_END
+- ftell，long ftell(FILE \*stream); fseek函数将指针设置到末尾，ftell函数获取当前的文件的大小。
+- rewind, void rewind(FILE \*stream);将文件指针放在开始处
+- fopen, FILE \*fopen(const char \*pathname, const char \*mode); mode为r，r+， w， w+这类
+- fread, size_t fread(void \*ptr, size_t size, size_t nmemb, FILE \*stream); 
+- fwrite，size_t fwrite(const void \*ptr, size_t size, size_t nmemb, FILE \*stream);
+- open
+- read
+- write
+- opendir
+- readdir
+- flock，int flock(int fd, int operation);operation包括 LOCK_SH, LOCK_EX, LOCK_UN,成功0，-1失败
+---
+## IPC
+- 管道pipe，int pipe(int pipefd[2]);适用于有血缘关系的进程，例如父子进程。
+- popen函数，前面说到，用pipe函数就能创建管道，但是它比较原始。我们需要自己创建子进程、自己创建管道、创建完管道获得管道的文件描述符后需要自己关闭管道两端的某些接口，popen函数封装好了
+- mmap
+- atoi
+- fstat
+--- 
+## 信号量
+- man 7 sem_overview可以查看信号量介绍
+- int sem_init(sem_t \*sem, int pshared, unsigned int value);
+- PV操作是一种实现进程互斥与同步的有效方法
+- sem_post,int sem_post(sem_t \*sem);解锁操作，信号灯加1
+- int sem_wait(sem_t \*sem);线程调用sem_wait取获取这个信号灯，第一个线程一看，有1个，他就拿到了，然后可以继续后继操作，此时信号灯自动减1，变成0个。那么第二个线程调用sem_wait时就会阻塞
+- int sem_destroy(sem_t \*sem);清理信号量
+- int semget(key_t key, int nsems, int semflg);
+- semget,semctl.semop是系统v的接口，意思是旧的，sem_init,sem_post,sem_wait这些是新的POISX的接口
+- 信号量使用时可以让一个线程等着另一个线程使用post加1，而这个线程阻塞着
+---
+## 消息队列
+- 消息队列，Unix的通信机制之一，可以理解为是一个存放消息（数据）容器。将消息写入消息队列，然后再从消息队列中取消息，一般来说是先进先出的顺序。可以解决两个进程的读写速度不同（处理数据速度不同），系统耦合等问题，而且消息队列里的消息哪怕进程崩溃了也不会消失。
+- ftok函数生成键值，msgget函数创建消息队列，msgsnd函数往消息队列发送消息，msgrcv函数从消息队列读取消息,msgctl函数进行删除消息队列
+- int msgget(key_t key, int msgflg);创建消息队列
+- int msgsnd(int msqid, const void \*msgp, size_t msgsz, int msgflg);msgp是一个数据结构体，发送的数据存放在里面
+   - struct msgbuf {
+               long mtype;       /* message type, must be > 0 */
+               char mtext[1];    /* message data */char数组里面的值可以修改
+           };
+- ssize_t msgrcv(int msqid, void \*msgp, size_t msgsz, long msgtyp, int msgflg);
+- int msgctl(int msqid, int cmd, struct msqid_ds \*buf);
+---
+## 信号与时间
+- raise
+- signal，可以选择屏蔽信号，杀死信号，执行信号函数，默认是杀死信号，signal是一个捕鼠夹子，到了才会执行函数，没有信号就异步执行下面的程序
+- pause
+- alarm，发送一个SIGALRM信号，延迟几秒钟
+- 时间
+- getitimer, setitimer，间隔一段时间
+---
+## 读写锁
+- 
+---
+## 共享内存
+- int shmget(key_t key, size_t size, int shmflg);只要key相等，shmget返回的id就相等
+- key_t ftok(const char \*pathname, int proj_id);返回的是key
+- void \*shmat(int shmid, const void \*shmaddr, int shmflg);shmaddr一般为NULL，一般返回共享内存的地址
+- 上面三个函数用来设置一块共享内存，设置完后所有的进程都可以访问，放在fork前面
+- ipcs可以查看共享内存 ipcrm可以删除共享内存
+- shmget函数有权限问题，需要在shmflg后面加权限 |0666，可以读写
+- attr表示属性
+- 线程的互斥锁可以在线程中使用，但是需要设置属性，pthread_mutexattr_搜索线程互斥锁在进程中的使用
+- 程序中最慢的就是IO操作，上锁就是不让其他线程同时访问重要的文件，可以在print之前解锁
+- 要仔细查看解锁是在哪里解的，break之后也需要解锁，不访问这个函数了，但是break之后需要将锁解掉
+- 线程互斥锁的初始化，pthread_mutex_init(),
+## 条件变量
+- pthread_cond_t
+- pthread_cond_wait,wait就是等待，等待条件的成立，条件成立后用signal给cond发送信号就可以，没有信号就一直在wait那等着int pthread_cond_wait(pthread_cond_t \*cond, pthread_mutex_t \*mutex),条件变量用于某个线程需要在某种条件成立时才去保护它将要操作的临界区，这种情况从而避免了线程不断轮询检查该条件是否成立而降低效率的情况，这是实现了效率提高。在条件满足时，自动退出阻塞，再加锁进行操作。
+- pthread_cond_signal,激发条件有两种形式，pthread_cond_signal()激活一个等待该条件的线程，存在多个等待线程时按入队顺序激活其中一个；而pthread_cond_broadcast()则激活所有等待线程。
+- 必须和一个互斥锁配合，以防止多个线程同时请求pthread_cond_wait
+- 条件变量用于某个线程需要在某种条件成立时才去保护它将要操作的临界区，这种情况从而避免了线程不断轮询检查该条件是否成立而降低效率的情况，这是实现了效率提高。在条件满足时，自动退出阻塞，再加锁进行操作。
+- 互斥锁锁住的是共享变量即全局变量，在函数外定义的变量是全局变量，main函数也是函数，其里面定义的也是局部变量。
+- 在条件变量等待时，当前进程挂起，此时要把锁丢掉，要不然别的进程也不能用，此操作是通过pthread_cond_wait()函数自动实现的，不同解锁，因为此函数有一个互斥锁参数，传进去线程阻塞，但是锁被解开
+- 条件变量都用互斥锁进行保护，条件变量状态的改变都应该先锁住互斥锁，pthread_cond_wait()需要传入一个已经加锁的互斥锁，该函数把调用线程加入等待条件的调用列表中，然后释放互斥锁，在条件满足从而离开pthread_cond_wait()时，mutex将被重新加锁，这两个函数是原子操作。
+---
+- 指向数组的指针强转为指向结构体的指针。在buffer中只能是char类型的，但是传送信息的时候有可能是struct类型的，强转后就相当于可以通过强转之后的指针操作数组里的内容让其按结构体数据类型发送和接受
+struct msgHdr{
+    int fd;                     // 套接字描述符
+    ushort tip;                 // 0 进入聊天室,    1 离开聊天室    2 发送消息
+    ushort onLineNum;           // 在线人数
+};
+struct msgHdr \*sendMsgHdr, recvMsgHdr = (struct msgHdr \*)recvbuf; recvMsgHdr->fd = dealfd;
+- 相当于数组大小没变，但是前几个字节的类型变为结构体类型了，结构体可以通过结构体方法取用和设置。
+- 在线程创建中，最后一个参数不一样创建出来的线程也不一样，
