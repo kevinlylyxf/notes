@@ -22,3 +22,6 @@ alias unproxy='unset all_proxy'
 ```
 - /bin/bash -c ""其中的-c的含义是给bash shell 输入的命令，命令在双引号里面。
 - mac下shell配置文件的加载有顺序/etc/profile /etc/paths ~/.bash_profile ~/.bash_login ~/.profile ~/.bashrc，/etc/profile和/etc/paths是系统级别的，系统启动就会加载，后面几个是当前用户级的环境变量，后面3个按照从前往后的顺序读取，如果~/.bash_profile文件存在，则后面的几个文件就会被忽略不读了，如果~/.bash_profile文件不存在，才会以此类推读取后面的文件。~/.bashrc没有上述规则，它是bash shell打开的时候载入的。.bash_profile这个文件在系统里面没有，没有就自己创建。zsh加载后面的几个不一样，zsh有.zprofile，相当于.bash_profile，修改的方法一样。zsh没有加载.bashrc，所以需要在.zshrc里面输入命令source ~/.bashrc
+---
+- mac下lyl目录在/Users/lyl，linux在/home/lyl，两者不一样，cd ～直接切换到lyl目录
+
