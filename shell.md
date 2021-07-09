@@ -70,5 +70,6 @@ echo ${str##*aa}  #结果为 @@@
 - exit  用来退出当前shell进程并返回一个退出状态，使用$?可以接受这个状态
 --- 
 [shell正则表达式分为基本的和扩展的](https://man.linuxde.net/docs/shell_regex.html)
+- shell中的cd命令是有继承的，cd之后下一条命令可以直接用cd进来的目录，就不用填写绝对路径了。makefile里面的cd不行，必须得写在一行。而且shell中的变量不能和环境变量重名。
 
 
