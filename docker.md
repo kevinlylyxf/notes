@@ -1,0 +1,66 @@
+- docker veriosn，显示版本信息
+- docker info，显示系统级别的信息，包括容器和镜像的信息，有多少容器和镜像。
+- docker --help
+- docker镜像命令
+   - docker images
+   - docker pull
+   - docker search
+   - docker rmi 
+- docker容器命令
+   - docker run,docker run -it ubuntu /bin/bash
+   - 容器中退出停止exit，退出不停止ctrl+p+q
+   - docker ps查看运行中的容器
+   - docker ps -a查看曾经运行的容器
+   - docker rm, docker rm -f $(docker ps -aq),rm不能删除运行中的容器，全部删除rm -f，挂载到本地的数据卷不会丢失，即使删了容器，实现了容器数据的持久化
+   - docker start，启动一个停止的容器
+   - docker restart，重启容器
+   - docker stop，停止容器
+   - docker kill，杀死容器
+   - docker run -d, 后台运行容器，此时查看ps发现没有ID，说明容器自杀了，因为没有前台进程，说明不需要其提供服务了，其自杀了，有的可以启动nginx，有的不能ubuntu
+   - docker logs，日志
+   - docker top，查看容器内部进程
+   - docker inspect，查看容器/镜像的元数据，里面包括主机，IP之类的所有信息
+   - docker exec -it，以交互的命令进入容器，这个容器曾经后台运行
+   - docker attach,没有-it，和上一个命令的区别是exec是新启动一个终端，而attach是进入正在执行程序的终端，不会新启用一个终端
+   - docker cp,不管容器有没有在运行，只要容器还在就行。
+- docker commit 从一个容器中创建新的镜像
+## 容器数据卷
+- docker run -v : 将本地目录和容器内的目录挂载到一起，数据是双向的，如果没有会自动创建
+- docker run -e，配置属性，环境配置，-P，随机映射端口，-p自己设置端口
+- 匿名挂载和具名挂载和指定路径挂载，匿名挂载-v 容器内路径，只写容器内路径，本地自动创建路径，具名挂载，-v 卷名:容器内路径，前面是卷名，创建了一个名字，容易寻找，自动创建的是一串代码，两种都在本地的/var/lib/docker/volume里面，指定路径挂载前面加/，docker volume 命令
+- docker run --volumes-from,实现容器间的数据共享，from后面是容器，只要一个容器在数据就在，删除一个不影响数据，实现容器间的数据共享，一般是共享容器内的整个数据，不是共享一部分。使用时可以在主机上启动一个父容器，将主机上的文件和父容器挂载，然后子容器挂载父容器实现共享数据。镜像名一般都写在后面，要不然不能成功。
+## DockerFile
+- FROM scratch，基础镜像，dockerhub上大部分都是从这开始的
+- docker是用来构建docker镜像的文件，是命令参数脚本。
+- docker commit是用来设置镜像快照的，用于保存现场，定制镜像应该使用DockerFile完成
+- 在dockerhub上查找ubuntu，点进去版本信息，会自动跳转到github上，然后可以看到dockerfile文件
+- docker history，查看官方的镜像是如何构建的，可以看到端口号什么的
+- 每一个RUN都是一层镜像，如果一些镜像都是干一件事，可以将其写在一个RUN命令里面，然后用&&分开，RUN的主要作用就是在构建的时候能加入自己的一些东西，在构建的时候就运行加入进去，当我们使用镜像的时候就可以直接使用有自己东西的镜像了，例如vim，不需要进入镜像安装vim
+- docker build -f dockerfile -t 新名字 . 后面这个点是必须的，指定上下文，这个上下文路径的理解很重要，这个点可以换成dockerfile所在的路径，这样写简单，文件名一般写成Dockerfile，就不用加-f指定文件了，会自动寻找
+- 环境变量，就是一些程序运行时的路径，设置在环境变量中然后去寻找程序。环境变量下面一般存储程序的运行路径。可以自己创建环境变量，一般都为大写，在程序中一般需要指定自己创建的环境变量。
+- dockerfile一般流程，FROM，然后COPY或者ADD，然后RUN，然后添加自己的东西，设置工作目录和环境变量，最后CMD
+   - FROM 基础镜像，一切从这里构建
+   - MAINTAINER，镜像是谁写的，姓名+邮箱
+   - RUN，镜像构建的时候需要运行的命令，比如加入vim
+   - COPY，复制文件，其文件必须在同一个上下文中，不能使用其他的，会复制到容器中
+   - ADD，添加自己的东西，类似于COPY，但是如果是压缩包会自动解压
+   - WORKDI，镜像的工作目录，每一个RUN都是一层镜像，上下两层的工作目录不一样，如果需要改变以后各层的工作目录，需要使用WORKDIE
+   - VOLUME，挂载的目录，VOLUME [" "," "]，是匿名挂载
+   - ENV，设置环境变量，可以设置别名，以后直接使用别名，ENV MYPATH /usr/local    WORKDIR $MYPATH，还可以在ENV中添加PATH环境变量，在外面类似于docker run -e
+   - EXPOSE，对外的端口设置，只是声明打算使用什么端口而已，不会在宿主机进行端口映射，需要时使用-p
+   - CMD，用于指定默认的容器主进程的启动命令，就是进入容器启动的是什么，CMD有两种格式，一般使用exec格式，CMD ["可执行文件","参数1","参数2"]，比如CMD ["ls","-a"]，只有最后一个CMD命令会生效，如果需要执行ls -al，不能使用docker run -l,这样是错误的，不会追加，是替换
+   - ENTRYPOINT，命令类似上面CMD，但是会追加执行，不会替换
+---
+## docker网络
+- veth-pair技术，就是一对虚拟设备接口，是成对出现的，一端连着协议栈，一端彼此相连着，常常充当一个桥梁，连接着各种虚拟网络设备。docker容器上的网口显示261:eth0@if262，宿主机上显示262:eth0@if261，宿主机上有一个docker0，就相当于一个路由器，所有的容器是其子网。容器间通过docker0来通信
+- 子网中192.168.0.0/16和192.168.0.0/24，其中16表示前16个为1，24表示其24位为1
+- docker network 创建网络，然后将容器加入到一个网络中就可以了
+   - docker network create -d bridge mynet，-d指定网络模式，一般为桥接，里面一些子网的配置，网关的配置可以看docker network crate --help
+   - docker network inspect，查看网络参数
+   - docker network ls，查看网络列表
+   - docker run --network 自己创建的网络
+- 创建的容器可以通过IP地址访问，不可以通过容器名来访问，这样很局限，通过docker network就可以通过容器名来访问。
+- 通过自定义网络可以实现两个集群之间网络的互斥性安全性
+- docker network connect，将一个容器连接到一个网络中，实现两个不同的网络之间的联系。
+- docker中要在镜像里面添加自己的东西，例如vim，这些在普通的ubuntu里面可以通过软件包管理，但是在里面没有这些，但是我们可以创建自己的镜像，使用RUN apt instll，这样创建出来的镜像就可以使用vim这些自己安装的了。
+

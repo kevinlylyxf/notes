@@ -1,0 +1,102 @@
+- [单机、集群、分布式的理解](https://blog.csdn.net/weixin_42369687/article/details/89914131)
+- 关系型数据库，相当于表格有行和列，很多的数据类型用户的个人信息，社交网络，地理位置这些数据不需要一个固定的格式存储，所以要用到非关系型数据库Nosql
+- docker中redis的默认安装路径/usr/local/bin
+- redis默认不是后台启动的，需要将redis.conf中daemonize 改为yes 
+- docker run -p 6379:6379 -v /usr/local/docker/redis.conf:/etc/redis/redis.conf -v /usr/local/docker/data:/data -d redis redis-server /etc/redis/redis.conf
+- redis-cli -p 6379测试连接，输入ping回复pong， redis-cli是Redis命令行界面，它是一个允许向Redis发送命令、并直接从终端读取服务器发送的回复的简单的程序。
+- 在连接的情况下，输入shutdown关闭redis
+- redis默认有16个数据库，redis.conf里面databases 16，select 3切换数据库，dbsize查看数据库大小，flushdb清空当前数据库，flushall清空所有的数据库
+---
+- 设置key的过期时间expire，单位是秒，查看key的剩余时间ttl，查看当前key的一个类型type，查看当前key是否存在exists，查看所有的key，keys\*
+- set name liyunliang,name是key，liyunliang是value
+- string类型
+   - 键和值都是字符串类型，其他的类型都是在字符串类型上构建的，字符串类型的值实际上可以是字符串(包括json，xml)，数字，甚至是二进制(图片音频视频)
+   - 一个中文存储的时候是三个字节，strlen获取value的长度
+   - append,追加字符串
+   - incr，值加1，decr，值减1，设置步长，incrby name 10,加步长，decrby，减步长
+   - getrange，截取字符串，获取全部字符串，getrange name 0 -1, setrange,替换字符串，setrange name 1 xx，只替换2个剩下的原样输出
+   - setex，为指定的key设置值及过期时间，如果key已经存在，将会替换，setex mykey 10 hello
+   - setnx，只有不存在的时候才设置，可以实现锁的效果，若key存在不做任何操作,不设置过期时间
+   - mset，mget，msetnx，设置多个值，msetnx要不一起成功一起失败，不可能有的成功，有的失败
+   - getset，先get在set
+   - key中可以用冒号分隔来实现多重的意思，Redis官方建议我们用:来分隔我们的key的各个层次，比如在咱们的User表中id为1000的人的名字，在Redis里面就应该表示为: user : 1000 : name，我们的命名方式应该在能完整阐释我们的键之余再尽可能的简洁明了
+- list列表，其实就是一个链表
+   - LPUSH，RPUSH，LRANGE，LPOP，RPOP，lpush从左边插入，相当于头部，左边的会显示在前面
+   - LINDEX，获取列表中的值lindex list 0
+   - LLEN，获取列表长度
+   - LREM，移除指定的值，lrem list 2 threee，列表中可以存在相同的值
+   - LTRIM，截取指定长度的列表，列表被修改
+   - RPOPLPUSH，从一个列表中弹出然后移动到一个新的列表中
+   - LSET，指定位置设置值，更新值，如果位置上没有就会报错
+   - LINSERT，插入数据，linsert mylist after(before) world new,在world前面插入new
+- set集合，里面的值不能重复
+   - SADD，加入
+   - SMEMBERS，查看成员
+   - SISMEMBERS，查看是否是一个集合的成员，如果是返回1，否则返回0
+   - SCARD，获取集合中元素个数
+   - SREM，移除元素
+   - SRANDMEMBER，获取一个随机的元素
+   - SPOP，随机移除元素，因为set是无序不重复的
+   - SMOVE，将一个set中的指定元素移动到另一个元素
+   - SDIFF，差集，sdiff key1 key2，以key1为标准，将不相同的找出来
+   - SINTER，交集，是基于集合的操作，后面会是集合
+   - SUNION，并集
+- hash(哈希)
+   - key-map模型，key是哈希表，里面存的是map集合，map有自己的键值对
+   - hset，hget，hmset，hmget
+   - hgetall，得到键值对都输出来
+   - hdel 删除 hdel myhash field1
+   - hlen，查看有几个键值对，一个键值对算一个
+   - HEXISTS，判断hash中指定字段是否存在
+   - hkeys \* ，hvals \*
+   - hincrby,hdecrby
+   - hsetnx
+   - hash的使用场景，hash更适合对象的存储，user里面有name age，hset user:1 name liyunliang,hset user:1 age 25
+- zset(有序集合) sorted set，不允许重复，但是score可以重复
+   - 带权重进行判断，普通消息设为1，重要消息设为2，工资表排序，成绩单排序，排行榜排序
+   - 在set的基础上增加了一个值score，通过这个值进行排序什么的操作
+   - zadd，zrange，zadd myzset 1 one
+- Geospatial(存储地理位置信息)(可以用于查询两地距离，方圆半径的人)
+   - 添加进去的是 经度 纬度 位置名称
+   - geoadd，geoadd china:city 116.40 39.30 beijing
+   - geopos,获取指定的位置名称的经纬度 geopos china:city beijing
+   - geodist,获取指定距离，geodist china:city beijing chongqing km
+   - georadius,以某个位置为中心查找周围指定距离的人，后面可以带参数，指定查多少人，显示距离什么的
+   - georadiusbymember 以某一个元素为中心查找方圆距离的值，这个元素一般是beijing这样存在key中的
+   - geo里面没有删除，可以通过zset来操作删除，zrem命令，zrange查看所有元素
+- hyperloglog(基数统计)(用于计数)
+   - 占用的内存是固定的，大概12kb，有一个错误率0.81%
+   - 基数就是统计一个数据集里不重复的数的个数有多少个
+   - PFADD 
+   - PFCOUNT
+   - PFMERGE
+- bitmap位图场景，按位存储，只有两个状态的比较合适，比如打卡未打卡，感染未感染
+   - setbit key offset value,其中offset就是哪个位，就是偏移量的意思，可以设置很多，就是数字，哪个位上面设置什么，value只有0或者1两个状态
+   - setbit
+   - getbit
+   - bitcount
+----
+### 事务
+- redis事务本质是一组命令的集合
+- 收到 EXEC 命令后进入事务执行，事务中任意命令执行失败，其余的命令依然被执行。表明redis单条命令是有原子性的，但是事务本身不保证原子性
+- multi 开启事务，exec执行事务，里面的命令会入队等待一次性执行
+- discard 放弃事务
+- 在写命令时如果命令错误，所有的命令都不会被执行，编译时异常
+- 运行时异常，比如让字符串+1，这时会在运行时错误，但是其他的命令会执行
+- watch监控，监视一个或多个key，如果在事务执行之前这个key被其他命令改动，那么事务将被打断。watch在multi前面监控然后multi，然后exec，事务被打断返回nil，相当于事务失败了。相当于多线程抢东西了
+- 在获取最新值的时候要先unwatch然后在watch
+---
+- redis持久化
+- RDB将内存状态保存到硬盘中，AOF将redis中从开始的命令保存起来，AOF比较安全，但是比较费时间，RDB比较简单
+- redis订阅发布Pub
+- redis主从复制
+   - 将一台redis服务器的数据复制到其他的redis服务器，前者称为主节点，后者称为从节点，数据的复制是单向的，主要作用1数据冗余，备份数据2故障恢复，当主节点出现问题时，从节点提供服务3负载均衡实现读写的分离
+- redis哨兵模式(sentinel)
+   - 主机挂掉之后，自动选择一个从机顶上，如果主机后来好了，只能当个从机了
+- redis缓存穿透和雪崩
+   - 缓存穿透，缓存穿透的概念很简单，用户想要查询一个数据，发现redis内存数据库没有，也就是缓存没有命中，于是向持久层数据库查询。发现也没有，于是本次查询失败。当用户很多的时候，缓存都没有命中，于是都去请求了持久层数据库。这会给持久层数据库造成很大的压力，这时候就相当于出现了缓存穿透。解决办法:布隆过滤器、缓存空对象
+   - 缓存击穿
+   - 缓存雪崩，就是缓存层出现了错误，不能工作，于是所有的请求都到了mysql，mysql的调用量暴增，造成存储层也挂掉，例如双十一所有的数据都放到了缓存层，但是过了一段时间，缓存层的数据过期了，秒杀没有了之类的，都会请求到mysql。
+
+
+
