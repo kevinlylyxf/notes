@@ -227,7 +227,7 @@ echo ${str##*aa}  #结果为 @@@
 
 - 版本管理系统git，使用的是合并格式diff的变体。
 
-  ```
+  ```shell
   	diff --git a/f1 b/f1
   　　index 6f8a38c..449b072 100644
   　　--- a/f1
@@ -252,7 +252,7 @@ echo ${str##*aa}  #结果为 @@@
 
   - 比较不同分支之间的差异
 
-    ```
+    ```shell
     git diff master dev
     上面的命令是以master分支为参照，比较dev分支和master分支之间的差异。注意改变分支的比较顺序，结果会不同，默认不加文件名参数，会比较出所有文件的差异。 比较指定文件的差异可以参照如下命令:
     git diff master dev -- READMD.md index.php
@@ -260,7 +260,7 @@ echo ${str##*aa}  #结果为 @@@
 
   - 比较工作区和版本库之间的文件差异
 
-    ```
+    ```shell
     Git中用一个叫HEAD的指针指向当前分支的最新一次提交，我们可以用以下命令来比较工作区和版本库之间的文件差异
     比较全部文件: git diff HEAD
     比较单个文件: git diff HEAD -- READMD.md
@@ -275,4 +275,75 @@ echo ${str##*aa}  #结果为 @@@
 
     - 使用git diff --cached或者git diff --staged来比较暂存区和版本库之间的文件差异，cached和staged都有表示缓存的意思。
 
-    
+##### ln
+
+- 功能是为某一个文件在另外一个位置建立一个同步的链接.当我们需要在不同的目录，用到相同的文件时，我们不需要在每一个需要的目录下都放一个必须相同的文件，我们只要在某个固定的目录，放上该文件，然后在 其它的目录下用ln命令链接（link）它就可以，不必重复的占用磁盘空间。
+
+  ```
+  ln [参数][源文件或目录][目标文件或目录]
+  ```
+
+  - 源文件是真实存在的文件，目标文件是我们要创建的链接文件
+  - -s是创建软连接
+  - ls查看文件时前面的是链接文件，后面的是真实的文件libm.so.6 -> libm-2.17.so，->的意思是指向真实的文件
+
+##### ldconfig和ldd
+
+- ldd用来查看程式运行所需的共享库,常用来解决程式因缺少某个库文件而不能运行的一些问题。
+
+  ```shell
+  ldd /bin/ls
+  linux-vdso.so.1 =>  (0x00007fff69bff000)
+  librt.so.1 => /lib64/librt.so.1 (0x00007fd67f147000)
+  libacl.so.1 => /lib64/libacl.so.1 (0x00007fd67ef41000)
+  libc.so.6 => /lib64/libc.so.6 (0x00007fd67ec01000)
+  libpthread.so.0 => /lib64/libpthread.so.0 (0x00007fd67e9e6000)
+  /lib64/ld-linux-x86-64.so.2 (0x00007fd67f351000)
+  libattr.so.1 => /lib64/libattr.so.1 (0x00007fd67e7e2000)
+  
+  第一个linux-vdso.so.1是系统用的，这个不用管
+  ```
+
+  - 第一列：程序需要依赖什么库
+  - 第二列: 系统提供的与程序需要的库所对应的库
+  - 第三列：库加载的开始地址
+  - 通过对比第一列和第二列，我们可以分析程序需要依赖的库和系统实际提供的，是否相匹配
+  - 通过观察第三列，我们可以知道在当前的库中的符号在对应的进程的地址空间中的开始位置
+
+-  ldd不是个可执行程式，而只是个shell脚本； ldd显示可执行模块的dependency的工作原理，其实质是通过ld-linux.so（elf动态库的装载器）来实现的。ld-linux.so模块会先于executable模块程式工作，并获得控制权，因此当上述的那些环境变量被设置时，ld-linux.so选择了显示可执行模块的dependency。
+
+- ldconfig
+
+  - `ldconfig`是一个动态库管理命令, 为了让动态库为系统所共享, 须运行该命令
+
+  - `ldconfig`通常在系统启动时运行, 而当用户安装了一个新的动态库时, 就需要手动运行该命令
+
+  - ldconfig作用，在默认搜寻目录(`/lib`和`/usr/lib`)下, 以及动态库配置文件(`/etc/ld.so.conf`和`/etc/ld.so.conf.d/*.conf`)里所列的目录下, 搜索出可共享的动态库(格式如`lib*.so*`), 进而创建出动态装入程序*(ld.so)*所需的连接和缓存文件，缓存文件默认为`/etc/ld.so.cache`, 此文件保存动态库名字列表。简单来说动态装载器ld.so需要/etc/ld.so.cache文件来查看需要的库路径，如果没有在这个缓存文件里面就不会加载，ldconfig会将默认搜寻目录和动态库配置文件中找需要的库，并将其加入到缓存文件中，这样系统就能装在所需要的库。一般安装软件时，会在/etc/ld.so.conf.d目录下生成一个文件，文件以conf为后缀例如mysql.ld.conf，文件里面记录着库存放的路径。这样运行ldconfig就能搜寻到库，放到缓存文件中，然后ld.so就能加载上了。
+
+  - 命令选项
+
+    ```shell
+    -p或--print-cache：此选项指示ldconfig打印出当前缓存文件所保存的全部共享库的名字。
+    -v或--verbose：用此选项时，ldconfig将显示正在扫描的目录及搜索到的动态连接库，还有它所建立的链接的名字。
+    ```
+
+  - 注意事项
+
+    - 往/lib和/usr/lib里面加东西, 是不用修改/etc/ld.so.conf的, 但是完了之后要调一下ldconfig, 不然这个library会找不到
+    - 想往上面两个目录以外加东西的时候, 一定要修改/etc/ld.so.conf, 然后再调用ldconfig, 不然也会找不到. 比如安装了一个mysql到/usr/local/mysql, mysql有一大堆library在/usr/local/mysql/lib下面, 这时就需要在/etc/ld.so.conf下面加一行/usr/local/mysql/lib, 保存过后ldconfig一下, 新的library才能在程序运行时被找到
+    - 如果想在这两个目录以外放lib, 但是又不想在/etc/ld.so.conf中加东西或者是没有权限加东西. 那也可以, 就是export一个全局变量`LD_LIBRARY_PATH`, 然后运行程序的时候就会去这个目录中找library. 一般来讲这只是一种临时的解决方案, 在没有权限或临时需要的时候使用
+    - ldconfig做的这些东西都与运行程序时有关, 跟编译时一点关系都没有
+    - 总之, 就是不管做了什么关于library的变动后, 最好都ldconfig一下, 不然会出现一些意想不到的结果
+
+##### bin和lib目录详解
+
+- bin目录有/bin,/sbin,/usr/bin,/usr/sbin,/usr/local/bin,/usr/local/sbin
+  - `/bin`放置系统的关键程序比如 `ls` `cat` ，对于“关键”的定义，不同的发行版会有不同的理解
+  - `/usr/bin` 放置发行版管理的程序，比如 Ubuntu 自带 `md5sum` ，这个 binary 就会在这个目录下
+  - `/usr/local/bin` 放置用户自己的程序，比如你编译了一个 gcc，那么 gcc 这个可执行 binary 应该在这个目录下，自己在晚上下载安装的软件一般放在这里
+  - 除此之外，还有对应的三个目录 `/sbin` `/usr/sbin` `/usr/local/sbin` ，放置系统管理的程序，比如 `deluser` `chroot` `service` ,`reboot` `shutdown`
+  - 这是一种文件的管理方式而已，你甚至可以把自己的 binary 放到 `$HOME/bin` 下。还有，OS X 用 [homebrew](https://brew.sh/) 安装的软件，会放在 `/usr/local/Cellar` 下，然后在 `/usr/local/bin` 创建一个指向相关 bin 目录的符号链接；但是在 Ubuntu 下，会放到 `/usr/bin` 下。
+  - 需要知道 `/` `/usr` `/usr/local` 这些都是 prefix，你编译一个软件的之后，要执行 `./configure --prefix=/usr/local` 然后 `make && make install` 。那么 `/usr/local` 就会作为 prefix，库文件就放在 `/usr/local/lib` 下面，配置文件就放在 `/usr/local/etc` 下面，可执行文件（binary）就放在 `/usr/local/bin` 下面。
+- lib64，lib目录和bin目录一样，只要有bin目录的地方就有lib目录，用来存放bin程序需要的库。简单说,/lib是内核级的,/usr/lib是系统级的,/usr/local/lib是用户级的。
+- /opt这里主要存放那些可选的程序。你想尝试最新的firefox测试版吗?那就装到/opt目录下吧，这样，当你尝试完，想删掉firefox的时候，你就可 以直接删除它，而不影响系统其他任何设置。安装到/opt目录下的程序，它所有的数据、库文件等等都是放在同个目录下面。而/usr/local里面的程序和库没有统一在一个文件夹里面，这样造成删除的时候困难，使用包管理工具安装的软件一般放在/usr里面。homebrew安装的放在/usr/local/Cellar下面有各个软件的文件夹，apt-get没有单独命名的文件夹，其内容是分散的lib和bin
+

@@ -477,6 +477,8 @@ char *strncpy(char *dest, const char *src, size_t n);
 
 - 实际使用方法，上面中path是可变长数组，length记录着结构体大小和可变长数组的总大小，减去结构体的大小就是数组的大小，所以在读取文件的时候，用length-sizeof（结构体）就是后面的长度，将这个长度的内存读到buffer中就得到了这个path。将这个buffer在赋值给变量就可以使用了。在往文件中写的时候，用length记录，将结构体先写入，在把path写入就可以。length就是一个记录，用length就可以正确读取了
 
+- 一般我们用数组大小为0的数组是得到数组指针，我们可以用结构体访问数组得到，例如上面FILE_SCAN_ITEM_STOR stor;stor.path,这个就是数组指针，指向数组第一个元素，或者如果结构体里面嵌套一个结构体，这个用嵌套的结构体指针+1就是后面的内容指针。
+
 ##### signal函数
 
 ```c
