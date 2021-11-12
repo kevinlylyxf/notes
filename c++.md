@@ -361,6 +361,20 @@ char *strncpy(char *dest, const char *src, size_t n);
   
 - 在用字符串的函数时要注意有没有\0，如果没有就不能使用strcmp和strcpy这样的函数，因为没有结尾不知道在哪里结束，所以会出现错误，不知道字符串到哪里了。
 
+##### strcpy和strncpy以及strlen和sizeof的问题
+
+- strlen是一个函数，求的是字符串的实际长度，它求得方法是从开始到遇到第一个'\0',如果你只定义没有给它赋初值，这个结果是不定的，它会从arr首地址一直找下去，直到遇到'\0'停止。 而sizeof()返回的是变量声明后所占的内存数，不是实际长度，此外sizeof不是函数，仅仅是一个操作符，strlen是函数。
+
+- strlen结果为去掉\0之后的实际字符数量，sizeof求得是字符串占用得内存数，如果定义arr[10]，用sizeof(arr)，求得结果为10，不管里面有没有字符，也不管有几个，求出来得结果就是占用得内存数10
+
+- strcpy会追加结束标记\0，strncpy()不会向dest追加结束标记'\0'，所以strncpy使用时其中得n要明白清楚，n为要复制得字节数，使用strlen和sizeof结果不一样
+
+  ```
+  char * strncpy(char *dest, const char *src, size_t n);
+  ```
+
+- strlen和sizeof在用于字符串指针时，sizeof为指针得大小4个字节，而strlen为字符串本身得长度，并不是4个字节
+
 ##### sprintf和snprintf
 
 - ```
@@ -501,7 +515,7 @@ void (*signal(int sig, void (*func)(int)))(int);
 
 ##### stringstream和snprintf
 
-```
+```c++
 int snprintf ( char * str, size_t size, const char * format, ... );
 ```
 
@@ -522,6 +536,13 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   ```
 
   - snprintf的主要功能就是将一些数据拼接到一起存放到字符串中，其中数据是按照format格式来组织的，这其实跟printf中的格式控制符一样，%s和%d就是占位符，最后会被实际的数据替换掉，其中的空格也是存在的，如果格式控制符中没有空格，输出的也就没有"%s%d"，这样就没有，所以数据是按照双引号里面的格式来组织存储到字符串str中的，其实就是将各个数据拿到一起，转换为字符串，最后就是一个字符串，所以可以混合拼接，字符串和数据变量拼接在一起。
+
+  ```c++
+  snprintf(log_desc, sizeof(log_desc), "modify <%s> password.",user_info.username)
+  snprintf(log_desc, sizeof(log_desc), "modify password.")
+  ```
+
+- snprintf中format也可以没有格式，例如第二个，就是将这个字符串拷贝到log_desc，如果有格式就有格式，按照格式拼接好字符串然后放进去
 
 - **<sstream>** 定义了三个类：istringstream、ostringstream 和 stringstream，分别用来进行流的输入、输出和输入输出操作。其和iostream、fstream类一样，都是系统定义好的一个类
 
@@ -605,6 +626,43 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     ```
 
     - 多次数据类型转换，必须使用 clear() 方法清空 stringstream，不使用 clear() 方法或使用 str("") 方法，都不能得到数据类型转换的正确结果，不适用clear结果为 456   4197008，使用str("")结果为456 0
+
+##### 函数默认值问题
+
+- 参数默认值需要在函数原型中声明，但是并不需要在函数定义中指明。
+- 如果为函数的某一个参数设置了默认值，那么这个参数后面的所有参数都需要设置默认值。 这个规定应该是为了防止省略函数中间的某一个参数，而导致编译器无法解析的情况。
+
+##### Json
+
+- JSON作为数据传输的格式，有几个显著的优点：
+
+  - JSON只允许使用UTF-8编码，不存在编码问题；
+  - JSON只允许使用双引号作为key，特殊字符用`\`转义，格式简单；
+  - 浏览器内置JSON支持，如果把数据用JSON发送给浏览器，可以用JavaScript直接处理。
+
+- JSON适合表示层次结构，因为它格式简单，仅支持以下几种数据类型：
+
+  - 键值对：`{"key": value}`
+  - 数组：`[1, 2, 3]`
+  - 字符串：`"abc"`
+  - 数值（整数和浮点数）：`12.34`
+  - 布尔值：`true`或`false`
+  - 空值：`null`
+
+  ```
+  {
+      "id": 1,       
+      "name": "Java核心技术",
+      "author": {
+          "firstName": "Abc",
+          "lastName": "Xyz"
+      },
+      "isbn": "1234567",
+      "tags": ["Java", "Network"]
+  }
+  ```
+
+  
 
 #### 从c到c++
 
@@ -919,7 +977,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - 和静态成员变量类似，静态成员函数在声明时要加 static，在定义时不能加 static。静态成员函数可以通过类来调用（一般都是这样做），也可以通过对象来调用
 
-- 静态成员函数不能访问类里面的非成员变量和非成员函数，所以我们可以在类里面写一个返回静态类对象，然后用静态类对象来访问成员变量
+- 静态成员函数不能访问类里面的非成员变量和非成员函数，所以我们可以在类里面可以定义一个静态成员函数写一个返回静态类对象，然后用静态类对象来访问成员变量，这样整个类对象在程序运行期间都是一样的，这样就不用在用到类时重复声明了。
 
   ```c++
   class XSecSystem:public XThread
@@ -944,11 +1002,58 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   }
   XDataBase & XSecSystem::getXdb()
   {
-  	return system().m_xdb;//通过静态类对象来访问非成员变量
+  	return system().m_xdb;//getXdb是静态成员函数，system()也是静态成员函数，静态成员函数只能调用静态成员函数和静态成员变量，system返回一个静态对象，所以通过这个对象可以访问这个类里面的成员变量和成员函数，此种设计只是一个跳板
   }
+      
+  在使用时，XSecSystem::getXdb().db()->QuerySecuritySettings(&arr)
   ```
-
   
+  ```c++
+  class XUIMgr
+  {
+  protected:
+      XUIClientOps m_uiOps;
+      BOOL __test()
+  	{
+          return TRUE;
+  	}
+  	XUIMgr();
+  public:
+  	virtual ~XUIMgr();
+  	static XUIMgr & mgr()
+  	{
+  		static XUIMgr __mgr;
+          return __mgr;
+  	}	
+      static void log(char * op_username, unsigned int op_class, unsigned int op_time, unsigned int op_result, char * fmtStr, ...);
+      XUIClientOps * clientOps()
+      {
+          return &m_uiOps;
+      }
+  	static BOOL initialize()
+  	{
+  		return XUIMgr::mgr().__test();
+  	}
+  };
+  
+  XUIMgr::XUIMgr()
+  {
+  	XUICLIENT_OPS * ops = NULL;
+  	ops = createUIClientOps();
+  	m_uiOps.setOps(ops);
+  	return;
+  }
+  scheme.h中有extern XUIMgr * g_mgr；
+  g_mgr的定义g_mgr = &XUIMgr::mgr();通过静态成员函数来得到一个静态类，然后通过这个静态类在访问类中的成员函数和成员变量
+      
+  XUIClientOps * client = g_mgr->clientOps();通过g_mgr来访问里面的成员函数clientOps，得到里面的类XUIClientOps，然后调用里面的方法。可以用临时变量client，不用每次用到里面的类就写上g_mgr->clientOps()，这样比较麻烦，虽然每次得到的都是同一个类对象
+  ```
+  
+- 静态对象在编译时就放在了全局静态区，这种方法只是将那个静态对象拿到，方便后续的使用，而且这个静态对象就一个，使用时不用重复定义，拿到这个直接用就可以
+
+- 这样做的好处是持久化了一些我们想要的东西，而且我们想用的就是一个，不会每次都申请一个新的使用，其保存在内存中。不会丢失，除非关闭软件或者断电
+
+- static对象在编译的时候就放到了内存中，在全局静态区，跟运行的时候没什么关系，运行的时候只是使用他
 
 ##### const成员变量和成员函数
 
@@ -1256,7 +1361,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - “多态（polymorphism）”指的是同一名字的事物可以完成不同的功能。多态可以分为编译时的多态和运行时的多态。前者主要是指函数的重载（包括运算符的重载）、对重载函数的调用，在编译时就能根据实参确定应该调用哪个函数，因此叫编译时的多态；而后者则和继承、虚函数等概念有关，是本章要讲述的内容。本教程后面提及的多态都是指运行时的多态。
 
-- 通过基类指针只能访问派生类的成员变量，但是不能访问派生类的成员函数。
+- 通过基类指针只能访问派生类的成员变量，但是不能访问派生类的成员函数。此处说的是从基类继承下来的成员变量可以访问，派生类单独声明的成员变量是不可以访问的，因为内存模型的关系，从基类继承下来的变量所占空间和基类是相同的，所以基类访问的成员变量就是访问派生类的成员变量，但是单独声明的不可以
 - 为了消除这种尴尬，让基类指针能够访问派生类的成员函数，[C++](http://c.biancheng.net/cplus/) 增加了**虚函数（Virtual Function）**。使用虚函数非常简单，只需要在函数声明前面增加 virtual 关键字。
 - 有了虚函数，基类指针指向基类对象时就使用基类的成员（包括成员函数和成员变量），指向派生类对象时就使用派生类的成员。换句话说，基类指针可以按照基类的方式来做事，也可以按照派生类的方式来做事，它有多种形态，或者说有多种表现方式，我们将这种现象称为**多态（Polymorphism）**。
 - 多态是面向对象编程的主要特征之一，C++中虚函数的唯一用处就是构成多态。
@@ -1284,13 +1389,13 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - 本例中定义了两个类，基类 Base 和派生类 Derived，它们都有自己的构造函数和析构函数。在构造函数中，会分配 100 个 char 类型的内存空间；在析构函数中，会把这些内存释放掉。pb、pd 分别是基类指针和派生类指针，它们都指向派生类对象，最后使用 delete 销毁 pb、pd 所指向的对象。
 
   ```c
-  	 Base *pb = new Derived();
-     delete pb;
-     cout<<"-------------------"<<endl;
-     Derived *pd = new Derived();
-     delete pd;
-  	从运行结果可以看出，语句delete pb;只调用了基类的析构函数，没有调用派生类的析构函数；而语句delete pd;同时调用了派生类和基类的析构函数。
-    不调用派生类的析构函数会导致 name 指向的 100 个 char 类型的内存空间得不到释放；除非程序运行结束由操作系统回收，否则就再也没有机会释放这些内存。这是典型的内存泄露。
+  Base *pb = new Derived();
+  delete pb;
+  cout<<"-------------------"<<endl;
+  Derived *pd = new Derived();
+  delete pd;
+  从运行结果可以看出，语句delete pb;只调用了基类的析构函数，没有调用派生类的析构函数；而语句delete pd;同时调用了派生类和基类的析构函数。
+  不调用派生类的析构函数会导致 name 指向的 100 个 char 类型的内存空间得不到释放；除非程序运行结束由操作系统回收，否则就再也没有机会释放这些内存。这是典型的内存泄露。
   
   ```
 
