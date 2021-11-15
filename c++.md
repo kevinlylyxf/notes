@@ -334,6 +334,40 @@ char *strncpy(char *dest, const char *src, size_t n);
 
 - 通常在复制字符串时用strcpy，而需要复制其他类型数据时则一般用memcpy，由于字符串是以“\0”结尾的，所以对于在数据中包含“\0”的数据只能用memcpy。
 
+- strcpy的参数必须是char *的，所以strcpy只能拷贝字符串，memcpy的参数是void *，所以memcpy可以拷贝任意的数据类型
+
+- char和unsigned都可以定义字符数组，其都可以通过%s打印出来，两者基本没有区别，但是unsigned不能使用strcpy函数拷贝，char类型能用strcpy函数拷贝，unsigned char可以使用memcpy函数拷贝，如果形参是char *类型的，不能用unsigned char 类型的实参赋值
+
+  ```
+  char* cJSON_strdup(const char* str)
+  {
+        size_t len;
+        char* copy;
+  
+        len = strlen(str) + 1;
+        if (!(copy = (char*)cJSON_malloc(len))) return 0;
+        memcpy(copy,str,len);
+        return copy;
+  }
+  ```
+
+  - 此函数的只要作用是复制字符串，不能传入unsigned char类型的数组，如果传入的话报错：从类型 ‘unsigned char*’ 到类型 ‘const char*’ 的转换无效，即unsigned char不能转换为char类型，如果上面的函数需要传入unsigned char类型的数据时，可以强制转换为char*的
+
+    ```
+    int main(){
+    	unsigned char str[512] = "aabbcc";
+    	char * arr = NULL;
+    	arr = cJSON_strdup((char*)str);
+    	printf("%s", arr);
+    }
+    
+    运行结果aabbcc
+    ```
+
+    - 所以当使用unsigned char给char赋值时要用强转就可以，上面的程序中可以使用arr指向函数返回值，因为函数返回一个字符串指针，左边是一个指针，又边也是一个指针，所以可以赋值
+
+  - 此函数使用时可以设置一个指针char * str = NULL；然后让这个指针指向返回值，因为这个函数的返回值为一个字符串指针，所以可以写为str = cJSON_strdup(str);这样写是正确的。
+
 - 字符数组当做字符串时，在定义时可以用字符串即char *类型的数据命令，但是如果在定义的时候没有赋值，以后只能一个一个字符的赋值
 
   ```c
@@ -361,7 +395,7 @@ char *strncpy(char *dest, const char *src, size_t n);
   
 - 在用字符串的函数时要注意有没有\0，如果没有就不能使用strcmp和strcpy这样的函数，因为没有结尾不知道在哪里结束，所以会出现错误，不知道字符串到哪里了。
 
-##### strcpy和strncpy以及strlen和sizeof的问题
+##### strcpy和strncpy以及strlen和sizeof的问题以及字符串循环打印的问题
 
 - strlen是一个函数，求的是字符串的实际长度，它求得方法是从开始到遇到第一个'\0',如果你只定义没有给它赋初值，这个结果是不定的，它会从arr首地址一直找下去，直到遇到'\0'停止。 而sizeof()返回的是变量声明后所占的内存数，不是实际长度，此外sizeof不是函数，仅仅是一个操作符，strlen是函数。
 
@@ -374,6 +408,10 @@ char *strncpy(char *dest, const char *src, size_t n);
   ```
 
 - strlen和sizeof在用于字符串指针时，sizeof为指针得大小4个字节，而strlen为字符串本身得长度，并不是4个字节
+
+- 在使用strcpy和strncpy以及memcpy函数的时候，dest要有明确的地址，不能只申请一个指针，指针要指向明确的地址才能行，否则会出现段错误。例如char * str = NULL; strcpy(str, "aabbcc");这样就会出现段错误，因为str没有空间可以容纳字符串，其只是一个指针
+
+- 如果字符串太大，循环打印的问题：strncpy和memcpy函数都可以设置拷贝多少个字节，所以我们可以每次都拷贝固定字节，然后每次拷贝完，src指针都往后移固定字节，这样就能循环打印了，字符串指针就是字符数组，所以可以往后移固定字节src+100，这样就能行。
 
 ##### sprintf和snprintf
 
