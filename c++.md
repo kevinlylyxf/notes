@@ -336,7 +336,7 @@ char *strncpy(char *dest, const char *src, size_t n);
 
 - strcpy的参数必须是char *的，所以strcpy只能拷贝字符串，memcpy的参数是void *，所以memcpy可以拷贝任意的数据类型
 
-- char和unsigned都可以定义字符数组，其都可以通过%s打印出来，两者基本没有区别，但是unsigned不能使用strcpy函数拷贝，char类型能用strcpy函数拷贝，unsigned char可以使用memcpy函数拷贝，如果形参是char *类型的，不能用unsigned char 类型的实参赋值
+- char和unsigned都可以定义字符数组，其都可以通过%s打印出来，两者基本没有区别，但是unsigned不能使用strcpy函数拷贝，char类型能用strcpy函数拷贝，unsigned char可以使用memcpy函数拷贝，如果形参是char *类型的，不能用unsigned char 类型的实参赋值，unsigned char 和char的互相转换都是错误的，所以不能这个赋值，除非形参中的指针参数是void\*的，这样就可以将任意类型的传进去，不论是unsigned char或者是char，因为其会在内部转化。所以memcpy函数可以拷贝任意类型的char或者unsigned char，因为其参数是void\*的，除了不能这样互相赋值外，其他的unsigned char和char都是相同的，都可以通过%s打印出来。如果需要转化，必须要用强转才行。例如将unsigned char赋值给char 可以使用强转，char = （char *）unsigned char
 
   ```
   char* cJSON_strdup(const char* str)
@@ -669,6 +669,13 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - 参数默认值需要在函数原型中声明，但是并不需要在函数定义中指明。
 - 如果为函数的某一个参数设置了默认值，那么这个参数后面的所有参数都需要设置默认值。 这个规定应该是为了防止省略函数中间的某一个参数，而导致编译器无法解析的情况。
+
+##### 指针参数和内存的问题
+
+- 如果一个接口返回指针，说明这个接口里面在堆区申请了空间，所以才会返回指针，否则接口就会出错
+- 指针作为形参，并不一定要传入指针变量，可以用取地址符来获取地址，指针本身表示的就是地址。所以可以定义一个非指针变量，然后用取地址符来获取地址传入。这样在函数里面也能根据这个指针修改所指向的值
+- 指针要有指向，而且指向的要有地址，不能只申请一个指针变量，int * num，然后将这个num指针当作变量传入到函数中，然后在函数中改变指针指向的值。因为num指针没有实际指向的内存，这样就会出现段错误
+- 最主要的是不能只申请一个指针变量，要让指针变量指向有内存，所以如果一个函数返回的是指针，我们可以申请一个指针变量来接收这个返回值，这样是正确的，因为函数内部申请了内存，这样我们可以用指针指向这块区域，不会出现段错误。
 
 ##### Json
 
