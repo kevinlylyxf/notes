@@ -531,6 +531,47 @@ char *strncpy(char *dest, const char *src, size_t n);
 
 - 一般我们用数组大小为0的数组是得到数组指针，我们可以用结构体访问数组得到，例如上面FILE_SCAN_ITEM_STOR stor;stor.path,这个就是数组指针，指向数组第一个元素，或者如果结构体里面嵌套一个结构体，这个用嵌套的结构体指针+1就是后面的内容指针。
 
+##### bool类型和0、1
+
+- 原生的c语言不支持bool类型，若需要使用bool类型可以借用int类型自己定义一下
+
+  ```c
+  typedef int bool;
+  #define TRUE 1
+  #define FALSE 0
+  ```
+
+- 上面的int也可以用char类型定义，这样节省空间，c++里面支持bool类型，c++中的bool类型占用一个字节
+
+- C99标准中新增的头文件中引入了bool类型，与C++中的bool兼容。该头文件为stdbool.h
+
+  ```c++
+  #ifndef _STDBOOL_H
+  #define _STDBOOL_H
+   
+  #ifndef __cplusplus
+   
+  #define bool	_Bool
+  #define true	1
+  #define false	0
+   
+  #else /* __cplusplus */
+   
+  /* Supporting <stdbool.h> in C++ is a GCC extension.  */
+  #define _Bool	bool
+  #define bool	bool
+  #define false	false
+  #define true	true
+   
+  #endif /* __cplusplus */
+  ```
+
+  - 代码中的_Bool是C99标准为bool类型引入的新的关键字，sizeof(_Bool)的值为1，表面其为bool类型。既然为bool类型，那么0表示为假，其他任何值都表示为真
+
+- bool类型用%d来打印，如果为真输出1，为假输出0，bool类型赋值时，如果是真的可以用任何非0值来赋值，如果为假，用0来赋值，bool类型也可以使用true和false来赋值
+
+- int类型的值也可以使用true和false来赋值，true就代表1，false就代表0
+
 ##### signal函数
 
 ```c
