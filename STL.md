@@ -1,4 +1,4 @@
-#### STL基础
+### STL基础
 
 - STL，英文全称 s[tan](http://c.biancheng.net/ref/tan.html)dard template library，中文可译为标准模板库或者泛型库，其包含有大量的模板类和模板函数，是 C++ 提供的一个基础模板的集合，用于完成诸如输入/输出、数学计算等功能。
 
@@ -27,7 +27,7 @@
 
 - 值得注意的是，大 O 表示法并不关心算法运行所消耗的具体时间，换句话说，对于那些影响算法运行效率较小的因素，使用大 O 表示法表示时会直接将其忽略。例如，某个算法运行的复杂度为 O(n)，呈线性增长，但至于线性增长的具体程度（是 100n 还是 2n），在大 O 表示法看来，它们是一样的。也就是说，采用这种测量法则，任何两个线性算法都将被视为具有相同的复杂度。采用大 O 表示法甚至会出现这种一种情况，即带有巨大常量的线性算法，很有可能会比小常量的指数算法更受欢迎，因为该方法无法显示出真实的运行时间。所以请读者记住，大 O 表示法只是某种度量方法，它所显示的算法的最佳复杂度，并不一定就是真正的最佳（最快）算法。
 
-#### STL序列式容器
+### STL序列式容器
 
 - 序列式容器，包括 array、vector、deque、list 和 forward_list 容器。
 
@@ -276,7 +276,7 @@
 
 - emplace_back() 和 push_back() 的区别，就在于底层实现的机制不同。push_back() 向容器尾部添加元素时，首先会创建这个元素，然后再将这个元素拷贝或者移动到容器中（如果是拷贝的话，事后会自行销毁先前创建的这个元素）；而 emplace_back() 在实现时，则是直接在容器尾部创建这个元素，省去了拷贝或移动元素的过程。
 
-  ```
+  ```c++
   为了让大家清楚的了解它们之间的区别，我们创建一个包含类对象的 vector 容器
   
   class testDemo
@@ -879,7 +879,7 @@ std::vector<int> demo{1,2};
 
   - C++ 11 标准中，还为 map 容器增添了移动构造函数。当有临时的 map 对象作为参数，传递给要初始化的 map 容器时，此时就会调用移动构造函数
 
-    ```
+    ```c++
     #创建一个会返回临时 map 对象的函数
     std::map<std::string,int> disMap() {
         std::map<std::string, int>tempMap{ {"C语言教程",10},{"STL教程",20} };
@@ -929,7 +929,7 @@ std::vector<int> demo{1,2};
 
 - equal_range(key) 成员方法可以看做是 lower_bound(key) 和 upper_bound(key) 的结合体，该方法会返回一个 pair 对象，其中的 2 个元素都是迭代器类型，其中 pair.first 实际上就是 lower_bound(key) 的返回值，而 pair.second 则等同于 upper_bound(key) 的返回值。equal_range(key) 成员方法表示的一个范围，位于此范围中的键值对，其键的值都为 key。这样我们就可以打印出相同键的元素
 
-  ```
+  ```c++
    //创建一个 pair 对象，来接收 equal_range() 的返回值
       pair <std::map<string, string>::iterator, std::map<string, string>::iterator> myPair = myMap.equal_range("C语言教程");
       //通过遍历，输出 myPair 指定范围内的键值对
@@ -948,7 +948,7 @@ std::vector<int> demo{1,2};
 
   - map 类模板中对`[ ]`运算符进行了重载，这意味着，类似于借助数组下标可以直接访问数组中元素，通过指定的键，我们可以轻松获取 map 容器中该键对应的值。
 
-    ```
+    ```c++
     //创建并初始化 map 容器
         std::map<std::string, std::string>myMap{ {"STL教程","http://c.biancheng.net/stl/"},
                                                  {"C语言教程","http://c.biancheng.net/c/"},
@@ -995,6 +995,23 @@ std::vector<int> demo{1,2};
 
   - 除了可以直接获取指定键对应的值之外，还可以借助 find() 成员方法间接实现此目的。和以上 2 种方式不同的是，该方法返回的是一个迭代器，即如果查找成功，该迭代器指向查找到的键值对；反之，则指向 map 容器最后一个键值对之后的位置（和 end() 成功方法返回的迭代器一样）。当 find() 方法查找失败时，其返回的迭代器指向的是容器中最后一个键值对之后的位置，即不指向任何有意义的键值对，也就没有所谓的 first 和 second 成员了。
 
+    ```c++
+    int main() {
+        //创建并初始化 map 容器
+        std::map<std::string, std::string>myMap{ {"STL教程","http://c.biancheng.net/stl/"},
+                                                 {"C语言教程","http://c.biancheng.net/c/"},
+                                                 {"Java教程","http://c.biancheng.net/java/"} };
+        map< std::string, std::string >::iterator myIter = myMap.find("C语言教程");
+        cout << myIter->first << " " << myIter->second << endl;
+        return 0;
+    }
+    C语言教程 http://c.biancheng.net/c/
+    ```
+    
+    
+    
+  - 如果以上方法都不适用，我们还可以遍历整个 map 容器，找到包含指定键的键值对，进而获取该键对应的值
+  
     ```c++
     //创建并初始化 map 容器
         std::map<std::string, std::string>myMap{ {"STL教程","http://c.biancheng.net/stl/"},
