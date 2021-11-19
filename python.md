@@ -381,6 +381,58 @@ c1*c2:  (72.24-13.2j)
   - float(string) 将字符串转换成 float 类型；
   - bool(string) 将字符串转换成 bool 类型。
 
+##### print
+
+- print() 函数完全可以同时输出多个变量
+
+- print() 函数的详细语法格式如下：
+
+  ```
+  print (value,...,sep='',end='\n',file=sys.stdout,flush=False)
+  ```
+
+  - value 参数可以接受任意多个变量或值，因此 print() 函数完全可以输出多个值
+
+    ```
+    user_name ＝ 'Charlie'
+    user_age = 8
+    #同时输出多个变量和字符串
+    print("读者名：",user_name,"年龄：",user_age)
+    
+    读者名： Charlie 年龄： 8
+    ```
+
+  - 从输出结果来看，使用 print() 函数输出多个变量时，print() 函数默认以空格隔开多个变量，如果读者希望改变默认的分隔符，可通过 sep 参数进行设置。例如输出语句：
+
+    ```
+    #同时输出多个变量和字符串，指定分隔符
+    print("读者名：" ,user_name,"年龄：",user_age,sep='|')
+    
+    读者名：|Charlie|年龄：|8
+    ```
+
+  - 在默认情况下，print() 函数输出之后总会换行，这是因为 print() 函数的 end 参数的默认值是“\n”，这个“\n”就代表了换行。如果希望 print() 函数输出之后不会换行，则重设 end 参数即可
+
+    ```
+    #设置end 参数，指定输出之后不再换行
+    print(40,'\t',end＝"")
+    print(5O,'\t',end＝"")
+    print(60,'\t',end＝"")
+    
+    40    50    60
+    ```
+
+  - file 参数指定 print() 函数的输出目标，file 参数的默认值为 sys.stdout，该默认值代表了系统标准输出，也就是屏幕，因此 print() 函数默认输出到屏幕。实际上，完全可以通过改变该参数让 print() 函数输出到特定文件中
+
+    ```
+    f = open("demo.txt","w")#打开文件以便写入
+    print('沧海月明珠有泪',file=f)
+    print('蓝回日暖玉生烟',file=f)
+    f.close()
+    ```
+
+  - print() 函数的 flush 参数用于控制输出缓存，该参数一般保持为 False 即可，这样可以获得较好的性能。
+
 ##### 转义字符
 
 - 转义字符，就是那些以反斜杠`\`开头的字符。
