@@ -2059,7 +2059,7 @@ b'C\xe8\xaf\xad\xe8\xa8\x80\xe4\xb8\xad\xe6\x96\x87\xe7\xbd\x91'
 
 #### 流程控制
 
-- 在其他语言中（如 C语言、[C++](http://c.biancheng.net/cplus/)、[Java](http://c.biancheng.net/java/) 等），选择结构还包括 switch 语句，也可以实现多重选择，但是在 Python 中没有 switch 语句，所以当要实现多重选择的功能时，只能使用 if else 分支语句。
+- 在其他语言中（如 C语言、[C++](http://c.biancheng.net/cplus/)、[Java](http://c.biancheng.net/java/) 等），选择结构还包括 switch 语句，也可以实现多重选择，但是在 Python 中没有 switch 语句，所以当要实现多重选择的功能时，只能使用 if else 分支语句。if   elif   else
 
 - 布尔类型（bool）只有两个值，分别是 True 和 False，Python 会把 True 当做“真”，把 False 当做“假”。对于数字，Python 会把 0 和 0.0 当做“假”，把其它值当做“真”。对于其它类型，当对象为空或者为 None 时，Python 会把它们当做“假”，其它情况当做真。
 
@@ -2072,3 +2072,462 @@ b'C\xe8\xaf\xad\xe8\xa8\x80\xe4\xb8\xad\xe6\x96\x87\xe7\xbd\x91'
   ```
 
 - 对于没有 return 语句的函数，返回值为空，也即 None。
+
+###### Pass
+
+- 在实际开发中，有时候我们会先搭建起程序的整体逻辑结构，但是暂时不去实现某些细节，而是在这些地方加一些注释，方面以后再添加代码
+
+  ```
+  age = int( input("请输入你的年龄：") )
+  if age < 12 :
+      print("婴幼儿")
+  elif age >= 12 and age < 18:
+      print("青少年")
+  elif age >= 18 and age < 30:
+      print("成年人")
+  elif age >= 30 and age < 50:
+      #TODO: 成年人
+  else:
+      print("老年人")
+  ```
+
+  - 当年龄大于等于 30 并且小于 50 时，我们没有使用 print() 语句，而是使用了一个注释，希望以后再处理成年人的情况。当 [Python](http://c.biancheng.net/python/) 执行到该 elif 分支时，会跳过注释，什么都不执行。
+
+  - 但是 Python 提供了一种更加专业的做法，就是空语句 pass。**pass** 是 Python 中的关键字，用来让解释器跳过此处，什么都不做。
+
+  - 就像上面的情况，有时候程序需要占一个位置，或者放一条语句，但又不希望这条语句做任何事情，此时就可以通过 pass 语句来实现。使用 pass 语句比使用注释更加优雅。
+
+    ```
+    age = int( input("请输入你的年龄：") )
+    if age < 12 :
+        print("婴幼儿")
+    elif age >= 12 and age < 18:
+        print("青少年")
+    elif age >= 18 and age < 30:
+        print("成年人")
+    elif age >= 30 and age < 50:
+        pass
+    else:
+        print("老年人")
+    ```
+
+###### Assert断言函数
+
+- [Python](http://c.biancheng.net/python/) assert 语句，又称断言语句，可以看做是功能缩小版的 if 语句，它用于判断某个表达式的值，如果值为真，则程序可以继续往下执行；反之，Python 解释器会报 AssertionError 错误。
+
+  ```
+  assert 表达式
+  
+  assert 语句的执行流程可以用 if 判断语句表示
+  if 表达式==True:
+      程序继续执行
+  else:
+      程序报 AssertionError 错误
+  ```
+
+  - 有读者可能会问，明明 assert 会令程序崩溃，为什么还要使用它呢？这是因为，与其让程序在晚些时候崩溃，不如在错误条件出现时，就直接让程序崩溃，这有利于我们对程序排错，提高程序的健壮性。
+  - 因此，assert 语句通常用于检查用户的输入是否符合规定，还经常用作程序初期测试和调试过程中的辅助工具。
+
+  ```
+  mathmark = int(input())
+  #断言数学考试分数是否位于正常范围内
+  assert 0 <= mathmark <= 100
+  #只有当 mathmark 位于 [0,100]范围内，程序才会继续执行
+  print("数学考试分数为：",mathmark)
+  
+  90
+  数学考试分数为： 90
+  再次运行
+  159
+  Traceback (most recent call last):
+    File "C:\Users\mengma\Desktop\file.py", line 3, in <module>
+      assert 0 <= mathmark <= 100
+  AssertionError
+  ```
+
+  - 当 assert 语句后的表达式值为真时，程序继续执行；反之，程序停止执行，并报 AssertionError 错误。
+
+- 另外，在实际工作中，assert 还有一些很常见的用法
+
+  ```
+  def func(input):
+      assert isinstance(input, list), '输入内容必须是列表'
+      # 下面的操作都是基于前提：input 必须是 list
+      if len(input) == 1:
+          ...
+      elif len(input) == 2:
+          ...
+      else:
+          ...
+  ```
+
+  - 上面代码中，func() 函数中的所有操作都基于输入必须是列表这个前提。所以很有必要在开头加一句 assert 的检查，防止程序出错。
+
+- assert 的检查是可以被关闭的，比如在命令行模式下运行 Python 程序时，加入 -O 选项就可以使程序中的 assert 失效。一旦 assert 失效，其包含的语句也就不会被执行。
+
+###### 循环结构while
+
+- 除了数字，while 循环还常用来遍历列表、元组和字符串，因为它们都支持通过下标索引获取指定位置的元素
+
+  ```
+  my_char="http://c.biancheng.net/python/"
+  i = 0;
+  while i<len(my_char):
+      print(my_char[i],end="")
+      i = i + 1
+      
+  http://c.biancheng.net/python/
+  ```
+
+###### for循环
+
+- for 循环，它常用于遍历字符串、列表、元组、字典、集合等序列类型，逐个获取序列中的各个元素。
+
+  ```
+  for 迭代变量 in 字符串|列表|元组|字典|集合：
+      代码块
+  ```
+
+  - 格式中，迭代变量用于存放从序列类型变量中读取出来的元素，所以一般不会在循环中对迭代变量手动赋值；代码块指的是具有相同缩进格式的多行代码（和 while 一样），由于和循环结构联用，因此代码块又称为循环体。
+
+  ```
+  add = "http://c.biancheng.net/python/"
+  #for循环，遍历 add 字符串
+  for ch in add:
+      print(ch,end="")
+      
+  http://c.biancheng.net/python/
+  ```
+
+  - 使用 for 循环遍历 add 字符串的过程中，迭代变量 ch 会先后被赋值为 add 字符串中的每个字符，并代入循环体中使用。只不过例子中的循环体比较简单，只有一行输出语句。
+
+- 在使用 for 循环时，最基本的应用就是进行数值循环。比如说，想要实现从 1 到 100 的累加
+
+  ```
+  print("计算 1+2+...+100 的结果为：")
+  #保存累加结果的变量
+  result = 0
+  #逐个获取从 1 到 100 这些值，并做累加操作
+  for i in range(101):
+      result += i
+  print(result)
+  ```
+
+  - 上面代码中，使用了 range() 函数，此函数是 Python 内置函数，用于生成一系列连续整数，多用于 for 循环中。
+
+- 当用 for 循环遍历 list 列表或者 tuple 元组时，其迭代变量会先后被赋值为列表或元组中的每个元素并执行一次循环体。
+
+  ```
+  my_list = [1,2,3,4,5]
+  for ele in my_list:
+      print('ele =', ele)
+      
+  ele = 1
+  ele = 2
+  ele = 3
+  ele = 4
+  ele = 5
+  ```
+
+- 在使用 for 循环遍历字典时，经常会用到和字典相关的 3 个方法，即 items()、keys() 以及 values()，它们各自的用法已经在前面章节中讲过，这里不再赘述。当然，如果使用 for 循环直接遍历字典，则迭代变量会被先后赋值为每个键值对中的键。
+
+  ```
+  my_dic = {'python教程':"http://c.biancheng.net/python/",\
+            'shell教程':"http://c.biancheng.net/shell/",\
+            'java教程':"http://c.biancheng.net/java/"}
+  for ele in my_dic.items():
+      print('ele =', ele)
+      
+  ele = ('python教程', 'http://c.biancheng.net/python/')
+  ele = ('shell教程', 'http://c.biancheng.net/shell/')
+  ele = ('java教程', 'http://c.biancheng.net/java/')
+  ```
+
+- 使用 for 循环实现用冒泡排序算法对 [5,8,4,1] 进行排序：
+
+  ```
+  data = [5,8,4,1]
+  #实现冒泡排序
+  for i in range(len(data)-1):
+      for j in range(len(data)-i-1):
+          if(data[j]>data[j+1]):
+              data[j],data[j+1] = data[j+1],data[j]
+  print("排序后：",data)
+  ```
+
+###### 推导式快速初始化各种序列
+
+- 推导式（又称解析器），是 Python 独有的一种特性。使用推导式可以快速生成列表、元组、字典以及集合类型的数据，因此推导式又可细分为列表推导式、元组推导式、字典推导式以及集合推导式。
+
+- 列表推导式，列表推导式可以利用 range 区间、元组、列表、字典和集合等数据类型，快速生成一个满足指定需求的列表。
+
+  ```
+  [表达式 for 迭代变量 in 可迭代对象 [if 条件表达式] ]
+  ```
+
+  - [if 条件表达式] 不是必须的，可以使用，也可以省略。
+
+  - 通过列表推导式的语法格式，明显会感觉到它和 for 循环存在某些关联。其实，除去 [if 条件表达式] 部分，其余各部分的含义以及执行顺序和 for 循环是完全一样的（表达式其实就是 for 循环中的循环体），即它的执行顺序如下所示：
+
+    ```
+    for 迭代变量 in 可迭代对象
+        表达式
+    ```
+
+  - 初学者可以这样认为，它只是对 for 循环语句的格式做了一下简单的变形，并用 [] 括起来而已，只不过最大的不同之处在于，列表推导式最终会将循环过程中，计算表达式得到的一系列值组成一个列表。
+
+    ```
+    a_range = range(10)
+    # 对a_range执行for表达式
+    a_list = [x * x for x in a_range]
+    # a_list集合包含10个元素
+    print(a_list)
+    
+    [0 , 1 , 4 , 9 , 16 , 25 , 36 , 49 , 64, 81]
+    
+    我们还可以在列表推导式中添加 if 条件语句，这样列表推导式将只迭代那些符合条件的元素
+    b_list = [x * x for x in a_range if x % 2 == 0]
+    # a_list集合包含5个元素
+    print(b_list)
+    
+    [0 ,4 , 16, 36, 64]
+    ```
+
+  - 以上所看到的列表推导式都只有一个循环，实际上它可使用多个循环，就像嵌套循环一样。
+
+    ```
+    d_list = [(x, y) for x in range(5) for y in range(4)]
+    # d_list列表包含20个元素
+    print(d_list)
+    
+    上面代码中，x 是遍历 range(5) 的迭代变量（计数器），因此该 x 可迭代 5 次；y 是遍历 range(4) 的计数器，因此该 y 可迭代 4 次。因此，该（x,y）表达式一共会迭代 20 次。上面的 for 表达式相当于如下嵌套循环：
+    dd_list = []
+    for x in range(5):
+        for y in range(4):
+            dd_list.append((x, y))
+            
+    [(0, 0), (0, 1), (0, 2), (0, 3), (1, 0), (1, 1), (1, 2), (1, 3), (2, 0), (2, 1), (2, 2), (2, 3), (3, 0), (3, 1), (3, 2), (3, 3), (4, 0), (4, 1), (4, 2), (4, 3)]
+    ```
+
+  - 对于包含多个循环的 for 表达式，同样可指定 if 条件。假如我们有一个需求：程序要将两个列表中的数值按“能否整除”的关系配对在一起。比如 src_a 列表中包含 30，src_b 列表中包含 5，其中 30 可以整除 5，那么就将 30 和 5 配对在一起。对于上面的需求使用 for 表达式来实现非常简单，例如如下代码：
+
+    ```
+    src_a = [30, 12, 66, 34, 39, 78, 36, 57, 121]
+    src_b = [3, 5, 7, 11]
+    # 只要y能整除x，就将它们配对在一起
+    result = [(x, y) for x in src_b for y in src_a if y % x == 0]
+    print(result)
+    
+    [(3, 30), (3, 12), (3, 66), (3, 39), (3, 78), (3, 36), (3, 57), (5, 30), (11, 66), (11, 121)]
+    ```
+
+- 元组推导式，元组推导式可以利用 range 区间、元组、列表、字典和集合等数据类型，快速生成一个满足指定需求的元组。通过和列表推导式做对比，你会发现，除了元组推导式是用 () 圆括号将各部分括起来，而列表推导式用的是 []，其它完全相同。不仅如此，元组推导式和列表推导式的用法也完全相同。
+
+  ```
+  a = (x for x in range(1,10))
+  print(a)
+  
+  <generator object <genexpr> at 0x0000020BAD136620>
+  从上面的执行结果可以看出，使用元组推导式生成的结果并不是一个元组，而是一个生成器对象（后续会介绍），这一点和列表推导式是不同的。
+  ```
+
+  - 如果我们想要使用元组推导式获得新元组或新元组中的元素，有以下三种方式：
+
+    - 使用 tuple() 函数，可以直接将生成器对象转换成元组
+
+      ```
+      a = (x for x in range(1,10))
+      print(tuple(a))
+      运行结果为：
+      (1, 2, 3, 4, 5, 6, 7, 8, 9)
+      ```
+
+    - 直接使用 for 循环遍历生成器对象，可以获得各个元素
+
+      ```
+      a = (x for x in range(1,10))
+      for i in a:
+          print(i,end=' ')
+      print(tuple(a))
+      
+      1 2 3 4 5 6 7 8 9 ()
+      ```
+
+    - 使用 __next__() 方法遍历生成器对象，也可以获得各个元素
+
+      ```
+      a = (x for x in range(3))
+      print(a.__next__())
+      print(a.__next__())
+      print(a.__next__())
+      a = tuple(a)
+      print("转换后的元组：",a)
+      
+      0
+      1
+      2
+      转换后的元组： ()
+      ```
+
+  - 无论是使用 for 循环遍历生成器对象，还是使用 __next__() 方法遍历生成器对象，遍历后原生成器对象将不复存在，这就是遍历后转换原生成器对象却得到空元组的原因。
+
+- 字典推导式
+
+  ```
+  {表达式 for 迭代变量 in 可迭代对象 [if 条件表达式]}
+  ```
+
+  ```
+  listdemo = ['C语言中文网','c.biancheng.net']
+  #将列表中各字符串值为键，各字符串的长度为值，组成键值对
+  newdict = {key:len(key) for key in listdemo}
+  print(newdict)
+  
+  {'C语言中文网': 6, 'c.biancheng.net': 15}
+  
+  交换现有字典中各键值对的键和值。
+  olddict={'C语言中文网': 6, 'c.biancheng.net': 15}
+  newdict = {v: k for k, v in olddict.items()}
+  print(newdict)
+  {6: 'C语言中文网', 15: 'c.biancheng.net'}
+  ```
+
+- 集合推导式
+
+  ```
+  { 表达式 for 迭代变量 in 可迭代对象 [if 条件表达式] }
+  ```
+
+  - 有读者可能会问，集合推导式和字典推导式的格式完全相同，那么给定一个类似的推导式，如何判断是哪种推导式呢？最简单直接的方式，就是根据表达式进行判断，如果表达式以键值对（key：value）的形式，则证明此推导式是字典推导式；反之，则是集合推导式。
+  - 既然生成的是集合，那么其保存的元素必须是唯一的。
+
+###### zip函数
+
+- zip() 函数是 [Python](http://c.biancheng.net/python/) 内置函数之一，它可以将多个序列（列表、元组、字典、集合、字符串以及 range() 区间构成的列表）“压缩”成一个 zip 对象。所谓“压缩”，其实就是将这些序列中对应位置的元素重新组合，生成一个个新的元组。
+
+  ```
+  zip(iterable, ...)
+  ```
+
+  - 其中 iterable,... 表示多个列表、元组、字典、集合、字符串，甚至还可以为 range() 区间。
+
+    ```
+    my_list = [11,12,13]
+    my_tuple = (21,22,23)
+    print([x for x in zip(my_list,my_tuple)])
+    my_dic = {31:2,32:4,33:5}
+    my_set = {41,42,43,44}
+    print([x for x in zip(my_dic)])
+    my_pychar = "python"
+    my_shechar = "shell"
+    print([x for x in zip(my_pychar,my_shechar)])
+    
+    [(11, 21), (12, 22), (13, 23)]
+    [(31,), (32,), (33,)]
+    [('p', 's'), ('y', 'h'), ('t', 'e'), ('h', 'l'), ('o', 'l')]
+    ```
+
+    - 读者分析以上的程序和相应的输出结果不难发现，在使用 zip() 函数“压缩”多个序列时，它会分别取各序列中第 1 个元素、第 2 个元素、... 第 n 个元素，各自组成新的元组。需要注意的是，当多个序列中元素个数不一致时，会以最短的序列为准进行压缩。
+
+  - 对于 zip() 函数返回的 zip 对象，既可以像上面程序那样，通过遍历提取其存储的元组，也可以向下面程序这样，通过调用 list() 函数将 zip() 对象强制转换成列表：
+
+    ```
+    my_list = [11,12,13]
+    my_tuple = (21,22,23)
+    print(list(zip(my_list,my_tuple)))
+    ```
+
+###### reversed函数
+
+- reserved() 是 Pyton 内置函数之一，其功能是对于给定的序列（包括列表、元组、字符串以及 range(n) 区间），该函数可以返回一个逆序序列的迭代器（用于遍历该逆序序列）。
+
+  ```
+  reversed(seq)
+  ```
+
+  - seq 可以是列表，元素，字符串以及 range() 生成的区间列表。
+
+  ```
+  #将列表进行逆序
+  print([x for x in reversed([1,2,3,4,5])])
+  #将元组进行逆序
+  print([x for x in reversed((1,2,3,4,5))])
+  #将字符串进行逆序
+  print([x for x in reversed("abcdefg")])
+  #将 range() 生成的区间列表进行逆序
+  print([x for x in reversed(range(10))])
+  
+  [5, 4, 3, 2, 1]
+  [5, 4, 3, 2, 1]
+  ['g', 'f', 'e', 'd', 'c', 'b', 'a']
+  [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+  ```
+
+- 除了使用列表推导式的方式，还可以使用 list() 函数，将 reversed() 函数逆序返回的迭代器，直接转换成列表
+
+  ```
+  #将列表进行逆序
+  print(list(reversed([1,2,3,4,5])))
+  
+  [5, 4, 3, 2, 1]
+  ```
+
+- 再次强调，使用 reversed() 函数进行逆序操作，并不会修改原来序列中元素的顺序
+
+###### sorted函数
+
+- sorted() 作为 [Python](http://c.biancheng.net/python/) 内置函数之一，其功能是对序列（列表、元组、字典、集合、还包括字符串）进行排序。
+
+  ```
+  list = sorted(iterable, key=None, reverse=False)  
+  ```
+
+  - iterable 表示指定的序列，key 参数可以自定义排序规则；reverse 参数指定以升序（False，默认）还是降序（True）进行排序。sorted() 函数会返回一个排好序的列表。
+
+    ```
+    #对列表进行排序
+    a = [5,3,4,2,1]
+    print(sorted(a))
+    #对元组进行排序
+    a = (5,4,3,1,2)
+    print(sorted(a))
+    #字典默认按照key进行排序
+    a = {4:1,\
+         5:2,\
+         3:3,\
+         2:6,\
+         1:8}
+    print(sorted(a.items()))
+    #对集合进行排序
+    a = {1,5,3,2,4}
+    print(sorted(a))
+    #对字符串进行排序
+    a = "51423"
+    print(sorted(a))
+    
+    [1, 2, 3, 4, 5]
+    [1, 2, 3, 4, 5]
+    [(1, 8), (2, 6), (3, 3), (4, 1), (5, 2)]
+    [1, 2, 3, 4, 5]
+    ['1', '2', '3', '4', '5']
+    ```
+
+- 使用 sorted() 函数对序列进行排序， 并不会在原序列的基础进行修改，而是会重新生成一个排好序的列表。
+
+- sorted(）函数默认对序列中元素进行升序排序，通过手动将其 reverse 参数值改为 True，可实现降序排序
+
+- 另外在调用 sorted() 函数时，还可传入一个 key 参数，它可以接受一个函数，该函数的功能是指定 sorted() 函数按照什么标准进行排序
+
+  ```
+  chars=['http://c.biancheng.net',\
+         'http://c.biancheng.net/python/',\
+         'http://c.biancheng.net/shell/',\
+         'http://c.biancheng.net/java/',\
+         'http://c.biancheng.net/golang/']
+  #默认排序
+  print(sorted(chars))
+  #自定义按照字符串长度排序
+  print(sorted(chars,key=lambda x:len(x)))
+  ```
+
+  
