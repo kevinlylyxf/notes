@@ -1281,6 +1281,299 @@ Linux教程：http://c.biancheng.net/linux_tutorial/
   2. 元组比列表的访问和处理速度更快，因此，当需要对指定元素进行访问，且不涉及修改元素的操作时，建议使用元组。
   3. 元组可以在映射（和集合的成员）中当做“键”使用，而列表不行。
 
+###### 元组解包
+
+- 赋值给多个变量的元组解包，一对一解包
+
+  ```
+  temp = ("hi","yuan","wai")
+   
+  first,second,third = temp
+  等同于
+  temp = ("hi","yuan","wai")
+   
+  first = temp[0]
+   
+  second = temp[1]
+   
+  third = temp[2]
+  ```
+
+- 元组的每个元素作为位置参数的元组解包
+
+  ```
+  temp = (1,2,3)
+   
+  def hello(first,second,third):
+      print(first)
+      print(second)
+      print(third)
+      
+  hello(*temp)
+  等同于
+  hello(1,2,3)
+  ```
+
+- 遍历的元素为元组对象时，同时赋值给对应的变量，自动完成元组解包
+
+  ```
+  temp_list = [
+              ('测试人员', self.tester),
+              ('开始时间', start_time),
+              ('合计耗时', duration),
+              ('测试结果', status + "，通过率= " + self.pass_rate)]
+   
+  for first, second in temp_list:
+      print(first)
+      print(second)
+  ```
+
+  - temp_list是一个list，每个元素为tuple，遍历temp_list时，将每次的获取到tuple对象，自动解包到2个变量first和second
+
+- *的使用
+
+  ```
+  >>> first, *new, last = [94, 85, 73, 46]
+  >>> new
+  [85, 73]
+  ```
+
+  - *在函数里面表示可变参数，在这里面也表示解包获取多个值，将多个值拼成一个列表返回到new，说明现在new是一个list类型，如果后面是元组，返回的也是list类型
+
+- 压包过程，压包是解包的逆过程，用zip函数实现
+
+  ```
+  >>> a = ['a', 'b', 'c']
+  >>> b = [1, 2, 3]
+  >>> for i in zip(a, b):
+  ...     print(i)
+  ...
+  ('a', 1)
+  ('b', 2)
+  ('c', 3)
+  ```
+
+- 压包与解包混合
+
+  ```
+  >>> a = [0, 1, 2]
+  >>> b = [1, 2, 3]
+  >>> for i, j in zip(a, b):
+  ...     print(i+j)
+  ...
+  1
+  3
+  5
+  ```
+
+  - 先是`zip`函数将`a b`压包成为一个可迭代对象
+  - 对可迭代对象的每一个元素（`('a', 1)`）进行解包（`i, j = ('a', 1)`）
+  - 此时就可以分别调用`i j`变量进行计算
+  - 加入星号如下
+
+  ```
+  >>> l = [('Bob', '1990-1-1', 60),
+  ...     ('Mary', '1996-1-4', 50),
+  ...     ('Nancy', '1993-3-1', 55),]
+  >>> for name, *args in l:
+  ...     print(name, args)
+  ...
+  Bob ['1990-1-1', 60]
+  Mary ['1996-1-4', 50]
+  Nancy ['1993-3-1', 55]
+  ```
+
+  - 解包与压包结合可以实现类似矩阵转置的操作
+
+  ```
+  a = [[1, 2, 3], [4, 5, 6]]
+  for x, y in zip(*a):
+      print(x, y)
+  
+  # 1 4
+  # 2 5
+  # 3 6
+  ```
+
+- _的用法，当一些元素不用时，用`_`表示是更好的写法，可以让读代码的人知道这个元素是不要的
+
+  ```
+  >>> person = ('Bob', 20, 50, (11, 20, 2000))
+  >>> name, *_, (*_, year) = person
+  >>> name
+  'Bob'
+  >>> year
+  2000
+  ```
+
+- 多变量同时赋值，之前赋值符号右侧都是可迭代对象，其实左侧也可以是多个变量
+
+  ```
+  >>> a, b = 1, 2
+  >>> a
+  1
+  >>> b
+  2
+  >>> a = 1, 2
+  >>> a
+  (1, 2)
+  
+  下面的语法是错误的
+  *a = 1, 2  //如果只有一个参数，编译器会当作字符串，不能作为元组处理，可以在后面加一个逗号来表示元组
+  a, b, c = 1, 2  
+  可以这样写
+  *a, = 1, 2
+  ```
+
+- *之可变参数，函数定义时，我们使用`*`的可变参数，其实也是压包解包过程
+
+  ```
+  >>> def myfun(*num):
+  ...     print(num)
+  ...
+  >>> myfun(1,2,5,6)
+  (1, 2, 5, 6)
+  ```
+
+  - 参数用`*num`表示，`num`变量就可以当成元组调用了。其实这个过程相当于`*num, = 1,2,5,6`
+
+- *之关键字参数
+
+  ```
+  >>> def myfun(**kw):
+  ...     print(kw)
+  ...
+  >>> myfun(name = "Bob", age = 20, weight = 50)
+  {'weight': 50, 'name': 'Bob', 'age': 20}
+  ```
+
+  - 键值对传入`**kw`，`kw`就可以表示相应字典。`**`的用法只在函数定义中使用，不能这样使用
+
+    ```
+    a, **b = {'weight': 50, 'name': 'Bob', 'age': 20}
+    ```
+
+- 可变参数与关键字参数的细节问题
+
+  - 函数传入实参时，可变参数(`*`)之前的参数不能指定参数名
+
+    ```
+    >>> def myfun(a, *b):
+    ...     print(a)
+    ...     print(b)
+    ...
+    >>> myfun(a=1, 2,3,4)
+      File "<stdin>", line 1
+    SyntaxError: positional argument follows keyword argument
+    
+    >>> myfun(1, 2,3,4)
+    1
+    (2, 3, 4)
+    ```
+
+  - 函数传入实参时，可变参数(`*`)之后的参数必须指定参数名，否则就会被归到可变参数之中
+
+    ```
+    >>> def myfun(a, *b, c=None):
+    ...     print(a)
+    ...     print(b)
+    ...     print(c)
+    ...
+    >>> myfun(1, 2,3,4)
+    1
+    (2, 3, 4)
+    None
+    >>> myfun(1, 2,3,c=4)
+    1
+    (2, 3)
+    4
+    ```
+
+  - 关键字参数都只能作为最后一个参数，前面的参数按照位置赋值还是名称赋值都可以
+
+    ```
+    >>> def myfun(a, *b, c, **d):
+    ...     print(a)
+    ...     print(b)
+    ...     print(c)
+    ...     print(d)
+    ...
+    >>> myfun(1, 2, 3, c= 4, m = 5, n = 6)
+    1
+    (2, 3)
+    4
+    {'n': 6, 'm': 5}
+    ```
+
+  - 可变参数与关键词参数共同使用以表示任意参数，下面是这一点在装饰器当中的使用
+
+    ```
+    >>> def mydecorator(func):
+    ...     def wrapper(*args, **kw):
+    ...         print('I am using a decorator.')
+    ...         return func(*args, **kw)
+    ...     return wrapper
+    ...
+    >>> @mydecorator
+    ... def myfun(a, b):
+    ...     print(a)
+    ...     print(b)
+    ...
+    >>> myfun(1, b = 2)
+    I am using a decorator.
+    1
+    2
+    ```
+
+    - (如果有的读者不熟悉装饰器，只需要知道，使用`@`定义`myfun`相当于`myfun = mydecorator(myfun)`，定义出来的`myfun`其实是返回结果`wrapper`函数)
+    - `wrapper`函数使用`*args, **kw`作为参数，则被修饰的`myfun`函数需要的参数无论是什么样的，传入`wrapper`都不会报错，这保证了装饰器可以修饰各种各样函数的灵活性。毕竟我们一般在函数中传入参数时，要么所有参数名都写，要么前面几个不写，后面的会写，这样使用`*args, **kw`完全没有问题。
+
+- 解包作为参数传入函数中
+
+  ```
+  def myfun(a, b):
+      print(a + b)
+  列表元组的解包   
+  >>> n = [1, 2]
+  >>> myfun(*n)
+  3
+  >>> m = (1, 2)
+  >>> myfun(*m)
+  3
+  
+  字典的解包
+  >>> mydict = {'a':1, 'b': 2}
+  >>> myfun(**mydict)
+  3
+  >>> myfun(*mydict)
+  ba
+  
+  应用
+  >>> bob = {'name': 'Bob', 'age': 30}
+  >>> "{name}'s age is {age}".format(**bob)
+  "Bob's age is 30"
+  ```
+
+- 多返回值函数
+
+  ```
+  def myfun(a, b):
+      return a + 1, b + 2
+  >>> m, n = myfun(1, 2)
+  >>> m
+  2
+  >>> n
+  4
+  
+  >>> p = myfun(1, 2)
+  >>> p
+  (2, 4)
+  ```
+
+  
+
+- 其实在python中元组解包不仅仅只限于元组，只要是可迭代的如列表、元组、字典、字符串、range()等，都是可以的
+
 ##### 字典dict
 
 | 主要特征                       | 解释                                                         |
@@ -2530,4 +2823,319 @@ b'C\xe8\xaf\xad\xe8\xa8\x80\xe4\xb8\xad\xe6\x96\x87\xe7\xbd\x91'
   print(sorted(chars,key=lambda x:len(x)))
   ```
 
+#### 函数和lambda表达式
+
+- 在创建函数时，即使函数不需要参数，也必须保留一对空的“()”，否则 Python 解释器将提示“invaild syntax”错误。另外，如果想定义一个没有任何功能的空函数，可以使用 pass 语句作为占位符。
+
+- 通过调用 Python 的 help() 内置函数或者 __doc__ 属性，我们可以查看某个函数的使用说明文档。事实上，无论是 Python 提供给我们的函数，还是自定义的函数，其说明文档都需要设计该函数的程序员自己编写。其实，函数的说明文档，本质就是一段字符串，只不过作为说明文档，字符串的放置位置是有讲究的，函数的说明文档通常位于函数内部、所有代码的最前面。
+
+  ```
+  #定义一个比较字符串大小的函数
+  def str_max(str1,str2):
+      '''
+      比较 2 个字符串的大小
+      '''
+      str = str1 if str1 > str2 else str2
+      return str
+  help(str_max)
+  #print(str_max.__doc__)
   
+  Help on function str_max in module __main__:
+  
+  str_max(str1, str2)
+      比较 2 个字符串的大小
+  ```
+
+  - 上面程序中，还可以使用 __doc__ 属性来获取 str_max() 函数的说明文档，即使用最后一行的输出语句，其输出结果为
+
+    ```
+      比较 2 个字符串的大小
+    ```
+
+- [Python](http://c.biancheng.net/python/) 中，根据实际参数的类型不同，函数参数的传递方式可分为 2 种，分别为值传递和引用（地址）传递：
+
+  1. 值传递：适用于实参类型为不可变类型（字符串、数字、元组）；
+  2. 引用（地址）传递：适用于实参类型为可变类型（列表，字典）；
+  3. 值传递和引用传递的区别是，函数参数进行值传递后，若形参的值发生改变，不会影响实参的值；而函数参数继续引用传递后，改变形参的值，实参的值也会一同改变。
+
+- 位置参数，有时也称必备参数，指的是必须按照正确的顺序将实际参数传到函数中，换句话说，调用函数时传入实际参数的数量和位置都必须和定义函数时保持一致。
+
+- 关键字参数，关键字参数是指使用形式参数的名字来确定输入的参数值。通过此方式指定函数实参时，不再需要与形参的位置完全一致，只要将参数名写正确即可。因此，[Python](http://c.biancheng.net/python/) 函数的参数名应该具有更好的语义，这样程序可以立刻明确传入函数的每个参数的含义。
+
+  ```
+  def dis_str(str1,str2):
+      print("str1:",str1)
+      print("str2:",str2)
+  #位置参数
+  dis_str("http://c.biancheng.net/python/","http://c.biancheng.net/shell/")
+  #关键字参数
+  dis_str("http://c.biancheng.net/python/",str2="http://c.biancheng.net/shell/")
+  dis_str(str2="http://c.biancheng.net/python/",str1="http://c.biancheng.net/shell/")
+  ```
+
+  - 在调用有参函数时，既可以根据位置参数来调用，也可以使用关键字参数（程序中第 8 行）来调用。在使用关键字参数调用时，可以任意调换参数传参的位置。
+  - 使用位置参数和关键字参数混合传参的方式。但需要注意，混合传参时关键字参数必须位于所有的位置参数之后。也就是说
+
+- 默认参数
+
+  ```
+  def 函数名(...，形参名，形参名=默认值)：
+      代码块
+  ```
+
+  - 在使用此格式定义函数时，指定有默认值的形式参数必须在所有没默认值参数的最后，否则会产生语法错误。
+
+###### 可变参数
+
+- Python 在定义函数时也可以使用可变参数，即允许定义参数个数可变的函数。这样当调用该函数时，可以向其传入任意多个参数。可变参数，又称不定长参数，即传入函数中的实际参数可以是任意多个。Python 定义可变参数，主要有以下 2 种形式。
+
+  - 形参前面加一个*
+
+    ```
+    *args
+    ```
+
+    - args 表示创建一个名为 args 的空元组，该元组可接受任意多个外界传入的非关键字实参。
+
+    ```
+    # 定义了支持参数收集的函数
+    def dis_str(home, *str) :
+        print(home)
+        # 输出str元组中的元素
+        print("str=",str)
+        for s in str :
+            print(s)
+    #可传入任何多个参数
+    dis_str("http://c.biancheng.net","http://c.biancheng.net/python/","http://c.biancheng.net/shell/")
+    
+    dis_str() 函数的最后一个参数就是 str 元组，这样在调用该函数时，除了前面位置参数接收对应位置的实参外，其它非关键字参数都会由 str 元组接收。
+    ```
+
+    - 可变参数并不一定必须为最后一个函数参数，例如修改 dis_str() 函数为：
+
+    ```
+    # 定义了支持参数收集的函数
+    def dis_str(*str,home) :
+        print(home)
+        # 输出str元组中的元素
+        print("str=",str)
+        for s in str :
+            print(s)
+    dis_str("http://c.biancheng.net","http://c.biancheng.net/python/",home="http://c.biancheng.net/shell/")
+    
+    str 可变参数作为 dis_str() 函数的第一个参数。但需要注意的是，在调用该函数时，必须以关键字参数的形式给普通参数传值，否则 Python 解释器会把所有参数都优先传给可变参数，如果普通参数没有默认值，就会报错。
+    ```
+
+  - 形参前面加两个*
+
+    ```
+    **kwargs
+    ```
+
+    - **kwargs 表示创建一个名为 kwargs 的空字典，该字典可以接收任意多个以关键字参数赋值的实际参数。
+
+    ```
+    # 定义了支持参数收集的函数
+    def dis_str(home,*str,**course) :
+        print(home)
+        print(str)
+        print(course)
+    #调用函数
+    dis_str("C语言中文网",\
+            "http://c.biancheng.net",\
+            "http://c.biancheng.net/python/",\
+            shell教程="http://c.biancheng.net/shell/",\
+            go教程="http://c.biancheng.net/golang/",\
+            java教程="http://c.biancheng.net/java/")
+            
+    C语言中文网
+    ('http://c.biancheng.net', 'http://c.biancheng.net/python/')
+    {'shell教程': 'http://c.biancheng.net/shell/', 'go教程': 'http://c.biancheng.net/golang/', 'java教程': 'http://c.biancheng.net/java/'}
+    ```
+
+    - 第 1 个参数传递给 home 参数，第 2、3 个非关键字参数传递给 str 元组，最后 2 个关键字参数将由 course 字典接收。
+    - *args 可变参数的值默认是空元组，**kwargs 可变参数的值默认是空字典。因此，在调用具有可变参数的函数时，不一定非要给它们传值
+
+###### 逆向参数收集
+
+- Python 支持定义具有可变参数的函数，即该函数可以接收任意多个参数，其中非关键字参数会集中存储到元组参数（*args）中，而关键字参数则集中存储到字典参数（**kwargs）中，这个过程可称为参数收集。
+
+- 不仅如此，Python 还支持逆向参数收集，即直接将列表、元组、字典作为函数参数，Python 会将其进行拆分，把其中存储的元素按照次序分给函数中的各个形参。
+
+- 在以逆向参数收集的方式向函数参数传值时，Pyhon 语法规定，当传入列表或元组时，其名称前要带一个 * 号，当传入字典时，其名称前要带有 2 个 * 号。
+
+  ```
+  def dis_str(name,add) :
+      print("name:",name)
+      print("add",add)
+  data = ["Python教程","http://c.biancheng.net/python/"]
+  #使用逆向参数收集方式传值
+  dis_str(*data)
+  
+  name: Python教程
+  add http://c.biancheng.net/python/
+  
+  def dis_str(name,add) :
+      print("name:",name)
+      print("add:",add)
+  data = {'name':"Python教程",'add':"http://c.biancheng.net/python/"}
+  #使用逆向参数收集方式传值
+  dis_str(**data)
+  
+  name: Python教程
+  add: http://c.biancheng.net/python/
+  
+  以逆向参数收集的方式，还可以给拥有可变参数的函数传参
+  def dis_str(name,*add) :
+      print("name:",name)
+      print("add:",add)
+  data = ["http://c.biancheng.net/python/",\
+          "http://c.biancheng.net/shell/",\
+          "http://c.biancheng.net/golang/"]
+  #使用逆向参数收集方式传值
+  dis_str("Python教程",*data)
+  
+  name: Python教程
+  add: ('http://c.biancheng.net/python/', 'http://c.biancheng.net/shell/', 'http://c.biancheng.net/golang/')
+  ```
+  
+- None(空值)，在 [Python](http://c.biancheng.net/python/) 中，有一个特殊的常量 None（N 必须大写）。和 False 不同，它不表示 0，也不表示空字符串，而表示没有值，也就是空值。
+
+  - 这里的空值并不代表空对象，即 None 和 []、“” 不同：
+
+    ```
+    >>> None is []
+    False
+    >>> None is ""
+    False
+    ```
+
+  - None 有自己的数据类型，我们可以在 IDLE 中使用 type() 函数查看它的类型
+
+    ```
+    >>> type(None)
+    <class 'NoneType'>
+    ```
+
+  - None 是 NoneType 数据类型的唯一值（其他编程语言可能称这个值为 null、nil 或 undefined），也就是说，我们不能再创建其它 NoneType 类型的变量，但是可以将 None 赋值给任何变量。如果希望变量中存储的东西不与任何其它值混淆，就可以使用 None。
+
+  - 除此之外，None 常用于 assert、判断以及函数无返回值的情况。举个例子，在前面章节中我们一直使用 print() 函数输出数据，其实该函数的返回值就是 None。因为它的功能是在屏幕上显示文本，根本不需要返回任何值，所以 print() 就返回 None。
+
+    ```
+    >>> spam = print('Hello!')
+    Hello!
+    >>> None == spam
+    True
+    ```
+
+  - 对于所有没有 return 语句的函数定义，Python 都会在末尾加上 return None，使用不带值的 return 语句（也就是只有 return 关键字本身），那么就返回 None。
+
+###### 函数返回多个值
+
+- 通常情况下，一个函数只有一个返回值，实际上 Python 也是如此，只不过 Python 函数能以返回列表或者元组的方式，将要返回的多个值保存到序列中，从而间接实现返回多个值的目的。
+
+- 因此，实现 Python 函数返回多个值，有以下 2 种方式：
+
+  1. 在函数中，提前将要返回的多个值存储到一个列表或元组中，然后函数返回该列表或元组；
+  2. 函数直接返回多个值，之间用逗号（ , ）分隔，Python 会自动将多个值封装到一个元组中，其返回值仍是一个元组。
+
+  ```
+  def retu_list() :
+      add = ["http://c.biancheng.net/python/",\
+              "http://c.biancheng.net/shell/",\
+              "http://c.biancheng.net/golang/"]
+      return add
+  def retu_tuple() :
+      return "http://c.biancheng.net/python/",\
+             "http://c.biancheng.net/golang/",\
+             "http://c.biancheng.net/golang/"
+  print("retu_list = ",retu_list())
+  print("retu_tuple = ",retu_tuple())
+  
+  retu_list =  ['http://c.biancheng.net/python/', 'http://c.biancheng.net/shell/', 'http://c.biancheng.net/golang/']
+  retu_tuple =  ('http://c.biancheng.net/python/', 'http://c.biancheng.net/golang/', 'http://c.biancheng.net/golang/')
+  ```
+
+  ```
+  在此基础上，我们可以利用 Python 提供的序列解包功能，之间使用对应数量的变量，直接接收函数返回列表或元组中的多个值。这里以 retu_list() 为例：
+  def retu_list() :
+      add = ["http://c.biancheng.net/python/",\
+              "http://c.biancheng.net/shell/",\
+              "http://c.biancheng.net/golang/"]
+      return add
+  pythonadd,shelladd,golangadd = retu_list()
+  print("pythonadd=",pythonadd)
+  print("shelladd=",shelladd)
+  print("golangadd=",golangadd)
+  
+  pythonadd= http://c.biancheng.net/python/
+  shelladd= http://c.biancheng.net/shell/
+  golangadd= http://c.biancheng.net/golang/
+  ```
+
+###### partial偏函数
+
+- 简单的理解偏函数，它是对原始函数的二次封装，是将现有函数的部分参数预先绑定为指定值，从而得到一个新的函数，该函数就称为偏函数。相比原函数，偏函数具有较少的可变参数，从而降低了函数调用的难度。
+
+- 定义偏函数，需使用 partial 关键字（位于 functools 模块中），其语法格式如下：
+
+  ```
+  偏函数名 = partial(func, *args, **kwargs)
+  ```
+
+  - func 指的是要封装的原函数，*args 和 **kwargs 分别用于接收无关键字实参和关键字实参。
+
+  ```
+  from functools import partial
+  #定义个原函数
+  def display(name,age):
+      print("name:",name,"age:",age)
+  #定义偏函数，其封装了 display() 函数，并为 name 参数设置了默认参数
+  GaryFun = partial(display,name = 'Gary')
+  #由于 name 参数已经有默认值，因此调用偏函数时，可以不指定
+  GaryFun(age = 13)
+  
+  name: Gary age: 13
+  ```
+
+  - 此程序的第 8 行代码中，必须采用关键字参数的形式给 age 形参传参，因为如果以无关键字参数的方式，该实参将试图传递给 name 形参，Python解释器会报 TypeError 错误。
+
+  ```
+  from functools import partial
+  def mod( n, m ):
+    return n % m
+  #定义偏函数，并设置参数 n 对应的实参值为 100
+  mod_by_100 = partial( mod, 100 )
+  print(mod( 100, 7 ))
+  print(mod_by_100( 7 ))
+  
+  2
+  2
+  ```
+
+- 结合以上示例不难分析出，偏函数的本质是将函数式编程、默认参数和冗余参数结合在一起，通过偏函数传入的参数调用关系，与正常函数的参数调用关系是一致的。
+
+- 偏函数通过将任意数量（顺序）的参数，转化为另一个带有剩余参数的函数对象，从而实现了截取函数功能（偏向）的效果。在实际应用中，可以使用一个原函数，然后将其封装多个偏函数，在调用函数时全部调用偏函数，一定程序上可以提高程序的可读性。
+
+###### 函数递归
+
+- 一个函数在它的函数体内调用它自身称为递归调用，这种函数称为递归函数。执行递归函数将反复调用其自身，每调用一次就进入新的一层，当最内层的函数执行完毕后，再一层一层地由里到外退出。
+
+- 有这样一个数学题。己知有一个数列：f(0) = 1，f(1) = 4，f(n + 2) = 2*f(n+ 1) +f(n)，其中 n 是大于 0 的整数，求 f(10) 的值。这道题可以使用递归来求得。下面程序将定义一个 fn() 函数，用于计算 f(10) 的值。
+
+  ```
+  def fn(n) :
+      if n == 0 :
+          return 1
+      elif n == 1 :
+          return 4
+      else :
+          # 函数中调用它自身，就是函数递归
+          return 2 * fn(n - 1) + fn(n - 2)
+  # 输出fn(10)的结果
+  print("fn(10)的结果是:", fn(10))
+  ```
+
+- 仔细看上面递归的过程，当一个函数不断地调用它自身时，必须在某个时刻函数的返回值是确定的，即不再调用它自身：否则，这种递归就变成了无穷递归，类似于死循环。因此，在定义递归函数时有一条最重要的规定： 递归一定要向已知方向进行。
+
+- 递归是非常有用的，例如程序希望遍历某个路径下的所有文件，但这个路径下的文件夹的深度是未知的，那么就可以使用递归来实现这个需求。系统可定义一个函数，该函数接收一个文件路径作为参数，该函数可遍历出当前路径下的所有文件和文件路径，即在该函数的函数体中再次调用函数自身来处理该路径下的所有文件路径。
