@@ -2622,4 +2622,418 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
   - 对于单行函数，使用 lambda 表达式可以省去定义函数的过程，让代码更加简洁；
   - 对于不需要多次复用的函数，使用 lambda 表达式可以在用完之后立即释放，提高程序执行的性能。
 
+###### eval()和exec()
+
+- eval() 和 exec() 函数的功能是相似的，都可以执行一个字符串形式的 Python 代码（代码以字符串的形式提供），相当于一个 Python 的解释器。二者不同之处在于，eval() 执行完要返回结果，而 exec() 执行完不返回结果
+
+  ```
+  eval(source, globals=None, locals=None, /)
   
+  exec(source, globals=None, locals=None, /)
+  ```
+
+  - 二者的语法格式除了函数名，其他都相同，其中各个参数的具体含义如下：
+
+    - expression：这个参数是一个字符串，代表要执行的语句 。该语句受后面两个字典类型参数 globals 和 locals 的限制，只有在 globals 字典和 locals 字典作用域内的函数和变量才能被执行。
+    - globals：这个参数管控的是一个全局的命名空间，即 expression 可以使用全局命名空间中的函数。如果只是提供了 globals 参数，而没有提供自定义的 __builtins__，则系统会将当前环境中的 __builtins__ 复制到自己提供的 globals 中，然后才会进行计算；如果连 globals 这个参数都没有被提供，则使用 Python 的全局命名空间。
+    - locals：这个参数管控的是一个局部的命名空间，和 globals 类似，当它和 globals 中有重复或冲突时，以 locals 的为准。如果 locals 没有被提供，则默认为 globals。
+    - __builtins__ 是 Python 的内建模块，平时使用的 int、str、abs 都在这个模块中。通过 print(dic["__builtins__"]) 语句可以查看 __builtins__ 所对应的 value。
+
+    ```
+    通过如下的例子来演示参数 globals 作用域的作用，注意观察它是何时将 __builtins__ 复制 globals 字典中去的
+    dic={} #定义一个字
+    dic['b'] = 3 #在 dic 中加一条元素，key 为 b
+    print (dic.keys()) #先将 dic 的 key 打印出来，有一个元素 b
+    exec("a = 4", dic) #在 exec 执行的语句后面跟一个作用域 dic
+    print(dic.keys()) #exec 后，dic 的 key 多了一个
+    
+    dict_keys(['b'])
+    dict_keys(['b', '__builtins__', 'a'])
+    ```
+
+    - 上面的代码是在作用域 dic 下执行了一句 a = 4 的代码。可以看出，exec() 之前 dic 中的 key 只有一个 b。执行完 exec() 之后，系统在 dic 中生成了两个新的 key，分别是 a 和 __builtins__。其中，a 为执行语句生成的变量，系统将其放到指定的作用域字典里；__builtins__ 是系统加入的内置 key。
+
+    - locals参数的用法就很简单了
+
+      ```
+      a=10
+      b=20
+      c=30
+      g={'a':6, 'b':8} #定义一个字典
+      t={'b':100, 'c':10} #定义一个字典
+      print(eval('a+b+c', g, t)) #定义一个字典 116
+      
+      116
+      ```
+
+- exe()和eval()的区别
+
+  - 它们的区别在于，eval() 执行完会返回结果，而 exec() 执行完不返回结果。
+
+    ```
+    a = 1
+    exec("a = 2") #相当于直接执行 a=2
+    print(a)
+    a = exec("2+3") #相当于直接执行 2+3，但是并没有返回值，a 应为 None
+    print(a)
+    a = eval('2+3') #执行 2+3，并把结果返回给 a
+    print(a)
+    
+    2
+    None
+    5
+    ```
+
+    - exec() 中最适合放置运行后没有结果的语句，而 eval() 中适合放置有结果返回的语句。
+
+    - 如果 eval() 里放置一个没有结果返回的语句
+
+      ```
+      a= eval("a = 2")
+      ```
+
+    - 这时 Python 解释器会报 SyntaxError 错误，提示 eval() 中不识别等号语法。
+
+- 应用场景
+
+  - 在使用 Python 开发服务端程序时，这两个函数应用得非常广泛。例如，客户端向服务端发送一段字符串代码，服务端无需关心具体的内容，直接跳过 eval() 或 exec() 来执行，这样的设计会使服务端与客户端的耦合度更低，系统更易扩展。
+  - 另外，如果读者以后接触 [TensorFlow](http://c.biancheng.net/tensorflow/) 框架，就会发现该框架中的静态图就是类似这个原理实现的：
+    - TensorFlow 中先将张量定义在一个静态图里，这就相当将键值对添加到字典里一样；
+    - TensorFlow 中通过 session 和张量的 eval() 函数来进行具体值的运算，就当于使用 eval() 函数进行具体值的运算一样。
+  - 需要注意的是，在使用 eval() 或是 exec() 来处理请求代码时，函数 eval() 和 exec() 常常会被黑客利用，成为可以执行系统级命令的入口点，进而来攻击网站。解决方法是：通过设置其命名空间里的可执行函数，来限制 eval() 和 exec() 的执行范围。
+
+- 使用 exec() 和 eval() 函数时，一定要记住，它们的第一个参数是字符串，而字符串的内容一定要是可执行的代码。
+
+- 以 eval() 函数为例，用代码演示常犯的错误
+
+  ```
+  s="hello"
+  print(eval(s))
+  
+  Traceback (most recent call last):
+    File "C:\Users\mengma\Desktop\demo.py", line 2, in <module>
+      print(eval(s))
+    File "<string>", line 1, in <module>
+  NameError: name 'hello' is not defined
+  ```
+
+  - 上面例子出错的地方在于，字符串的内容是 hello，而 hello 并不是可执行的代码（除非定义了一个变量叫作 hello）。
+
+  - 如果要将字符串 hello 通过 print 函数打印出来
+
+    ```
+    s="hello"
+    print(eval('s'))
+    
+    hello
+    ```
+
+    - 这种写法是要 eval() 执行 "hello" 这句代码。这个 hello 是有引号的，在代码中代表字符串的意思，所以可以执行。
+
+  - 同理，也可以写成这样：
+
+    ```
+    s='"hello"' #s 是个字符串，字符串的内容是带引号的 hello
+    print(eval(s))
+    
+    hello
+    ```
+
+    - 这种写法的意思是 s 是个字符串，并且其内容是个带引号的 hello。所以直接将 s 放入到函数 eval() 中也可以执行。
+
+  - 除了以上这种方式，还可以不去改变原有字符串 s 的写法，直接使用 repr() 函数来进行转化，也可以得到同样的效果
+
+    ```
+    s="hello"
+    print(eval(repr(s))) #使用函数 repr() 进行转化
+    
+    hello
+    ```
+
+  - 注意，虽然函数 eval() 与 str() 的返回值都是字符串。但是使用 str() 函数对 s 进行转化，程序同样会报错
+
+    ```
+    s="hello"
+    print(eval(str(s)))
+    
+    Traceback (most recent call last):
+      File "C:\Users\mengma\Desktop\demo.py", line 2, in <module>
+        print(eval(str(s)))
+      File "<string>", line 1, in <module>
+    NameError: name 'hello' is not defined
+    ```
+
+  - 为什么会有这个区别呢？同样对带字符串 s 的转化，使用 repr() 与 str() 得到的结果是有差别的，直接将二者的结果打印出来，就可以很明显地看出不同。见下面代码：
+
+    ```
+    s="hello"
+    print(repr(s))
+    print(str(s))
+    
+    'hello'
+    hello
+    ```
+
+    - 可见使用 repr() 返回的内容，输出后会在两边多一个单引号。
+
+  - 在编写代码时，一般会使 repr() 函数来生成动态的字符串，再传入到 eval() 或 exec() 函数内，实现动态执行代码的功能。
+
+###### 函数式编程
+
+- 所谓函数式编程，是指代码中每一块都是不可变的，都由纯函数的形式组成。这里的纯函数，是指函数本身相互独立、互不影响，对于相同的输入，总会有相同的输出。
+
+- 除此之外，函数式编程还具有一个特点，即允许把函数本身作为参数传入另一个函数，还允许返回一个函数。
+
+- 例如，想让列表中的元素值都变为原来的两倍，可以使用如下函数实现：
+
+  ```
+  def multiply_2(list):
+      for index in range(0, len(list)):
+          list[index] *= 2
+      return list
+  ```
+
+  - 需要注意的是，这段代码不是一个纯函数的形式，因为列表中元素的值被改变了，如果多次调用 multiply_2() 函数，那么每次得到的结果都不一样。
+
+  - 而要想让 multiply_2() 成为一个纯函数的形式，就得重新创建一个新的列表并返回
+
+    ```
+    def multiply_2_pure(list):
+        new_list = []
+        for item in list:
+            new_list.append(item * 2)
+        return new_list
+    ```
+
+- 函数式编程的优点，主要在于其纯函数和不可变的特性使程序更加健壮，易于调试和测试；缺点主要在于限制多，难写。
+
+- Python 允许使用变量，所以它并不是一门纯函数式编程语言。Python 仅对函数式编程提供了部分支持，主要包括 map()、filter() 和 reduce() 这 3 个函数，它们通常都结合 lambda 匿名函数一起使用。接下来就对这 3 个函数的用法做逐一介绍。
+
+- map() 函数的基本语法格式
+
+  ```
+  map(function, iterable)
+  ```
+
+  - function 参数表示要传入一个函数，其可以是内置函数、自定义函数或者 lambda 匿名函数；iterable 表示一个或多个可迭代对象，可以是列表、字符串等。
+
+  - map() 函数的功能是对可迭代对象中的每个元素，都调用指定的函数，并返回一个 map 对象。
+
+  - 该函数返回的是一个 map 对象，不能直接输出，可以通过 for 循环或者 list() 函数来显示。
+
+    ```
+    listDemo = [1, 2, 3, 4, 5]
+    new_list = map(lambda x: x * 2, listDemo)
+    print(list(new_list))
+    
+    [2， 4， 6， 8， 10]
+    
+    map() 函数可传入多个可迭代对象作为参数。
+    listDemo1 = [1, 2, 3, 4, 5]
+    listDemo2 = [3, 4, 5, 6, 7]
+    new_list = map(lambda x,y: x + y, listDemo1,listDemo2)
+    print(list(new_list))
+    
+    [4, 6, 8, 10, 12]
+    ```
+
+  - 由于 map() 函数是直接由用 C 语言写的，运行时不需要通过 Python 解释器间接调用，并且内部做了诸多优化，所以相比其他方法，此方法的运行效率最高。
+
+- filter()函数的基本语法格式
+
+  ```
+  filter(function, iterable)
+  ```
+
+  - 此格式中，funcition 参数表示要传入一个函数，iterable 表示一个可迭代对象。
+
+  - filter() 函数的功能是对 iterable 中的每个元素，都使用 function 函数判断，并返回 True 或者 False，最后将返回 True 的元素组成一个新的可遍历的集合。
+
+    ```
+    返回一个列表中的所有偶数。
+    listDemo = [1, 2, 3, 4, 5]
+    new_list = filter(lambda x: x % 2 == 0, listDemo)
+    print(list(new_list))
+    
+    [2, 4]
+    
+    filter() 函数可以接受多个可迭代对象。
+    listDemo = [1, 2, 3, 4, 5]
+    new_list = map(lambda x,y: x-y>0,[3,5,6],[1,5,8] )
+    print(list(new_list))
+    
+    [True, False, False]
+    ```
+
+- reduce() 函数通常用来对一个集合做一些累积操作
+
+  ```
+  reduce(function, iterable)
+  ```
+
+  - function 规定必须是一个包含 2 个参数的函数；iterable 表示可迭代对象。
+
+  - 由于 reduce() 函数在 Python 3.x 中已经被移除，放入了 functools 模块，因此在使用该函数之前，需先导入 functools 模块。
+
+  - 计算某个列表元素的乘积。
+
+    ```
+    import functools
+    listDemo = [1, 2, 3, 4, 5]
+    product = functools.reduce(lambda x, y: x * y, listDemo)
+    print(product)
+    
+    120
+    ```
+
+- 通常来说，当对集合中的元素进行一些操作时，如果操作非常简单，比如相加、累积这种，那么应该优先考虑使用 map()、filter()、reduce() 实现。另外，在数据量非常多的情况下（比如机器学习的应用），一般更倾向于函数式编程的表示，因为效率更高。
+
+- 当然，在数据量不多的情况下，使用 for 循环等方式也可以。不过，如果要对集合中的元素做一些比较复杂的操作，考虑到代码的可读性，通常会使用 for 循环。
+
+###### 函数注解
+
+- 函数注解是 Python 3 最独特的功能之一，关于它的介绍，官方文档是这么说的，“函数注解是关于用户自定义函数使用类型的完全可选的元信息”。也就是说，官方将函数注解的用途归结为：为函数中的形参和返回值提供类型提示信息。
+
+- 下面是对 Python 官方文档中的示例稍作修改后的程序，可以很好的展示如何定义并获取函数注解：
+
+  ```
+  def f(ham:str,egg:str='eggs')->str:
+    pass
+  print(f.__annotations__)
+  
+  {'ham': <class 'str'>, 'egg': <class 'str'>, 'return': <class 'str'>}
+  ```
+
+  - 如上所示，给函数中的参数做注解的方法是在形参后添加冒号“：”，后接需添加的注解（可以是类（如 str、int 等），也可以是字符串或者表示式）；给返回值做注解的方法是将注解添加到 def 语句结尾的冒号和 -> 之间。
+  - 如果参数有默认值，参数注解位于冒号和等号之间。比如 eggs:str='eggs'，它表示 eggs 参数的默认值为 'eggs'，添加的注解为 str。
+
+- 给函数定义好注解之后，可以通过函数对象的 __annotations__ 属性获取，它是一个字典，在应用运行期间可以获取
+
+  ```
+  def square(number:"一个数字")->"返回number的平方":
+    return number**2
+  print(square(10))
+  print(square.__annotations__)
+  
+  100
+  {'number': '一个数字', 'return': '返回number的平方'}
+  ```
+
+- 事实上，函数注解并不局限于类型提示，而且在 Python 及其标准库中也没有单个功能可以利用这种注解，这也是这个功能独特的原因。
+
+- 函数注解没有任何语法上的意义，只是为函数参数和返回值做注解，并在运行获取这些注解，仅此而已。换句话说，为函数做的注解，Python不做检查，不做强制，不做验证，什么操作都不做，函数注解对Python解释器没任何意义。
+
+- PEP 3107 作为提议函数注解的官方文档，其中列出了以下可能的使用场景：
+
+  - 提供类型信息：包括类型检查、让 IDE 显示函数接受和返回的类型、适配、与其他语言的桥梁、数据库查询映射、RPC参数编组等；
+  - 其他信息：函数参数和返回值的文档。
+
+- 总之，虽然函数注解存在的时间和 Python 3 一样长，但目前仍未找到任一常见且积极维护的包，将函数注解用作类型检查之外的功能。Python 3 最初发布时包含函数注解的最初目的也仅是用于试验和玩耍。 
+
+#### 类和对象
+
+- Python 语言在设计之初，就定位为一门面向对象的编程语言，“Python 中一切皆对象”就是对 Python 这门编程语言的完美诠释。类和对象是 Python 的重要特征，相比其它面向对象语言，Python 很容易就可以创建出一个类和对象。同时，Python 也支持面向对象的三大特征：封装、继承和多态。
+
+- 无论是类属性还是类方法，对于类来说，它们都不是必需的，可以有也可以没有。另外，Python 类中属性和方法所在的位置是任意的，即它们之间并没有固定的前后次序。
+
+- 给类起好名字之后，其后要跟有冒号（：），表示告诉 Python 解释器，下面要开始设计类的内部功能了，也就是编写类属性和类方法。
+
+- 其实，类属性指的就是包含在类中的变量；而类方法指的是包含类中的函数。换句话说，类属性和类方法其实分别是包含类中的变量和函数的别称。需要注意的一点是，同属一个类的所有类属性和类方法，要保持统一的缩进格式，通常统一缩进 4 个空格。
+
+  ```
+  class TheFirstDemo:
+      '''这是一个学习Python定义的第一个类'''
+      # 下面定义了一个类属性
+      add = 'http://c.biancheng.net'
+      # 下面定义了一个say方法
+      def say(self, content):
+          print(content)
+  ```
+
+  - 和函数一样，我们也可以为类定义说明文档，其要放到类头之后，类体之前的位置，如上面程序中第二行的字符串，就是 TheFirstDemo 这个类的说明文档。
+  - 分析上面的代码可以看到，我们创建了一个名为 TheFirstDemo 的类，其包含了一个名为 add 的类属性。注意，根据定义属性位置的不同，在各个类方法之外定义的变量称为类属性或类变量（如 add 属性），而在类方法中定义的属性称为实例属性（或实例变量）
+  - say() 是一个实例方法，除此之外，Python 类中还可以定义类方法和静态方法
+
+###### \__init__()类构造方法
+
+- 在创建类时，我们可以手动添加一个 __init__() 方法，该方法是一个特殊的类实例方法，称为构造方法（或构造函数）。
+
+- 构造方法用于创建对象时使用，每当创建一个类的实例对象时，[Python](http://c.biancheng.net/python/) 解释器都会自动调用它。[Python](http://c.biancheng.net/python/) 类中，手动添加构造方法的语法格式如下：
+
+  ```
+  def __init__(self,...):
+      代码块
+  ```
+
+  - 此方法的方法名中，开头和结尾各有 2 个下划线，且中间不能有空格。Python 中很多这种以双下划线开头、双下划线结尾的方法，都具有特殊的意义
+
+- \__init__() 方法可以包含多个参数，但必须包含一个名为 self 的参数，且必须作为第一个参数。也就是说，类的构造方法最少也要有一个 self 参数。例如，仍以 TheFirstDemo 类为例，添加构造方法的代码如下所示
+
+  ```
+  class TheFirstDemo:
+      '''这是一个学习Python定义的第一个类'''
+      #构造方法
+      def __init__(self):
+          print("调用构造方法")
+      # 下面定义了一个类属性
+      add = 'http://c.biancheng.net'
+      # 下面定义了一个say方法
+      def say(self, content):
+          print(content)
+  ```
+
+  - 即便不手动为类添加任何构造方法，Python 也会自动为类添加一个仅包含 self 参数的构造方法。
+  - 仅包含 self 参数的 \__init__() 构造方法，又称为类的默认构造方法。
+
+- 在 \__init__() 构造方法中，除了 self 参数外，还可以自定义一些参数，参数之间使用逗号“,”进行分割
+
+  ```
+  class CLanguage:
+      '''这是一个学习Python定义的一个类'''
+      def __init__(self,name,add):
+          print(name,"的网址为:",add)
+  #创建 add 对象，并传递参数给构造函数
+  add = CLanguage("C语言中文网","http://c.biancheng.net")
+  ```
+
+  - 由于创建对象时会调用类的构造方法，如果构造函数有多个参数时，需要手动传递参数
+  - 虽然构造方法中有 self、name、add 3 个参数，但实际需要传参的仅有 name 和 add，也就是说，self 不需要手动传递参数。
+
+###### 类对象的创建和使用
+
+- 创建类对象的过程，又称为类的实例化。
+
+- 对已定义好的类进行实例化
+
+  ```
+  类名(参数)
+  ```
+
+  - 定义类时，如果没有手动添加\__init\__() 构造方法，又或者添加的 \__init__() 中仅有一个 self 参数，则创建类对象时的参数可以省略不写。
+
+- 如下代码创建了名为 CLanguage 的类，并对其进行了实例化：
+
+  ```
+  class CLanguage :
+      # 下面定义了2个类变量
+      name = "C语言中文网"
+      add = "http://c.biancheng.net"
+      def __init__(self,name,add):
+          #下面定义 2 个实例变量
+          self.name = name
+          self.add = add
+          print(name,"网址为：",add)
+      # 下面定义了一个say实例方法
+      def say(self, content):
+          print(content)
+  # 将该CLanguage对象赋给clanguage变量
+  clanguage = CLanguage("C语言中文网","http://c.biancheng.net")
+  ```
+
+  - 在上面的程序中，由于构造方法除 self 参数外，还包含 2 个参数，且这 2 个参数没有设置默认参数，因此在实例化类对象时，需要传入相应的 name 值和 add 值（self 参数是特殊参数，不需要手动传值，Python 会自动传给它值）。
+  - 类变量和实例变量，简单地理解，定义在各个类方法之外（包含在类中）的变量为类变量（或者类属性），定义在类方法中的变量为实例变量（或者实例属性）
+
+- 定义的类只有进行实例化，也就是使用该类创建对象之后，才能得到利用。总的来说，实例化后的类对象可以执行以下操作：
+
+  - 访问或修改类对象具有的实例变量，甚至可以添加新的实例变量或者删除已有的实例变量；
+  - 调用类对象的方法，包括调用现有的方法，以及给类对象动态添加方法。
