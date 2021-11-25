@@ -445,6 +445,8 @@ char *strncpy(char *dest, const char *src, size_t n);
 
 - strlen结果为去掉\0之后的实际字符数量，sizeof求得是字符串占用得内存数，如果定义arr[10]，用sizeof(arr)，求得结果为10，不管里面有没有字符，也不管有几个，求出来得结果就是占用得内存数10
 
+- sizeof只要能找到实际字符数组就能返回实际的字符大小，例如结构体里面有个字符数组arr[10]，sizeof(struct->arr)，返回的结果就是10，如果定义一个char * 来接收这个字符串，或者将字符数组赋值给一个char * 的形参，sizeof这个指针返回的结果就是指针占用的字节4。
+
 - strcpy会追加结束标记\0，strncpy()不会向dest追加结束标记'\0'，所以strncpy使用时其中得n要明白清楚，n为要复制得字节数，使用strlen和sizeof结果不一样
 
   ```
