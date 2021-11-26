@@ -1118,6 +1118,23 @@
   #else
       程序段4  //#elif 和 #else 也可以省略
   #endif    //需要注意的是，#if 命令要求判断条件为“整型常量表达式”，也就是说，表达式中不能包含变量，而且结果必须是整数；而 if 后面的表达式没有限制，只要符合语法就行。这是 #if 和 if 的一个重要区别。
+   
+  //#if后面跟的是表达式，makefile编译程序时利用-D选项表示-D后面的宏被定义过，这样#ifdef 宏名就能找到这个宏，我们还可以加上宏，并且可以设置宏的值，这样我们就可以使用#if判断这个宏值，根据宏值来确定不同的格式
+  //#define定义的是宏，宏有两种，一种是没有值的，例如#define定义的头保护，宏还可以有值，例如我们定义的宏替换，这个宏在代码里面就是具体的替换，我们还可以使用#if判断这个宏值
+          
+  CC=gcc
+  version=0.0.2
+  release_number=2
+   
+  all: test
+   
+  test: test.c
+  	$(CC) -o $@ $^ -DDEBUG_PRINT -D VERSION='"$(version)"' -D RELEASE_NUMBER=$(release_number)
+   
+  .PHONY: clean
+   
+  clean:
+  	rm test
   ```
 
 - #indef用法的一般格式

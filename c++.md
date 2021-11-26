@@ -365,7 +365,7 @@ char *strncpy(char *dest, const char *src, size_t n);
 
 - strcpy只能复制字符串，而memcpy可以复制任意内容，例如字符数组、整型、结构体、类等。strcpy会将\0一起拷贝进去。
 
-- strcpy和strncpy会自动拷贝\0，但是为了安全，需要手动方式自行添加`\0` 结束符，一般拷贝了n个的话，将最后一个设置为0即\0
+- strcpy会在字符串结尾加上\0，而strncpy不会在目标字符数组结尾加上\0，为了安全，需要手动方式自行添加`\0` 结束符，一般拷贝了n个的话，将最后一个设置为0即\0
 
   ```c
   strncpy(info.path, buffer, sizeof(info.path));
