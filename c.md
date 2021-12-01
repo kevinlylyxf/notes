@@ -1786,7 +1786,7 @@
   int pthread_create(pthread_t *thread,
                      const pthread_attr_t *attr,
                      void *(*start_routine) (void *),
-                     void *arg);c
+                     void *arg);
   ```
 
   - pthread_t *thread：传递一个 pthread_t 类型的指针变量，也可以直接传递某个 pthread_t 类型变量的地址。pthread_t 是一种用于表示线程的数据类型，每一个 pthread_t 类型的变量都可以表示一个线程。
