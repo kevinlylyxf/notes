@@ -487,11 +487,28 @@ char *strncpy(char *dest, const char *src, size_t n);
 - 在局部变量里面可以定义变量，例如if和for语句内可以定义变量，其是内部的只能在函数内部使用，不管for和if外面有没有goto语句
 
   ```
-  int a = 2;
-  if (a != 2) goto DONE;
-  int b = 3;
-  printf("$d\n", b);
+  int main{
+  	int a = 2;
+  	if (a != 2) goto DONE;
+  	int b = 3;
+  	printf("%d\n", b);
+  DONE:
+  	return 0;
+  }
   这个写法是错误的，a和b在同一层，所以不能在定义变量b之前有goto语句
+  
+  如果将上面的语句在嵌套一层，这样就可以将上面的语句看成一个语句，这样对外就不暴露goto DONE语句了，这样就对了，不能暴露在同一层意思是不能暴露在函数里面第一层，但是可以嵌套一层，这样就可以隐藏goto DONE
+  int main{
+  	if(1){
+  		int a = 2;
+  		if (a != 2) goto DONE;
+  		int b = 3;
+  		printf("%d\n", b);
+  	}
+  DONE:
+  	return 0;
+  }
+  上面的这个语句是正确的，这样就没有goto DONE了，嵌套的一层里面就不用理会goto DONE了，可以随时用随时定义
   
   int a = 2;
   if (a != 2) goto DONE;
@@ -499,10 +516,7 @@ char *strncpy(char *dest, const char *src, size_t n);
   	int b = 3;
   	printf("$d\n", b);
   }这种写法是正确的，b是在内部定义的，和a没有在同一层，所以变量b不受前面goto语句的影响，同理，if换成for也是一样的。只要是变量没有在同一层就可以定义局部变量。但是在局部里面如果有goto，只能在goto之前定义变量。
-  
   ```
-
-  
 
 - 在打开一个文件我们想创建一个buffer将数据都读入到buffer中，但是我们不知道文件的大小，不能直接定义数组的长度。所以我们可以先计算文件的大小，在计算文件大小的语句中不能有goto，否则会报错，然后在得到文件大小的语句之后在创建buffer，这样就能读入成功了。
 
