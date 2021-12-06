@@ -3037,3 +3037,758 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 
   - 访问或修改类对象具有的实例变量，甚至可以添加新的实例变量或者删除已有的实例变量；
   - 调用类对象的方法，包括调用现有的方法，以及给类对象动态添加方法。
+  
+- 使用已创建好的类对象访问类中实例变量的语法格式如下：
+
+  ```
+  类对象名.变量名
+  ```
+
+- 使用类对象调用类中方法的语法格式如下：
+
+  ```
+  对象名.方法名(参数)
+  ```
+
+- Python 支持为已创建好的对象动态增加实例变量，方法也很简单，这里的动态是对一个实例化对象添加，不是为定义的类添加
+
+  ```
+  # 为clanguage对象增加一个money实例变量
+  clanguage.money= 159.9
+  print(clanguage.money)
+  
+  159.9
+  ```
+
+  - 通过直接增加一个新的实例变量并为其赋值，就成功地为 clanguage 对象添加了 money 变量。
+
+- 既然能动态添加，那么是否能动态删除呢？答案是肯定的，使用 del 语句即可实现
+
+  ```
+  #删除新添加的 money 实例变量
+  del clanguage.money
+  #再次尝试输出 money，此时会报错
+  print(clanguage.money)
+  ```
+
+- 给类对象动态添加方法，为 clanguage 对象动态增加的方法，Python 不会自动将调用者自动绑定到第一个参数（即使将第一个参数命名为 self 也没用）
+
+  ```
+  # 先定义一个函数
+  def info(self):
+      print("---info函数---", self)
+  # 使用info对clanguage的foo方法赋值（动态绑定方法）
+  clanguage.foo = info
+  # Python不会自动将调用者绑定到第一个参数，
+  # 因此程序需要手动将调用者绑定为第一个参数
+  clanguage.foo(clanguage)  # ①
+  # 使用lambda表达式为clanguage对象的bar方法赋值（动态绑定方法）
+  clanguage.bar = lambda self: print('--lambda表达式--', self)
+  clanguage.bar(clanguage) # ②
+  ```
+
+  - 上面的第 5 行和第 11 行代码分别使用函数、lambda 表达式为 clanguage 对象动态增加了方法，但对于动态增加的方法，Python 不会自动将方法调用者绑定到它们的第一个参数，因此程序必须手动为第一个参数传入参数值，如上面程序中 ① 号、② 号代码所示。
+
+- 有读者可能会问，有没有不用手动给 self 传值的方法呢？通过借助 types 模块下的 MethodType 可以实现，仍以上面的 info() 函数为例：
+
+  ```
+  def info(self,content):
+      print("C语言中文网地址为：%s" % content)
+  # 导入MethodType
+  from types import MethodType
+  clanguage.info = MethodType(info, clanguage)
+  # 第一个参数已经绑定了，无需传入
+  clanguage.info("http://c.biancheng.net")
+  ```
+
+  - 可以看到，由于使用 MethodType 包装 info() 函数时，已经将该函数的 self 参数绑定为 clanguage，因此后续再使用 info() 函数时，就不用再给 self 参数绑定值了。
+
+###### self用法
+
+- 在定义类的过程中，无论是显式创建类的构造方法，还是向类中添加实例方法，都要求将 self 参数作为方法的第一个参数。例如，定义一个 Person 类：
+
+  ```
+  class Person:
+      def __init__(self):
+          print("正在执行构造方法")
+      # 定义一个study()实例方法
+      def study(self,name):
+          print(name,"正在学Python")
+  ```
+
+- 事实上，Python 只是规定，无论是构造方法还是实例方法，最少要包含一个参数，并没有规定该参数的具体名称。之所以将其命名为 self，只是程序员之间约定俗成的一种习惯，遵守这个约定，可以使我们编写的代码具有更好的可读性（大家一看到 self，就知道它的作用）。
+
+- 那么，self 参数的具体作用是什么呢？打个比方，如果把类比作造房子的图纸，那么类实例化后的对象是真正可以住的房子。根据一张图纸（类），我们可以设计出成千上万的房子（类对象），每个房子长相都是类似的（都有相同的类变量和类方法），但它们都有各自的主人，那么如何对它们进行区分呢？当然是通过 self 参数，它就相当于每个房子的门钥匙，可以保证每个房子的主人仅能进入自己的房子（每个类对象只能调用自己的类变量和类方法）。其实 Python 类方法中的 self 参数就相当于 C++ 中的 this 指针。
+
+- 也就是说，同一个类可以产生多个对象，当某个对象调用类方法时，该对象会把自身的引用作为第一个参数自动传给该方法，换句话说，Python 会自动绑定类方法的第一个参数指向调用该方法的对象。如此，Python解释器就能知道到底要操作哪个对象的方法了。
+
+- 因此，程序在调用实例方法和构造方法时，不需要手动为第一个参数传值。例如，更改前面的 Person 类
+
+  ```
+  class Person:
+      def __init__(self):
+          print("正在执行构造方法")
+      # 定义一个study()实例方法
+      def study(self):
+          print(self,"正在学Python")
+  zhangsan = Person()
+  zhangsan.study()
+  lisi = Person()
+  lisi.study()
+  ```
+
+  - 上面代码中，study() 中的 self 代表该方法的调用者，即谁调用该方法，那么 self 就代表谁。因此，该程序的运行结果为：
+
+    ```
+    正在执行构造方法
+    <__main__.Person object at 0x0000021ADD7D21D0> 正在学Python
+    正在执行构造方法
+    <__main__.Person object at 0x0000021ADD7D2E48> 正在学Python
+    ```
+
+- 另外，对于构造函数中的 self 参数，其代表的是当前正在初始化的类对象
+
+  ```
+  class Person:
+      name = "xxx"
+      def __init__(self,name):
+          self.name=name
+  zhangsan = Person("zhangsan")
+  print(zhangsan.name)
+  lisi = Person("lisi")
+  print(lisi.name)
+  
+  zhangsan
+  lisi
+  ```
+
+  - 可以看到，zhangsan 在进行初始化时，调用的构造函数中 self 代表的是 zhangsan；而 lisi 在进行初始化时，调用的构造函数中 self 代表的是 lisi。
+
+- 值得一提的是，除了类对象可以直接调用类方法，还有一种函数调用的方式
+
+  ```
+  class Person:
+      def who(self):
+          print(self)
+  zhangsan = Person()
+  #第一种方式
+  zhangsan.who()
+  #第二种方式
+  who = zhangsan.who   //相当于函数指针，将函数名给函数指针，然后通过函数指针调用，这样函数名代表地址就不用写()，但是下面要写
+  who()#通过 who 变量调用zhangsan对象中的 who() 方法
+  
+  
+  <__main__.Person object at 0x0000025C26F021D0>
+  <__main__.Person object at 0x0000025C26F021D0>
+  ```
+
+  - 无论采用哪种方法，self 所表示的都是实际调用该方法的对象。
+
+###### 类变量和实例变量
+
+- 无论是类属性还是类方法，都无法像普通变量或者函数那样，在类的外部直接使用它们。我们可以将类看做一个独立的空间，则类属性其实就是在类体中定义的变量，类方法是在类体中定义的函数。
+
+- 在类体中，根据变量定义的位置不同，以及定义的方式不同，类属性又可细分为以下 3 种类型：
+
+  1. 类体中、所有函数之外：此范围定义的变量，称为类属性或类变量；
+  2. 类体中，所有函数内部：以“self.变量名”的方式定义的变量，称为实例属性或实例变量；
+  3. 类体中，所有函数内部：以“变量名=变量值”的方式定义的变量，称为局部变量。
+
+- 类变量指的是在类中，但在各个类方法外定义的变量
+
+  ```
+  class CLanguage :
+      # 下面定义了2个类变量
+      name = "C语言中文网"
+      add = "http://c.biancheng.net"
+      # 下面定义了一个say实例方法
+      def say(self, content):
+          print(content)
+  ```
+
+  - 类变量的特点是，所有类的实例化对象都同时共享类变量，也就是说，类变量在所有实例化对象中是作为公用资源存在的。类方法的调用方式有 2 种，既可以使用类名直接调用，也可以使用类的实例化对象调用。
+
+    ```
+    #使用类名直接调用
+    print(CLanguage.name)
+    print(CLanguage.add)
+    #修改类变量的值
+    CLanguage.name = "Python教程"
+    CLanguage.add = "http://c.biancheng.net/python"
+    print(CLanguage.name)
+    print(CLanguage.add)
+    
+    C语言中文网
+    http://c.biancheng.net
+    Python教程
+    http://c.biancheng.net/python
+    ```
+
+  - 也可以使用类对象来调用所属类中的类变量（此方式不推荐使用）
+
+  - 因为类变量为所有实例化对象共有，通过类名修改类变量的值，会影响所有的实例化对象
+
+  - 通过类对象是无法修改类变量的。通过类对象对类变量赋值，其本质将不再是修改类变量的值，而是在给该对象定义新的实例变量
+
+  - 除了可以通过类名访问类变量之外，还可以动态地为类和对象添加类变量
+
+    ```
+    clang = CLanguage()
+    CLanguage.catalog = 13
+    print(clang.catalog)
+    
+    13
+    ```
+
+- 实例变量指的是在任意类方法内部，以“self.变量名”的方式定义的变量，其特点是只作用于调用方法的对象。另外，实例变量只能通过对象名访问，无法通过类名访问。
+
+  ```
+  class CLanguage :
+      def __init__(self):
+          self.name = "C语言中文网"
+          self.add = "http://c.biancheng.net"
+      # 下面定义了一个say实例方法
+      def say(self):
+          self.catalog = 13
+  ```
+
+  - name、add 以及 catalog 都是实例变量。其中，由于 __init__() 函数在创建类对象时会自动调用，而 say() 方法需要类对象手动调用。因此，CLanguage 类的类对象都会包含 name 和 add 实例变量，而只有调用了 say() 方法的类对象，才包含 catalog 实例变量。
+
+  - 通过类对象可以访问类变量，但无法修改类变量的值。这是因为，通过类对象修改类变量的值，不是在给“类变量赋值”，而是定义新的实例变量
+
+    ```
+    clang = CLanguage()
+    #clang访问类变量
+    print(clang.name)
+    print(clang.add)
+    clang.name = "Python教程"
+    clang.add = "http://c.biancheng.net/python"
+    #clang实例变量的值
+    print(clang.name)
+    print(clang.add)
+    #类变量的值
+    print(CLanguage.name)
+    print(CLanguage.add)
+    
+    C语言中文网
+    http://c.biancheng.net
+    Python教程
+    http://c.biancheng.net/python
+    C语言中文网
+    http://c.biancheng.net
+    
+    通过类对象是无法修改类变量的值的，本质其实是给 clang 对象新添加 name 和 add 这 2 个实例变量。
+    ```
+
+- 局部变量直接以“变量名=值”的方式进行定义
+
+  ```
+  class CLanguage :
+      # 下面定义了一个say实例方法
+      def count(self,money):
+          sale = 0.8*money
+          print("优惠后的价格为：",sale)
+  clang = CLanguage()
+  clang.count(100)
+  ```
+
+  - 定义局部变量是为了所在类方法功能的实现。需要注意的一点是，局部变量只能用于所在函数中，函数执行完成后，局部变量也会被销毁。
+
+###### 实例方法、静态方法和类方法
+
+- 和类属性一样，类方法也可以进行更细致的划分，具体可分为类方法、实例方法和静态方法。
+
+- 和类属性的分类不同，对于初学者来说，区分这 3 种类方法是非常简单的，即采用 @classmethod 修饰的方法为类方法；采用 @staticmethod 修饰的方法为静态方法；不用任何修改的方法为实例方法。其中 @classmethod 和 @staticmethod 都是函数装饰器
+
+- 通常情况下，在类中定义的方法默认都是实例方法。前面章节中，我们已经定义了不只一个实例方法。不仅如此，类的构造方法理论上也属于实例方法，只不过它比较特殊。
+
+  - 实例方法最大的特点就是，它最少也要包含一个 self 参数，用于绑定调用此方法的实例对象（Python 会自动完成绑定）。实例方法通常会用类对象直接调用
+
+  - Python 也支持使用类名调用实例方法，但此方式需要手动给 self 参数传值
+
+    ```
+    #类名调用实例方法，需手动给 self 参数传值
+    clang = CLanguage()
+    CLanguage.say(clang)
+    ```
+
+- 类方法和实例方法相似，它最少也要包含一个参数，只不过类方法中通常将其命名为 cls，Python 会自动将类本身绑定给 cls 参数（注意，绑定的不是类对象）。也就是说，我们在调用类方法时，无需显式为 cls 参数传参。和 self 一样，cls 参数的命名也不是规定的（可以随意命名），只是 Python 程序员约定俗称的习惯而已。和实例方法最大的不同在于，类方法需要使用`＠classmethod`修饰符进行修饰
+
+  ```
+  class CLanguage:
+      #类构造方法，也属于实例方法
+      def __init__(self):
+          self.name = "C语言中文网"
+          self.add = "http://c.biancheng.net"
+      #下面定义了一个类方法
+      @classmethod
+      def info(cls):
+          print("正在调用类方法",cls)
+  ```
+
+  - 如果没有 ＠classmethod，则 Python 解释器会将 类方法认定为实例方法，而不是类方法。
+
+  - 类方法推荐使用类名直接调用，当然也可以使用实例对象来调用（不推荐）
+
+    ```
+    #使用类名直接调用类方法
+    CLanguage.info()
+    #使用类对象调用类方法
+    clang = CLanguage()
+    clang.info()
+    ```
+
+- 静态方法其实就是我们学过的函数，和函数唯一的区别是，静态方法定义在类这个空间（类命名空间）中，而函数则定义在程序所在的空间（全局命名空间）中。静态方法没有类似 self、cls 这样的特殊参数，因此 Python 解释器不会对它包含的参数做任何类或对象的绑定。也正因为如此，类的静态方法中无法调用任何类属性和类方法。静态方法需要使用`＠staticmethod`修饰
+
+  ```
+  class CLanguage:
+      @staticmethod
+      def info(name,add):
+          print(name,add)
+  ```
+
+  - 静态方法的调用，既可以使用类名，也可以使用类对象
+
+    ```
+    #使用类名直接调用静态方法
+    CLanguage.info("C语言中文网","http://c.biancheng.net")
+    #使用类对象调用静态方法
+    clang = CLanguage()
+    clang.info("Python教程","http://c.biancheng.net/python")
+    ```
+
+  - 在实际编程中，几乎不会用到类方法和静态方法，因为我们完全可以使用函数代替它们实现想要的功能，但在一些特殊的场景中（例如工厂模式中），使用类方法和静态方法也是很不错的选择。
+
+###### 描述符
+
+- [Python](http://c.biancheng.net/python/) 中，通过使用描述符，可以让程序员在引用一个对象属性时自定义要完成的工作。
+
+- 本质上看，描述符就是一个类，只不过它定义了另一个类中属性的访问方式。换句话说，一个类可以将属性管理全权委托给描述符类。
+
+- 描述符是 Python 中复杂属性访问的基础，它在内部被用于实现 property、方法、类方法、静态方法和 super 类型。
+
+- 描述符类基于以下 3 个特殊方法，换句话说，这 3 个方法组成了描述符协议：
+
+  - \__set__(self, obj, type=None)：在设置属性时将调用这一方法（本节后续用 setter 表示）；
+  - \__get__(self, obj, value)：在读取属性时将调用这一方法（本节后续用 getter 表示）；
+  - \__delete__(self, obj)：对属性调用 del 时将调用这一方法。
+  - 其中，实现了 setter 和 getter 方法的描述符类被称为数据描述符；反之，如果只实现了 getter 方法，则称为非数据描述符。
+
+- 实际上，在每次查找属性时，描述符协议中的方法都由类对象的特殊方法 __getattribute__() 调用（注意不要和 __getattr__() 弄混）。也就是说，每次使用类对象.属性（或者 getattr(类对象，属性值)）的调用方式时，都会隐式地调用 __getattribute__()，它会按照下列顺序查找该属性：
+
+  1. 验证该属性是否为类实例对象的数据描述符；
+  2. 如果不是，就查看该属性是否能在类实例对象的 __dict__ 中找到；
+  3. 最后，查看该属性是否为类实例对象的非数据描述符。
+
+  ```
+  #描述符类
+  class revealAccess:
+      def __init__(self, initval = None, name = 'var'):
+          self.val = initval
+          self.name = name
+      def __get__(self, obj, objtype):
+          print("Retrieving",self.name)
+          return self.val
+      def __set__(self, obj, val):
+      
+          print("updating",self.name)
+          self.val = val
+  class myClass:
+      x = revealAccess(10,'var "x"')
+      y = 5
+  m = myClass()
+  print(m.x)
+  m.x = 20
+  print(m.x)
+  print(m.y)
+  运行结果为：
+  Retrieving var "x"
+  10
+  updating var "x"
+  Retrieving var "x"
+  20
+  5
+  ```
+
+  - 从这个例子可以看到，如果一个类的某个属性有数据描述符，那么每次查找这个属性时，都会调用描述符的\\__get__() 方法，并返回它的值；同样，每次在对该属性赋值时，也会调用 \__set__() 方法。
+  - 虽然上面例子中没有使用\__del__() 方法，但也很容易理解，当每次使用 del 类对象.属性（或者 delattr(类对象，属性)）语句时，都会调用该方法。
+
+- 除了使用描述符类自定义类属性被调用时做的操作外，还可以使用 property() 函数或者 @property 装饰器
+
+###### property()定义属性
+
+- 前面章节中，我们一直在用“类对象.属性”的方式访问类中定义的属性，其实这种做法是欠妥的，因为它破坏了类的封装原则。正常情况下，类包含的属性应该是隐藏的，只允许通过类提供的方法来间接实现对类属性的访问和操作。
+
+- 因此，在不破坏类封装原则的基础上，为了能够有效操作类中的属性，类中应包含读（或写）类属性的多个 getter（或 setter）方法，这样就可以通过“类对象.方法(参数)”的方式操作属性
+
+  ```
+  class CLanguage:
+      #构造函数
+      def __init__(self,name):
+          self.name = name 
+      #设置 name 属性值的函数 
+      def setname(self,name):
+          self.name = name
+      #访问nema属性值的函数
+      def getname(self):
+          return self.name
+      #删除name属性值的函数
+      def delname(self):
+          self.name="xxx"
+  clang = CLanguage("C语言中文网")
+  #获取name属性值
+  print(clang.getname())
+  #设置name属性值
+  clang.setname("Python教程")
+  print(clang.getname())
+  #删除name属性值
+  clang.delname()
+  print(clang.getname())
+  
+  C语言中文网
+  Python教程
+  xxx
+  ```
+
+  - 可能有读者觉得，这种操作类属性的方式比较麻烦，更习惯使用“类对象.属性”这种方式。庆幸的是，Python 中提供了 property() 函数，可以实现在不破坏类封装原则的前提下，让开发者依旧使用“类对象.属性”的方式操作类中的属性。
+
+- property() 函数的基本使用格式如下：
+
+  ```
+  属性名=property(fget=None, fset=None, fdel=None, doc=None)
+  ```
+
+  - fget 参数用于指定获取该属性值的类方法，fset 参数用于指定设置该属性值的方法，fdel 参数用于指定删除该属性值的方法，最后的 doc 是一个文档字符串，用于说明此函数的作用。
+
+  - 在使用 property() 函数时，以上 4 个参数可以仅指定第 1 个、或者前 2 个、或者前 3 个，当前也可以全部指定。也就是说，property() 函数中参数的指定并不是完全随意的。
+
+    ```
+    修改上面的程序，为 name 属性配置 property() 函数
+    
+    class CLanguage:
+        #构造函数
+        def __init__(self,n):
+            self.__name = n
+        #设置 name 属性值的函数
+        def setname(self,n):
+            self.__name = n
+        #访问nema属性值的函数
+        def getname(self):
+            return self.__name
+        #删除name属性值的函数
+        def delname(self):
+            self.__name="xxx"
+        #为name 属性配置 property() 函数
+        name = property(getname, setname, delname, '指明出处')
+    #调取说明文档的 2 种方式
+    #print(CLanguage.name.__doc__)
+    help(CLanguage.name)
+    clang = CLanguage("C语言中文网")
+    #调用 getname() 方法
+    print(clang.name)
+    #调用 setname() 方法
+    clang.name="Python教程"
+    print(clang.name)
+    #调用 delname() 方法
+    del clang.name
+    print(clang.name)
+    
+    Help on property:
+    
+        指明出处
+    
+    C语言中文网
+    Python教程
+    xxx
+    ```
+
+  - 在此程序中，由于 getname() 方法中需要返回 name 属性，如果使用 self.name 的话，其本身又被调用 getname()，这将会先入无限死循环。为了避免这种情况的出现，程序中的 name 属性必须设置为私有属性，即使用 __name（前面有 2 个下划线）。有关类属性和类方法的属性设置（分为共有属性、保护属性、私有属性）
+
+  - 当然，property() 函数也可以少传入几个参数。以上面的程序为例，我们可以修改 property() 函数如下所示
+
+    ```
+    name = property(getname, setname)
+    ```
+
+    - 这意味着，name 是一个可读写的属性，但不能删除，因为 property() 函数中并没有为 name 配置用于函数该属性的方法。也就是说，即便 CLanguage 类中设计有 delname() 函数，这种情况下也不能用来删除 name 属性。 
+
+  - 同理，还可以像如下这样使用 property() 函数：
+
+    ```
+    name = property(getname)    # name 属性可读，不可写，也不能删除
+    name = property(getname, setname,delname)    #name属性可读、可写、也可删除，就是没有说明文档
+    ```
+
+###### @property装饰器
+
+- 既要保护类的封装特性，又要让开发者可以使用“对象.属性”的方式操作操作类属性，除了使用 property() 函数，Python 还提供了 @property 装饰器。通过 @property 装饰器，可以直接通过方法名来访问方法，不需要在方法名后添加一对“（）”小括号。
+
+- @property 的语法格式如下：
+
+  ```
+  @property
+  def 方法名(self)
+      代码块
+  ```
+
+- 例如，定义一个矩形类，并定义用 @property 修饰的方法操作类中的 area 私有属性
+
+  ```
+  class Rect:
+      def __init__(self,area):
+          self.__area = area
+      @property
+      def area(self):
+          return self.__area
+  rect = Rect(30)
+  #直接通过方法名来访问 area 方法
+  print("矩形的面积是：",rect.area)
+  
+  矩形的面积为： 30
+  ```
+
+  - 上面程序中，使用 ＠property 修饰了 area() 方法，这样就使得该方法变成了 area 属性的 getter 方法。需要注意的是，如果类中只包含该方法，那么 area 属性将是一个只读属性。
+  - 也就是说，在使用 Rect 类时，无法对 area 属性重新赋值
+
+- 而要想实现修改 area 属性的值，还需要为 area 属性添加 setter 方法，就需要用到 setter 装饰器
+
+  ```
+  @方法名.setter
+  def 方法名(self, value):
+      代码块
+  ```
+
+  - 为 Rect 类中的 area 方法添加 setter 方法
+
+    ```
+    @area.setter
+    def area(self, value):
+        self.__area = value
+    ```
+
+- 除此之外，还可以使用 deleter 装饰器来删除指定属性
+
+  ```
+  @方法名.deleter
+  def 方法名(self):
+      代码块
+  ```
+
+  - 在 Rect 类中，给 area() 方法添加 deleter 方法
+
+    ```
+    @area.deleter
+    def area(self):
+        self.__area = 0
+    ```
+
+    ```
+    del rect.area
+    print("删除后的area值为：",rect.area)
+    
+    删除后的area值为： 0
+    ```
+
+###### 封装
+
+- 简单的理解封装（Encapsulation），即在设计类时，刻意地将一些属性和方法隐藏在类的内部，这样在使用此类时，将无法直接以“类对象.属性名”（或者“类对象.方法名(参数)”）的形式调用这些属性（或方法），而只能用未隐藏的类方法间接操作这些隐藏的属性和方法。
+- 封装机制保证了类内部[数据结构](http://c.biancheng.net/data_structure/)的完整性，因为使用类的用户无法直接看到类中的数据结构，只能使用类允许公开的数据，很好地避免了外部对内部数据的影响，提高了程序的可维护性。除此之外，对一个类实现良好的封装，用户只能借助暴露出来的类方法来访问数据，我们只需要在这些暴露的方法中加入适当的控制逻辑，即可轻松实现用户对类中属性或方法的不合理操作。
+- 和其它面向对象的编程语言（如 C++、Java）不同，Python 类中的变量和函数，不是公有的（类似 public 属性），就是私有的（类似 private），这 2 种属性的区别如下：
+  - public：公有属性的类变量和类函数，在类的外部、类内部以及子类（后续讲继承特性时会做详细介绍）中，都可以正常访问；
+  - private：私有属性的类变量和类函数，只能在本类内部使用，类的外部以及子类都无法使用。
+- 但是，Python 并没有提供 public、private 这些修饰符。为了实现类的封装，Python 采取了下面的方法：
+  - 默认情况下，Python 类中的变量和方法都是公有（public）的，它们的名称前都没有下划线（_）；这个是双下划线
+  - 如果类中的变量和函数，其名称以双下划线“__”开头，则该变量（函数）为私有变量（私有函数），其属性等同于 private。
+
+- 除此之外，还可以定义以单下划线“\_”开头的类属性或者类方法（例如 \_name、\_display(self)），这种类属性和类方法通常被视为私有属性和私有方法，虽然它们也能通过类对象正常访问，但这是一种约定俗称的用法，初学者一定要遵守。
+
+- 注意，Python 类中还有以双下划线开头和结尾的类方法（例如类的构造函数\__init__(self)），这些都是 Python 内部定义的，用于 Python 内部调用。我们自己定义类属性或者类方法时，不要使用这种格式。
+
+  ```
+  class CLanguage :
+      def setname(self, name):
+          if len(name) < 3:
+              raise ValueError('名称长度必须大于3！')
+          self.__name = name
+      def getname(self):
+          return self.__name
+      #为 name 配置 setter 和 getter 方法
+      name = property(getname, setname)
+      def setadd(self, add):
+          if add.startswith("http://"):
+              self.__add = add
+          else:
+              raise ValueError('地址必须以 http:// 开头') 
+      def getadd(self):
+          return self.__add
+     
+      #为 add 配置 setter 和 getter 方法
+      add = property(getadd, setadd)
+      #定义个私有方法
+      def __display(self):
+          print(self.__name,self.__add)
+  clang = CLanguage()
+  clang.name = "C语言中文网"
+  clang.add = "http://c.biancheng.net"
+  print(clang.name)
+  print(clang.add)
+  
+  C语言中文网
+  http://c.biancheng.net
+  ```
+
+  - 上面程序中，CLanguage 将 name 和 add 属性都隐藏了起来，但同时也提供了可操作它们的“窗口”，也就是各自的 setter 和 getter 方法，这些方法都是公有（public）的。
+
+  - 不仅如此，以 add 属性的 setadd() 方法为例，通过在该方法内部添加控制逻辑，即通过调用 startswith() 方法，控制用户输入的地址必须以“http://”开头，否则程序将会执行 raise 语句抛出 ValueError 异常。
+
+  - 通过此程序的运行逻辑不难看出，通过对 CLanguage 类进行良好的封装，使得用户仅能通过暴露的 setter() 和 getter() 方法操作 name 和 add 属性，而通过对 setname() 和 setadd() 方法进行适当的设计，可以避免用户对类中属性的不合理操作，从而提高了类的可维护性和安全性。
+
+  - 细心的读者可能还发现，CLanguage 类中还有一个 \__display() 方法，由于该类方法为私有（private）方法，且该类没有提供操作该私有方法的“窗口”，因此我们无法在类的外部使用它。换句话说，如下调用 __display() 方法是不可行的：
+
+    ```
+    #尝试调用私有的 display() 方法
+    clang.__display()
+    
+    Traceback (most recent call last):
+      File "D:\python3.6\1.py", line 33, in <module>
+        clang.__display()
+    AttributeError: 'CLanguage' object has no attribute '__display'
+    ```
+
+- python封装底层原理
+  - 事实上，Python 封装特性的实现纯属“投机取巧”，之所以类对象无法直接调用以双下划线开头命名的类属性和类方法，是因为其底层实现时，Python 偷偷改变了它们的名称。
+
+  - 事实上，对于以双下划线开头命名的类属性或类方法，Python 在底层实现时，将它们的名称都偷偷改成了 "_类名__属性（方法）名" 的格式。
+
+  - 就以 CLanguage 类中的\_\_display() 为例，Python 在底层将其方法名偷偷改成了“_CLanguage__display()”。例如，在 CLanguage 类的基础上，执行如下代码：
+
+    ```
+    clang = CLanguage()
+    #调用name的setname()方法
+    clang.name = "C语言中文网"
+    #调用add的setadd()方法
+    clang.add = "http://c.biancheng.net"
+    #直接调用隐藏的display()方法
+    clang._CLanguage__display()
+    
+    C语言中文网 http://c.biancheng.net
+    ```
+
+  - 不仅如此，那些原本我们认为是私有的类属性（例如 `__name` 和 `__add`），其底层的名称也改成了“_类名__属性名”的这种格式
+
+  ```
+  clang = CLanguage()
+  clang.name = "C语言中文网"
+  clang.add = "http://c.biancheng.net"
+  #直接调用 name 和 add 私有属性
+  print(clang._CLanguage__name,clang._CLanguage__add)
+  
+  C语言中文网 http://c.biancheng.net
+  ```
+
+  - 甚至于，我们还可以通过这种方式修改 clang 对象的私有属性
+
+    ```
+    clang._CLanguage__name = "Python教程"
+    clang._CLanguage__add = "http://c.biancheng.net/python"
+    print(clang._CLanguage__name,clang._CLanguage__add)
+    
+    Python教程 http://c.biancheng.net/python
+    ```
+
+  - Python 类中所有的属性和方法，都是公有（public）属性，如果希望 Python 底层修改类属性或者类方法的名称，以此将它们隐藏起来，只需将它们的名称前添加双下划线（“__”）即可。
+
+###### 继承
+
+- Python 中，实现继承的类称为子类，被继承的类称为父类（也可称为基类、超类）
+
+- 子类继承父类时，只需在定义子类时，将父类（可以是多个）放在子类之后的圆括号里即可。语法格式如下：
+
+  ```
+  class 类名(父类1, 父类2, ...)：
+      #类定义部分
+  ```
+
+  - 如果该类没有显式指定继承自哪个类，则默认继承 object 类（object 类是 Python 中所有类的父类，即要么是直接父类，要么是间接父类）。另外，Python 的继承是多继承机制（和 [C++](http://c.biancheng.net/cplus/) 一样），即一个子类可以同时拥有多个直接父类。
+
+  ```
+  class People:
+      def say(self):
+          print("我是一个人，名字是：",self.name)
+  class Animal:
+      def display(self):
+          print("人也是高级动物")
+  #同时继承 People 和 Animal 类
+  #其同时拥有 name 属性、say() 和 display() 方法
+  class Person(People, Animal):
+      pass
+  zhangsan = Person()
+  zhangsan.name = "张三"
+  zhangsan.say()
+  zhangsan.display()
+  
+  我是一个人，名字是： 张三
+  人也是高级动物
+  
+  可以看到，虽然 Person 类为空类，但由于其继承自 People 和 Animal 这 2 个类，因此实际上 Person 并不空，它同时拥有这 2 个类所有的属性和方法。
+  ```
+
+  - 子类拥有父类所有的属性和方法，即便该属性或方法是私有（private）的，看封装的底层实现即可知道，python的封装只是投机取巧改了名字
+
+- 事实上，大部分面向对象的编程语言，都只支持单继承，即子类有且只能有一个父类。而 Python 却支持多继承（C++也支持多继承）。和单继承相比，多继承容易让代码逻辑复杂、思路混乱，一直备受争议，中小型项目中较少使用，后来的 [Java](http://c.biancheng.net/java/)、[C#](http://c.biancheng.net/csharp/)、[PHP](http://c.biancheng.net/php/) 等干脆取消了多继承。
+
+- 使用多继承经常需要面临的问题是，多个父类中包含同名的类方法。对于这种情况，Python 的处置措施是：根据子类继承多个父类时这些父类的前后次序决定，即排在前面父类中的类方法会覆盖排在后面父类中的同名类方法。
+
+- 虽然 Python 在语法上支持多继承，但逼不得已，建议大家不要使用多继承。
+
+###### 父类方法重写
+
+- 前面讲过在 [Python](http://c.biancheng.net/python/) 中，子类继承了父类，那么子类就拥有了父类所有的类属性和类方法。通常情况下，子类会在此基础上，扩展一些新的类属性和类方法。但凡事都有例外，我们可能会遇到这样一种情况，即子类从父类继承得来的类方法中，大部分是适合子类使用的，但有个别的类方法，并不能直接照搬父类的，如果不对这部分类方法进行修改，子类对象无法使用。针对这种情况，我们就需要在子类中重复父类的方法。
+
+- 重写，有时又称覆盖，是一个意思，指的是对类中已有方法的内部实现进行修改。
+
+  ```
+  class Bird:
+      #鸟有翅膀
+      def isWing(self):
+          print("鸟有翅膀")
+      #鸟会飞
+      def fly(self):
+          print("鸟会飞")
+  class Ostrich(Bird):
+      # 重写Bird类的fly()方法
+      def fly(self):
+          print("鸵鸟不会飞")
+  # 创建Ostrich对象
+  ostrich = Ostrich()
+  #调用 Ostrich 类中重写的 fly() 类方法
+  ostrich.fly()
+  
+  鸵鸟不会飞
+  
+  ostrich 调用的是重写之后的 fly() 类方法。
+  ```
+
+- 事实上，如果我们在子类中重写了从父类继承来的类方法，那么当在类的外部通过子类对象调用该方法时，Python 总是会执行子类中重写的方法。这就产生一个新的问题，即如果想调用父类中被重写的这个方法，很简单，前面讲过，Python 中的类可以看做是一个独立空间，而类方法其实就是出于该空间中的一个函数。而如果想要全局空间中，调用类空间中的函数，只需要在调用该函数是备注类名即可
+
+  ```
+  class Bird:
+      #鸟有翅膀
+      def isWing(self):
+          print("鸟有翅膀")
+      #鸟会飞
+      def fly(self):
+          print("鸟会飞")
+  class Ostrich(Bird):
+      # 重写Bird类的fly()方法
+      def fly(self):
+          print("鸵鸟不会飞")
+  # 创建Ostrich对象
+  ostrich = Ostrich()
+  #调用 Bird 类中的 fly() 方法
+  Bird.fly(ostrich)
+  
+  鸟会飞
+  ```
+
+  - 此程序中，需要大家注意的一点是，使用类名调用其类方法，Python 不会为该方法的第一个 self 参数自定绑定值，因此采用这种调用方法，需要手动为 self 参数赋值。
