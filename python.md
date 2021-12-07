@@ -3792,3 +3792,780 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
   ```
 
   - 此程序中，需要大家注意的一点是，使用类名调用其类方法，Python 不会为该方法的第一个 self 参数自定绑定值，因此采用这种调用方法，需要手动为 self 参数赋值。
+
+###### 子类化内置类型
+
+- Python 中内置有一个 object 类，它是所有内置类型的共同祖先，也是所有没有显式指定父类的类（包括用户自定义的）的共同祖先。因此在实际编程过程中，如果想实现与某个内置类型具有类似行为的类时，最好的方法就是将这个内置类型子类化。
+
+- 内置类型子类化，其实就是自定义一个新类，使其继承有类似行为的内置类，通过重定义这个新类实现指定的功能。
+
+- 举个例子，如下所示创建了一个名为 newDict 的类，其中 newDictError 是自定义的异常类：
+
+  ```
+  class newDictError(ValueError):
+    """如果向newDict 添加重复值，则引发此异常"""
+  class newDict(dict):
+    """不接受重复值的字典"""
+    def __setitem__(self,key,value):
+      if value in self.values():
+        if ((key in self and self[key]!=value) or (key not in self)):
+          raise newDictError("这个值已经存在，并对应不同的键")
+      super().__setitem__(key,value)
+  demoDict = newDict()
+  demoDict['key']='value'
+  demoDict['other_key']='value2'
+  print(demoDict)
+  demoDict['other_key']='value'
+  print(demoDict)
+  
+  {'key': 'value', 'other_key': 'value2'}
+  Traceback (most recent call last):
+    File "C:\Users\mengma\Desktop\demo.py", line 15, in <module>
+      demoDict['other_key']='value'
+    File "C:\Users\mengma\Desktop\demo.py", line 9, in __setitem__
+      raise newDictError("这个值已经存在，并对应不同的键")
+  newDictError: 这个值已经存在，并对应不同的键
+  ```
+
+  - 可以看到，newDict 是 Python 中 dict 类型的子类，所以其大部分行为都和 dict 内置类相同，唯一不同之处在于，newDict 不允许字典中多个键对应相同的值。如果用户试图添加具有相同值的新元素，则会引发 newDictError 异常，并给出提示信息。
+
+  - 由于目前尚未学习如何处理异常，因此这里没有 newDictError 做任何处理，异常处理会在后续章节做详细讲解。
+
+  - 另外，如果查看现有代码你会发现，其实很多类都是对 Python 内置类的部分实现，它们作为子类的速度更快，代码更整洁。比如，list 类型用来管理序列，如果一个类需要在内部处理序列，那么就可以对 list 进行子类化，示例代码如下：
+
+    ```
+    class myList(list):
+      def __init__(self,name):
+        self.name = name
+      def dir(self,nesting = 0):
+        offset = " " * nesting
+        print("%s%s/" % (offset,self.name))
+        for element in self:
+          if hasattr(element , 'dir'):
+            element.dir(nesting + 1)
+          else:
+            print("%s %s" % (offset,element))
+    demoList = myList('C语言中文网')
+    demoList.append('http://c.biancheng.net')
+    print(demoList.dir())
+    
+    C语言中文网/
+    http://c.biancheng.net
+    None
+    ```
+
+  - 除了 Python 中常用的基本内置类型，collections 模块中还额外提供了很多有用的容器，这些容器可以满足大部分情况。
+
+###### super()函数：调用父类的构造方法
+
+- 前面不止一次讲过，[Python](http://c.biancheng.net/python/) 中子类会继承父类所有的类属性和类方法。严格来说，类的构造方法其实就是实例方法，因此毫无疑问，父类的构造方法，子类同样会继承。
+
+- 但我们知道，Python 是一门支持多继承的面向对象编程语言，如果子类继承的多个父类中包含同名的类实例方法，则子类对象在调用该方法时，会优先选择排在最前面的父类中的实例方法。显然，构造方法也是如此。
+
+  ```
+  class People:
+      def __init__(self,name):
+          self.name = name
+      def say(self):
+          print("我是人，名字为：",self.name)
+  class Animal:
+      def __init__(self,food):
+          self.food = food
+      def display(self):
+          print("我是动物,我吃",self.food)
+  #People中的 name 属性和 say() 会遮蔽 Animal 类中的
+  class Person(People, Animal):
+      pass
+  per = Person("zhangsan")
+  per.say()
+  #per.display()
+  
+  我是人，名字为： zhangsan
+  ```
+
+  - 上面程序中，Person 类同时继承 People 和 Animal，其中 People 在前。这意味着，在创建 per 对象时，其将会调用从 People 继承来的构造函数。因此我们看到，上面程序在创建 per 对象的同时，还要给 name 属性进行赋值。
+
+  - 但如果去掉最后一行的注释，运行此行代码，Python 解释器会报如下错误：
+
+    ```
+    Traceback (most recent call last):
+      File "D:\python3.6\Demo.py", line 18, in <module>
+        per.display()
+      File "D:\python3.6\Demo.py", line 11, in display
+        print("我是动物,我吃",self.food)
+    AttributeError: 'Person' object has no attribute 'food'
+    ```
+
+    - 这是因为，从 Animal 类中继承的 display() 方法中，需要用到 food 属性的值，但由于 People 类的构造方法“遮蔽”了Animal 类的构造方法，使得在创建 per 对象时，Animal 类的构造方法未得到执行，所以程序出错。
+
+- 针对这种情况，正确的做法是定义 Person 类自己的构造方法（等同于重写第一个直接父类的构造方法）。但需要注意，如果在子类中定义构造方法，则必须在该方法中调用父类的构造方法。
+
+- 在子类中的构造方法中，调用父类构造方法的方式有 2 种，分别是：
+
+  1. 类可以看做一个独立空间，在类的外部调用其中的实例方法，可以向调用普通函数那样，只不过需要额外备注类名（此方式又称为未绑定方法）；
+  2. 使用 super() 函数。但如果涉及多继承，该函数只能调用第一个直接父类的构造方法。
+  3. 也就是说，涉及到多继承时，在子类构造函数中，调用第一个父类构造方法的方式有以上 2 种，而调用其它父类构造方法的方式只能使用未绑定方法。
+
+- Python 2.x 中，super() 函数的使用语法格式如下：
+
+  ```
+  super(Class, obj).__init__(self,...)
+  ```
+
+  - Class 值得是子类的类名，obj 通常指的就是 self。
+
+- 但在 Python 3.x 中，super() 函数有一种更简单的语法格式，推荐大家使用这种格式
+
+  ```
+  super().__init__(self,...)
+  ```
+
+  ```
+  class People:
+      def __init__(self,name):
+          self.name = name
+      def say(self):
+          print("我是人，名字为：",self.name)
+  class Animal:
+      def __init__(self,food):
+          self.food = food
+      def display(self):
+          print("我是动物,我吃",self.food)
+  class Person(People, Animal):
+      #自定义构造方法
+      def __init__(self,name,food):
+          #调用 People 类的构造方法
+          super().__init__(name)
+          #super(Person,self).__init__(name) #执行效果和上一行相同
+          #People.__init__(self,name)#使用未绑定方法调用 People 类构造方法
+          #调用其它父类的构造方法，需手动给 self 传值
+          Animal.__init__(self,food)    
+  per = Person("zhangsan","熟食")
+  per.say()
+  per.display()
+  
+  我是人，名字为： zhangsan
+  我是动物,我吃 熟食
+  ```
+
+  - 可以看到，Person 类自定义的构造方法中，调用 People 类构造方法，可以使用 super() 函数，也可以使用未绑定方法。但是调用 Animal 类的构造方法，只能使用未绑定方法。
+
+- 前面已经讲解了 super() 函数的用法，值得一提的是，Python 2 中 super() 函数的用法和 Python 3 大致相同，唯一的区别在于，Python 2 中不能使用零参数形式的格式，必须提供至少一个参数。
+
+- 对于想要编写跨版本兼容代码的程序员来说，还要注意一件事，即 Python 2 中的 super() 函数只适用于新式类，在旧式类中不能使用 super()。
+
+- 那么，什么是旧式类和新式类呢？在早期版本的 Python 中，所有类并没有一个共同的祖先 object，如果定义一个类，但没有显式指定其祖先，那么就被解释为旧式类
+
+- Python 2.x 版本中，为了向后兼容保留了旧式类。该版本中的新式类必须显式继承 object 或者其他新式类
+
+- 而在 Python 3.x 版本中，不再保留旧式类的概念。因此，没有继承任何其他类的类都隐式地继承自 object。
+
+- 可以说，在 Python 3.x 中，显式声明某个类继承自 object 似乎是冗余的。但如果考虑跨版本兼容，那么就必须将 object 作为所有基类的祖先，因为如果不这么做的话，这些类将被解释为旧式类，最终会导致难以诊断的问题。
+
+###### super()使用注意事项
+
+- 混用super与显示类调用，分析如下程序，C 类使用了 __init__() 方法调用它的基类，会造成 B 类被调用了 2 次：
+
+  ```
+  class A:
+      def __init__(self):
+          print("A",end=" ")
+          super().__init__()
+  class B:
+      def __init__(self):
+          print("B",end=" ")
+          super().__init__()
+  class C(A,B):
+      def __init__(self):
+          print("C",end=" ")
+          A.__init__(self)
+          B.__init__(self)
+  print("MRO:",[x.__name__ for x in C.__mro__])
+  C()
+  
+  MRO: ['C', 'A', 'B', 'object']
+  C A B B
+  ```
+
+  - 出现以上这种情况的原因在于，C 的实例调用 A.__init__(self)，使得 super(A,self).__init__() 调用了 B.__init__() 方法。换句话说，super 应该被用到整个类的层次结构中。
+  - 但是，有时这种层次结构的一部分位于第三方代码中，我们无法确定外部包的这些代码中是否使用 super()，因此，当需要对某个第三方类进行子类化时，最好查看其内部代码以及 MRO 中其他类的内部代码。
+
+- 不同种类的参数，使用 super 的另一个问题是初始化过程中的参数传递。如果没有相同的签名，一个类怎么能调用其基类的 __init__() 代码呢？这会导致下列问题：
+
+  ```
+  class commonBase:
+      def __init__(self):
+          print("commonBase")
+          super().__init__()
+  class base1(commonBase):
+      def __init__(self):
+          print("base1")
+          super().__init__()
+  class base2(commonBase):
+      def __init__(self):
+          print("base2")
+          super().__init__()
+  class myClass(base1,base2):
+      def __init__(self,arg):
+          print("my base")
+          super().__init__(arg)
+  myClass(10)
+  
+  my base
+  Traceback (most recent call last):
+    File "C:\Users\mengma\Desktop\demo.py", line 20, in <module>
+      myClass(10)
+    File "C:\Users\mengma\Desktop\demo.py", line 19, in __init__
+      super().__init__(arg)
+  TypeError: __init__() takes 1 positional argument but 2 were given
+  ```
+
+  - 一种解决方法是使用 *args 和 **kwargs 包装的参数和关键字参数，这样即使不使用它们，所有的构造函数也会传递所有参数
+
+    ```
+    class commonBase:
+        def __init__(self,*args,**kwargs):
+            print("commonBase")
+            super().__init__()
+    class base1(commonBase):
+        def __init__(self,*args,**kwargs):
+            print("base1")
+            super().__init__(*args,**kwargs)
+    class base2(commonBase):
+        def __init__(self,*args,**kwargs):
+            print("base2")
+            super().__init__(*args,**kwargs)
+    class myClass(base1,base2):
+        def __init__(self,arg):
+            print("my base")
+            super().__init__(arg)
+    myClass(10)
+    
+    my base
+    base1
+    base2
+    commonBase
+    ```
+
+    - 不过，这是一种很糟糕的解决方法，由于任何参数都可以传入，所有构造函数都可以接受任何类型的参数，这会导致代码变得脆弱。另一种解决方法是在 MyClass 中显式地使用特定类的 __init__() 调用，但这无疑会导致第一种错误。
+
+- 如果想要避免程序中出现以上的这些问题，这里给出几点建议：
+
+  - 尽可能避免使用多继承，可以使用一些设计模式来替代它；
+  - super 的使用必须一致，即在类的层次结构中，要么全部使用 super，要么全不用。混用 super 和传统调用是一种混乱的写法；
+  - 如果代码需要兼容 Python 2.x，在 Python 3.x 中应该显式地继承自 object。在 Python 2.x 中，没有指定任何祖先地类都被认定为旧式类。
+  - 调用父类时应提前查看类的层次结构，也就是使用类的 `__mro__` 属性或者 mro() 方法查看有关类的 MRO。
+
+###### \__slots__:限制类实例动态添加属性和方法
+
+- 通过学习《[Python类变量和实例变量](http://c.biancheng.net/view/2283.html)》一节，了解了如何动态的为单个实例对象添加属性，甚至如果必要的话，还可以为所有的类实例对象统一添加属性（通过给类添加属性）。
+
+- 那么，[Python](http://c.biancheng.net/python/) 是否也允许动态地为类或实例对象添加方法呢？答案是肯定的。我们知道，类方法又可细分为实例方法、静态方法和类方法，Python 语言允许为类动态地添加这 3 种方法；但对于实例对象，则只允许动态地添加实例方法，不能添加类方法和静态方法。
+
+- 为单个实例对象添加方法，不会影响该类的其它实例对象；而如果为类动态地添加方法，则所有的实例对象都可以使用。
+
+  ```
+  class CLanguage:
+      pass
+  #下面定义了一个实例方法
+  def info(self):
+      print("正在调用实例方法")
+  #下面定义了一个类方法
+  @classmethod
+  def info2(cls):
+      print("正在调用类方法")
+  #下面定义个静态方法
+  @staticmethod
+  def info3():
+      print("正在调用静态方法")
+  #类可以动态添加以上 3 种方法，会影响所有实例对象
+  CLanguage.info = info
+  CLanguage.info2 = info2
+  CLanguage.info3 = info3
+  clang = CLanguage()
+  #如今，clang 具有以上 3 种方法
+  clang.info()
+  clang.info2()
+  clang.info3()
+  #类实例对象只能动态添加实例方法，不会影响其它实例对象
+  clang1 = CLanguage()
+  clang1.info = info
+  #必须手动为 self 传值
+  clang1.info(clang1)
+  
+  正在调用实例方法
+  正在调用类方法
+  正在调用静态方法
+  正在调用实例方法
+  ```
+
+- 显然，动态给类或者实例对象添加属性或方法，是非常灵活的。但与此同时，如果胡乱地使用，也会给程序带来一定的隐患，即程序中已经定义好的类，如果不做任何限制，是可以做动态的修改的。
+
+- 庆幸的是，Python 提供了 `__slots__` 属性，通过它可以避免用户频繁的给实例对象动态地添加属性或方法。再次声明，`__slots__` 只能限制为实例对象动态添加属性和方法，而无法限制动态地为类添加属性和方法。
+
+- `__slots__` 属性值其实就是一个元组，只有其中指定的元素，才可以作为动态添加的属性或者方法的名称。举个例子：
+
+  ```
+  class CLanguage:
+      __slots__ = ('name','add','info')
+  ```
+
+  - 可以看到， CLanguage 类中指定了 `__slots__` 属性，这意味着，该类的实例对象仅限于动态添加 name、add、info 这 3 个属性以及 name()、add() 和 info() 这 3 个方法。注意，对于动态添加的方法，`__slots__` 限制的是其方法名，并不限制参数的个数。
+
+- 比如，在 CLanguage 类的基础上，添加如下代码并运行：
+
+  ```
+  def info(self,name):
+      print("正在调用实例方法",self.name)
+  clang = CLanguage()
+  clang.name = "C语言中文网"
+  #为 clang 对象动态添加 info 实例方法
+  clang.info = info
+  clang.info(clang,"Python教程")
+  
+  正在调用实例方法 C语言中文网
+  
+  def info(self,name):
+      print("正在调用实例方法",self.name)
+  clang = CLanguage()
+  clang.name = "C语言中文网"
+  clang.say = info
+  clang.say(clang,"Python教程")
+  
+  Traceback (most recent call last):
+    File "D:\python3.6\1.py", line 9, in <module>
+      clang.say = info
+  AttributeError: 'CLanguage' object has no attribute 'say'
+  ```
+
+  - 显然，根据 `__slots__` 属性的设置，CLanguage 类的实例对象是不能动态添加以 say 为名称的方法的。
+
+- 另外本节前面提到，`__slots__` 属性限制的对象是类的实例对象，而不是类，因此下面的代码是合法的：
+
+  ```
+  def info(self):
+      print("正在调用实例方法")
+  CLanguage.say = info
+  clang = CLanguage()
+  clang.say()
+  
+  正在调用实例方法
+  ```
+
+- 此外，`__slots__` 属性对由该类派生出来的子类，也是不起作用的
+
+  ```
+  class CLanguage:
+      __slots__ = ('name','add','info')
+  #Clanguage 的空子类
+  class CLangs(CLanguage):
+      pass
+  #定义的实例方法
+  def info(self):
+      print("正在调用实例方法")
+  clang = CLangs()
+  #为子类对象动态添加 say() 方法
+  clang.say = info
+  clang.say(clang)
+  
+  正在调用实例方法
+  ```
+
+  - 显然，`__slots__` 属性只对当前所在的类起限制作用。
+  - 因此，如果子类也要限制外界为其实例对象动态地添加属性和方法，必须在子类中设置 `__slots__` 属性。
+- 注意，如果为子类也设置有 `__slots__` 属性，那么子类实例对象允许动态添加的属性和方法，是子类中 `__slots__` 属性和父类 `__slots__` 属性的和。
+
+###### type():动态创建类
+
+- type() 函数属于 [Python](http://c.biancheng.net/python/) 内置函数，通常用来查看某个变量的具体类型。其实，type() 函数还有一个更高级的用法，即创建一个自定义类型（也就是创建一个类）。
+
+- type() 函数的语法格式有 2 种，分别如下：
+
+  ```
+  type(obj) 
+  type(name, bases, dict)
+  ```
+
+  - 以上这 2 种语法格式，各参数的含义及功能分别是：
+    - 第一种语法格式用来查看某个变量（类对象）的具体类型，obj 表示某个变量或者类对象。
+    - 第二种语法格式用来创建类，其中 name 表示类的名称；bases 表示一个元组，其中存储的是该类的父类；dict 表示一个字典，用于表示类内定义的属性或者方法。
+
+  ```
+  #定义一个实例方法
+  def say(self):
+      print("我要学 Python！")
+  #使用 type() 函数创建类
+  CLanguage = type("CLanguage",(object,),dict(say = say, name = "C语言中文网"))
+  #创建一个 CLanguage 实例对象
+  clangs = CLanguage()
+  #调用 say() 方法和 name 属性
+  clangs.say()
+  print(clangs.name)
+  
+  我要学 Python！
+  C语言中文网
+  ```
+
+  - Python 元组语法规定，当 (object,) 元组中只有一个元素时，最后的逗号（,）不能省略。
+  - 此程序中通过 type() 创建了类，其类名为 CLanguage，继承自 objects 类，且该类中还包含一个 say() 方法和一个 name 属性。
+  - 有读者可能会问，如何判断 dict 字典中添加的是方法还是属性？很简单，如果该键值对中，值为普通变量（如 "C语言中文网"），则表示为类添加了一个类属性；反之，如果值为外部定义的函数（如 say() ），则表示为类添加了一个实例方法。
+  - 可以看到，使用 type() 函数创建的类，和直接使用 class 定义的类并无差别。事实上，我们在使用 class 定义类时，Python 解释器底层依然是用 type() 来创建这个类。
+
+###### MetaClass元类
+
+- MetaClass元类，本质也是一个类，但和普通类的用法不同，它可以对类内部的定义（包括类属性和类方法）进行动态的修改。可以这么说，使用元类的主要目的就是为了实现在创建类时，能够动态地改变类中定义的属性或者方法。
+
+- 举个例子，根据实际场景的需要，我们要为多个类添加一个 name 属性和一个 say() 方法。显然有多种方法可以实现，但其中一种方法就是使用 MetaClass 元类。
+
+- 如果在创建类时，想用 MetaClass 元类动态地修改内部的属性或者方法，则类的创建过程将变得复杂：先创建 MetaClass 元类，然后用元类去创建类，最后使用该类的实例化对象实现功能。
+
+- 和前面章节创建的类不同，如果想把一个类设计成 MetaClass 元类，其必须符合以下条件：
+
+  1. 必须显式继承自 type 类；
+  2. 类中需要定义并实现 `__new__`() 方法，该方法一定要返回该类的一个实例对象，因为在使用元类创建类时，该 `__new__`() 方法会自动被执行，用来修改新建的类。
+
+  ```
+  #定义一个元类
+  class FirstMetaClass(type):
+      # cls代表动态修改的类
+      # name代表动态修改的类名
+      # bases代表被动态修改的类的所有父类
+      # attr代表被动态修改的类的所有属性、方法组成的字典
+      def __new__(cls, name, bases, attrs):
+          # 动态为该类添加一个name属性
+          attrs['name'] = "C语言中文网"
+          attrs['say'] = lambda self: print("调用 say() 实例方法")
+          return super().__new__(cls,name,bases,attrs)
+  ```
+
+  - 此程序中，首先可以断定 FirstMetaClass 是一个类。其次，由于该类继承自 type 类，并且内部实现了 `__new__`() 方法，因此可以断定 FirstMetaCLass 是一个元类。
+
+  - 可以看到，在这个元类的 `__new__`() 方法中，手动添加了一个 name 属性和 say() 方法。这意味着，通过 FirstMetaClass 元类创建的类，会额外添加 name 属性和 say() 方法
+
+    ```
+    #定义类时，指定元类
+    class CLanguage(object,metaclass=FirstMetaClass):
+        pass
+    clangs = CLanguage()
+    print(clangs.name)
+    clangs.say()
+    
+    C语言中文网
+    调用 say() 实例方法
+    ```
+
+    - 可以看到，在创建类时，通过在标注父类的同时指定元类（格式为`metaclass=元类名`），则当 [Python](http://c.biancheng.net/python/) 解释器在创建这该类时，FirstMetaClass 元类中的 `__new__` 方法就会被调用，从而实现动态修改类属性或者类方法的目的。
+    - 显然，FirstMetaClass 元类的 `__new__`() 方法动态地为 Clanguage 类添加了 name 属性和 say() 方法，因此，即便该类在定义时是空类，它也依然有 name 属性和 say() 方法。
+    - 对于 MetaClass 元类，它多用于创建 API，因此我们几乎不会使用到它。
+
+- metaclass 这样“逆天”的存在，会"扭曲变形"正常的 Python 类型模型，所以，如果使用不慎，对于整个代码库造成的风险是不可估量的。换句话说，metaclass 仅仅是给小部分 Python 开发者，在开发框架层面的 Python 库时使用的。而在应用层，metaclass 往往不是很好的选择。
+
+###### 多态
+
+- 我们都知道，[Python](http://c.biancheng.net/python/) 是弱类型语言，其最明显的特征是在使用变量时，无需为其指定具体的数据类型。这会导致一种情况，即同一变量可能会被先后赋值不同的类对象，例如：
+
+  ```
+  class CLanguage:
+      def say(self):
+          print("赋值的是 CLanguage 类的实例对象")
+  class CPython:
+      def say(self):
+          print("赋值的是 CPython 类的实例对象")
+  a = CLanguage()
+  a.say()
+  a = CPython()
+  a.say()
+  
+  赋值的是 CLanguage 类的实例对象
+  赋值的是 CPython 类的实例对象
+  ```
+
+  - 可以看到，a 可以被先后赋值为 CLanguage 类和 CPython 类的对象，但这并不是多态。类的多态特性，还要满足以下 2 个前提条件：
+    1. 继承：多态一定是发生在子类和父类之间；
+    2. 重写：子类重写了父类的方法。
+
+- 改写上面的代码
+
+  ```
+  class CLanguage:
+      def say(self):
+          print("调用的是 Clanguage 类的say方法")
+  class CPython(CLanguage):
+      def say(self):
+          print("调用的是 CPython 类的say方法")
+  class CLinux(CLanguage):
+      def say(self):
+          print("调用的是 CLinux 类的say方法")
+  a = CLanguage()
+  a.say()
+  a = CPython()
+  a.say()
+  a = CLinux()
+  a.say()
+  
+  调用的是 Clanguage 类的say方法
+  调用的是 CPython 类的say方法
+  调用的是 CLinux 类的say方法
+  ```
+
+  - 可以看到，CPython 和 CLinux 都继承自 CLanguage 类，且各自都重写了父类的 say() 方法。从运行结果可以看出，同一变量 a 在执行同一个 say() 方法时，由于 a 实际表示不同的类实例对象，因此 a.say() 调用的并不是同一个类中的 say() 方法，这就是多态。
+
+- 但是，仅仅学到这里，读者还无法领略 Python 类使用多态特性的精髓。其实，Python 在多态的基础上，衍生出了一种更灵活的编程机制。
+
+  ```
+  class WhoSay:
+      def say(self,who):
+          who.say()
+  class CLanguage:
+      def say(self):
+          print("调用的是 Clanguage 类的say方法")
+  class CPython(CLanguage):
+      def say(self):
+          print("调用的是 CPython 类的say方法")
+  class CLinux(CLanguage):
+      def say(self):
+          print("调用的是 CLinux 类的say方法")
+  a = WhoSay()
+  #调用 CLanguage 类的 say() 方法
+  a.say(CLanguage())
+  #调用 CPython 类的 say() 方法
+  a.say(CPython())
+  #调用 CLinux 类的 say() 方法
+  a.say(CLinux())
+  
+  调用的是 Clanguage 类的say方法
+  调用的是 CPython 类的say方法
+  调用的是 CLinux 类的say方法
+  ```
+
+  - 此程序中，通过给 WhoSay 类中的 say() 函数添加一个 who 参数，其内部利用传入的 who 调用 say() 方法。这意味着，当调用 WhoSay 类中的 say() 方法时，我们传给 who 参数的是哪个类的实例对象，它就会调用那个类中的 say() 方法。
+
+###### 枚举类
+
+- 一些具有特殊含义的类，其实例化对象的个数往往是固定的，比如用一个类表示月份，则该类的实例对象最多有 12 个；再比如用一个类表示季节，则该类的实例化对象最多有 4 个。
+
+- 针对这种特殊的类，[Python](http://c.biancheng.net/python/) 3.4 中新增加了 Enum 枚举类。也就是说，对于这些实例化对象个数固定的类，可以用枚举类来定义。
+
+  ```
+  from enum import Enum
+  class Color(Enum):
+      # 为序列值指定value值
+      red = 1
+      green = 2
+      blue = 3
+  ```
+
+  - 如果想将一个类定义为枚举类，只需要令其继承自 enum 模块中的 Enum 类即可。例如在上面程序中，Color 类继承自 Enum 类，则证明这是一个枚举类。
+
+- 在 Color 枚举类中，red、green、blue 都是该类的成员（可以理解为是类变量）。注意，枚举类的每个成员都由 2 部分组成，分别为 name 和 value，其中 name 属性值为该枚举值的变量名（如 red），value 代表该枚举值的序号（序号通常从 1 开始）。
+
+- 和普通类的用法不同，枚举类不能用来实例化对象，但这并不妨碍我们访问枚举类中的成员。访问枚举类成员的方式有多种，例如以 Color 枚举类为例，在其基础上添加如下代码：
+
+  ```
+  #调用枚举成员的 3 种方式
+  print(Color.red)
+  print(Color['red'])
+  print(Color(1))
+  #调取枚举成员中的 value 和 name
+  print(Color.red.value)
+  print(Color.red.name)
+  #遍历枚举类中所有成员的 2 种方式
+  for color in Color:
+      print(color)
+      
+  Color.red
+  Color.red
+  Color.red
+  1
+  red
+  Color.red
+  Color.green
+  Color.blue
+  ```
+
+- 枚举类成员之间不能比较大小，但可以用 == 或者 is 进行比较是否相等
+
+  ```
+  print(Color.red == Color.green)
+  print(Color.red.name is Color.green.name)
+  
+  Flase
+  Flase
+  ```
+
+- 需要注意的是，枚举类中各个成员的值，不能在类的外部做任何修改，也就是说，下面语法的做法是错误的：
+
+  ```
+  Color.red = 4
+  ```
+
+- 除此之外，该枚举类还提供了一个 `__members__` 属性，该属性是一个包含枚举类中所有成员的字典，通过遍历该属性，也可以访问枚举类中的各个成员。例如：
+
+  ```
+  for name,member in Color.__members__.items():
+      print(name,"->",member)
+      
+  red -> Color.red
+  green -> Color.green
+  blue -> Color.blue
+  ```
+
+- 值得一提的是，Python 枚举类中各个成员必须保证 name 互不相同，但 value 可以相同
+
+  ```
+  from enum import Enum
+  class Color(Enum):
+      # 为序列值指定value值
+      red = 1
+      green = 1
+      blue = 3
+  print(Color['green'])
+  
+  Color.red
+  ```
+
+  - 可以看到，Color 枚举类中 red 和 green 具有相同的值（都是 1），Python 允许这种情况的发生，它会将 green 当做是 red 的别名，因此当访问 green 成员时，最终输出的是 red。
+
+- 在实际编程过程中，如果想避免发生这种情况，可以借助 @unique 装饰器，这样当枚举类中出现相同值的成员时，程序会报 ValueError 错误。
+
+  ```
+  #引入 unique
+  from enum import Enum,unique
+  #添加 unique 装饰器
+  @unique
+  class Color(Enum):
+      # 为序列值指定value值
+      red = 1
+      green = 1
+      blue = 3
+  print(Color['green'])
+  
+  Traceback (most recent call last):
+    File "D:\python3.6\demo.py", line 3, in <module>
+      class Color(Enum):
+    File "D:\python3.6\lib\enum.py", line 834, in unique
+      (enumeration, alias_details))
+  ValueError: duplicate values found in <enum 'Color'>: green -> red
+  ```
+
+- 除了通过继承 Enum 类的方法创建枚举类，还可以使用 Enum() 函数创建枚举类
+
+  ```
+  from enum import Enum
+  #创建一个枚举类
+  Color = Enum("Color",('red','green','blue'))
+  #调用枚举成员的 3 种方式
+  print(Color.red)
+  print(Color['red'])
+  print(Color(1))
+  #调取枚举成员中的 value 和 name
+  print(Color.red.value)
+  print(Color.red.name)
+  #遍历枚举类中所有成员的 2 种方式
+  for color in Color:
+      print(color)
+      
+  Color.red
+  Color.red
+  Color.red
+  1
+  red
+  Color.red
+  Color.green
+  Color.blue
+  ```
+
+  - Enum() 函数可接受 2 个参数，第一个用于指定枚举类的类名，第二个参数用于指定枚举类中的多个成员。
+
+#### 类特殊成员
+
+- Python 类中，凡是以双下划线 "\__" 开头和结尾命名的成员（属性和方法），都被称为类的特殊成员（特殊属性和特殊方法）。例如，类的 `__init__(self)` 构造方法就是典型的特殊方法。
+- Python 类中的特殊成员，其特殊性类似 C++ 类的 private 私有成员，即不能在类的外部直接调用，但允许借助类中的普通方法调用甚至修改它们。如果需要，还可以对类的特殊方法进行重写，从而实现一些特殊的功能。
+
+###### \__new__()
+
+- `__new__()` 是一种负责创建类实例的静态方法，它无需使用 staticmethod 装饰器修饰，且该方法会优先 `__init__()` 初始化方法被调用。
+
+- 一般情况下，覆写 `__new__()` 的实现将会使用合适的参数调用其超类的 `super().__new__()`，并在返回之前修改实例
+
+```
+class demoClass:
+    instances_created = 0
+    def __new__(cls,*args,**kwargs):
+        print("__new__():",cls,args,kwargs)
+        instance = super().__new__(cls)
+        instance.number = cls.instances_created
+        cls.instances_created += 1
+        return instance
+    def __init__(self,attribute):
+        print("__init__():",self,attribute)
+        self.attribute = attribute
+test1 = demoClass("abc")
+test2 = demoClass("xyz")
+print(test1.number,test1.instances_created)
+print(test2.number,test2.instances_created)
+
+__new__(): <class '__main__.demoClass'> ('abc',) {}
+__init__(): <__main__.demoClass object at 0x0000026FC0DF8080> abc
+__new__(): <class '__main__.demoClass'> ('xyz',) {}
+__init__(): <__main__.demoClass object at 0x0000026FC0DED358> xyz
+0 2
+1 2
+```
+
+- `__new__()` 通常会返回该类的一个实例，但有时也可能会返回其他类的实例，如果发生了这种情况，则会跳过对 `__init__()` 方法的调用。而在某些情况下（比如需要修改不可变类实例（[Python](http://c.biancheng.net/python/) 的某些内置类型）的创建行为），利用这一点会事半功倍
+
+```
+class nonZero(int):
+    def __new__(cls,value):
+        return super().__new__(cls,value) if value != 0 else None
+    def __init__(self,skipped_value):
+        #此例中会跳过此方法
+        print("__init__()")
+        super().__init__()
+print(type(nonZero(-12)))
+print(type(nonZero(0)))
+
+__init__()
+<class '__main__.nonZero'>
+<class 'NoneType'>
+```
+
+- 那么，什么情况下使用 `__new__()` 呢？答案很简单，在 `__init__()` 不够用的时候。例如，前面例子中对 Python 不可变的内置类型（如 int、str、float 等）进行了子类化，这是因为一旦创建了这样不可变的对象实例，就无法在 `__init__`() 方法中对其进行修改。
+- 有些读者可能会认为，`__new__()` 对执行重要的对象初始化很有用，如果用户忘记使用 super()，可能会漏掉这一初始化。虽然这听上去很合理，但有一个主要的缺点，即如果使用这样的方法，那么即便初始化过程已经是预期的行为，程序员明确跳过初始化步骤也会变得更加困难。不仅如此，它还破坏了“`__init__()` 中执行所有初始化工作”的潜规则。
+- 注意，由于 `__new__()` 不限于返回同一个类的实例，所以很容易被滥用，不负责任地使用这种方法可能会对代码有害，所以要谨慎使用。一般来说，对于特定问题，最好搜索其他可用的解决方案，最好不要影响对象的创建过程，使其违背程序员的预期。比如说，前面提到的覆写不可变类型初始化的例子，完全可以用工厂方法（一种[设计模式](http://c.biancheng.net/design_pattern/)）来替代。
+- Python中大量使用 `__new__()` 方法且合理的，就是 MetaClass 元类。
+
+###### \__repr__():显示属性
+
+- 前面章节中，我们经常会直接输出类的实例化对象，例如：
+
+  ```
+  class CLanguage:
+      pass
+  clangs = CLanguage()
+  print(clangs)
+  
+  <__main__.CLanguage object at 0x000001A7275221D0>
+  ```
+
+  - 通常情况下，直接输出某个实例化对象，本意往往是想了解该对象的基本信息，例如该对象有哪些属性，它们的值各是多少等等。但默认情况下，我们得到的信息只会是“类名+object at+内存地址”，对我们了解该实例化对象帮助不大。
+
+- 那么，有没有可能自定义输出实例化对象时的信息呢？答案是肯定，通过重写类的 `__repr__()` 方法即可。事实上，当我们输出某个实例化对象时，其调用的就是该对象的 `__repr__()` 方法，输出的是该方法的返回值。
+
+  ```
+  class CLanguage:
+      def __init__(self):
+          self.name = "C语言中文网"
+          self.add = "http://c.biancheng.net"
+      def __repr__(self):
+          return "CLanguage[name="+ self.name +",add=" + self.add +"]"
+  clangs = CLanguage()
+  print(clangs)
+  
+  CLanguage[name=C语言中文网,add=http://c.biancheng.net]
+  ```
+
+###### \__del__():销毁对象
+
+- 

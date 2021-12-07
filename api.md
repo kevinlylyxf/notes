@@ -28,3 +28,15 @@
   - umask()会将系统umask值设成参数mask&0777后的值, 然后将先前的umask值返回。在使用open()建立新文件时, 该参数mode 并非真正建立文件的权限, 而是(mode&~umask)的权限值。
   - 例如，在建立文件时指定文件权限为0666, 通常umask 值默认为022, 则该文件的真正权限则为0666&～022＝0644, 也就是rw-r--r--返回值此调用不会有错误值返回. 返回值为原先系统的umask 值。
 
+### system
+
+##### 回调函数
+
+- [深入c++回调，里面包含各种解释，前面包含链接，可以查看一下解释](https://cloud.tencent.com/developer/article/1519851)
+
+- [回调函数理解包括同步和异步](https://bot-man-jl.github.io/articles/?post=2017/Callback-Explained)
+
+##### 信号处理和signal
+
+- [Linux信号处理原理与实现](https://mp.weixin.qq.com/s/rcpK-UEYIy628b77IG-obA)
+
