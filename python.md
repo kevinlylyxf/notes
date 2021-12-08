@@ -4964,4 +4964,132 @@ __init__()
 
 ###### \__call__()
 
-- 
+- 本节再介绍 [Python](http://c.biancheng.net/python/) 类中一个非常特殊的实例方法，即 `__call__()`。该方法的功能类似于在类中重载 () 运算符，使得类实例对象可以像调用普通函数那样，以“对象名()”的形式使用。
+
+  ```
+  class CLanguage:
+      # 定义__call__方法
+      def __call__(self,name,add):
+          print("调用__call__()方法",name,add)
+  clangs = CLanguage()
+  clangs("C语言中文网","http://c.biancheng.net")
+  
+  调用__call__()方法 C语言中文网 http://c.biancheng.net
+  ```
+
+  - 可以看到，通过在 CLanguage 类中实现 `__call__()` 方法，使的 clangs 实例对象变为了可调用对象。
+  - Python 中，凡是可以将 () 直接应用到自身并执行，都称为可调用对象。可调用对象包括自定义的函数、Python 内置函数以及本节所讲的类实例对象。
+
+- 对于可调用对象，实际上“名称()”可以理解为是“名称.`__call__()`”的简写。仍以上面程序中定义的 clangs 实例对象为例，其最后一行代码还可以改写为如下形式：
+
+  ```
+  clangs.__call__("C语言中文网","http://c.biancheng.net")
+  ```
+
+- 这里再举一个自定义函数的例子
+
+  ```
+  def say():
+      print("Python教程：http://c.biancheng.net/python")
+  say()
+  say.__call__()
+  
+  Python教程：http://c.biancheng.net/python
+  Python教程：http://c.biancheng.net/python
+  ```
+
+  - 不仅如此，类中的实例方法也有以上 2 种调用方式
+
+- 前面章节介绍了 hasattr() 函数的用法，该函数的功能是查找类的实例对象中是否包含指定名称的属性或者方法，但该函数有一个缺陷，即它无法判断该指定的名称，到底是类属性还是类方法。要解决这个问题，我们可以借助可调用对象的概念。要知道，类实例对象包含的方法，其实也属于可调用对象，但类属性却不是
+
+  ```
+  class CLanguage:
+      def __init__ (self):
+          self.name = "C语言中文网"
+          self.add = "http://c.biancheng.net"
+      def say(self):
+          print("我正在学Python")
+  clangs = CLanguage()
+  if hasattr(clangs,"name"):
+      print(hasattr(clangs.name,"__call__"))
+  print("**********")
+  if hasattr(clangs,"say"):
+      print(hasattr(clangs.say,"__call__"))
+      
+  False
+  **********
+  True
+  ```
+
+  - 可以看到，由于 name 是类属性，它没有以 `__call__` 为名的 `__call__()` 方法；而 say 是类方法，它是可调用对象，因此它有 `__call__()` 方法。
+
+###### 重载运算符
+
+- 前面章节介绍了 [Python](http://c.biancheng.net/python/) 中的各个序列类型，每个类型都有其独特的操作方法，例如列表类型支持直接做加法操作实现添加元素的功能，字符串类型支持直接做加法实现字符串的拼接功能，也就是说，同样的运算符对于不同序列类型的意义是不一样的，这是怎么做到的呢？其实在 Python 内部，每种序列类型都是 Python 的一个类，例如列表是 list 类，字典是 dict 类等，这些序列类的内部使用了一个叫作“重载运算符”的技术来实现不同运算符所对应的操作。
+
+- 所谓重载运算符，指的是在类中定义并实现一个与运算符对应的处理方法，这样当类对象在进行运算符操作时，系统就会调用类中相应的方法来处理。
+
+  ```
+  class MyClass: #自定义一个类
+      def __init__(self, name , age): #定义该类的初始化函数
+          self.name = name #将传入的参数值赋值给成员交量
+          self.age = age
+      def __str__(self): #用于将值转化为字符串形式，等同于 str(obj)
+          return "name:"+self.name+";age:"+str(self.age)
+     
+      __repr__ = __str__ #转化为供解释器读取的形式
+     
+      def __lt__(self, record): #重载 self<record 运算符
+          if self.age < record.age:
+              return True
+          else:
+              return False
+     
+      def __add__(self, record): #重载 + 号运算符
+          return MyClass(self.name, self.age+record.age)
+  myc = MyClass("Anna", 42) #实例化一个对象 Anna，并为其初始化
+  mycl = MyClass("Gary", 23) #实例化一个对象 Gary，并为其初始化
+  print(repr(myc)) #格式化对象 myc，
+  print(myc) #解释器读取对象 myc，调用 repr
+  print (str (myc)) #格式化对象 myc ，输出"name:Anna;age:42"
+  print(myc < mycl) #比较 myc<mycl 的结果，输出 False
+  print (myc+mycl) #进行两个 MyClass 对象的相加运算，输出 "name:Anna;age:65"
+  
+  name:Anna;age:42
+  name:Anna;age:42
+  name:Anna;age:42
+  False
+  name:Anna;age:65
+  ```
+
+  - 这个例子中，MyClass 类中重载了 repr、str、<、+ 运算符，并用 MyClass 实例化了两个对象 myc 和 mycl。
+  - 通过将 myc 进行 repr、str 运算，从输出结果中可以看到，程序调用了重载的操作符方法 `__repr__` 和 `__str__`。而令 myc 和 mycl 进行 < 号的比较运算以及加法运算，从输出结果中可以看出，程序调用了重载 < 号的方法 `__lt__` 和 `__add__` 方法。
+
+- Python 中常用的可重载的运算符
+
+  | 重载运算符                                     | 含义                                                         |
+  | ---------------------------------------------- | ------------------------------------------------------------ |
+  | \__new__                                       | 创建类，在 __init__ 之前创建对象                             |
+  | \__init__                                      | 类的构造函数，其功能是创建类对象时做初始化工作。             |
+  | \__del__                                       | 析构函数，其功能是销毁对象时进行回收资源的操作               |
+  | \__add__                                       | 加法运算符 +，当类对象 X 做例如 X+Y 或者 X+=Y 等操作，内部会调用此方法。但如果类中对 __iadd__ 方法进行了重载，则类对象 X 在做 X+=Y 类似操作时，会优先选择调用 __iadd__ 方法。 |
+  | \__radd__                                      | 当类对象 X 做类似 Y+X 的运算时，会调用此方法。               |
+  | \__iadd__                                      | 重载 += 运算符，也就是说，当类对象 X 做类似 X+=Y 的操作时，会调用此方法。 |
+  | \__or__                                        | “或”运算符 \|，如果没有重载 __ior__，则在类似 X\|Y、X\|=Y 这样的语句中，“或”符号生效 |
+  | `__repr__，__str__`                            | 格式转换方法，分别对应函数 repr(X)、str(X)                   |
+  | `__call__`                                     | 函数调用，类似于 X(*args, **kwargs) 语句                     |
+  | `__getattr__`                                  | 点号运算，用来获取类属性                                     |
+  | `__setattr__`                                  | 属性赋值语句，类似于 X.any=value                             |
+  | `__delattr__`                                  | 删除属性，类似于 del X.any                                   |
+  | `__getattribute__`                             | 获取属性，类似于 X.any                                       |
+  | `__getitem__`                                  | 索引运算，类似于 X[key]，X[i:j]                              |
+  | __setitem__                                    | 索引赋值语句，类似于 X[key], X[i:j]=sequence                 |
+  | __delitem__                                    | 索引和分片删除                                               |
+  | __get__, __set__, __delete__                   | 描述符属性，类似于 X.attr，X.attr=value，del X.attr          |
+  | __len__                                        | 计算长度，类似于 len(X)                                      |
+  | __lt__，__gt__，__le__，__ge__，__eq__，__ne__ | 比较，分别对应于 <、>、<=、>=、=、!= 运算符。                |
+  | __iter__，__next__                             | 迭代环境下，生成迭代器与取下一条，类似于 I=iter(X) 和 next() |
+  | __contains__                                   | 成员关系测试，类似于 item in X                               |
+  | __index__                                      | 整数值，类似于 hex(X)，bin(X)，oct(X)                        |
+  | __enter__，__exit__                            | 在对类对象执行类似 with obj as var 的操作之前，会先调用 __enter__ 方法，其结果会传给 var；在最终结束该操作之前，会调用 __exit__ 方法（常用于做一些清理、扫尾的工作） |
+
