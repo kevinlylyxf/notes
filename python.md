@@ -5067,29 +5067,691 @@ __init__()
 
 - Python 中常用的可重载的运算符
 
-  | 重载运算符                                     | 含义                                                         |
-  | ---------------------------------------------- | ------------------------------------------------------------ |
-  | \__new__                                       | 创建类，在 __init__ 之前创建对象                             |
-  | \__init__                                      | 类的构造函数，其功能是创建类对象时做初始化工作。             |
-  | \__del__                                       | 析构函数，其功能是销毁对象时进行回收资源的操作               |
-  | \__add__                                       | 加法运算符 +，当类对象 X 做例如 X+Y 或者 X+=Y 等操作，内部会调用此方法。但如果类中对 __iadd__ 方法进行了重载，则类对象 X 在做 X+=Y 类似操作时，会优先选择调用 __iadd__ 方法。 |
-  | \__radd__                                      | 当类对象 X 做类似 Y+X 的运算时，会调用此方法。               |
-  | \__iadd__                                      | 重载 += 运算符，也就是说，当类对象 X 做类似 X+=Y 的操作时，会调用此方法。 |
-  | \__or__                                        | “或”运算符 \|，如果没有重载 __ior__，则在类似 X\|Y、X\|=Y 这样的语句中，“或”符号生效 |
-  | `__repr__，__str__`                            | 格式转换方法，分别对应函数 repr(X)、str(X)                   |
-  | `__call__`                                     | 函数调用，类似于 X(*args, **kwargs) 语句                     |
-  | `__getattr__`                                  | 点号运算，用来获取类属性                                     |
-  | `__setattr__`                                  | 属性赋值语句，类似于 X.any=value                             |
-  | `__delattr__`                                  | 删除属性，类似于 del X.any                                   |
-  | `__getattribute__`                             | 获取属性，类似于 X.any                                       |
-  | `__getitem__`                                  | 索引运算，类似于 X[key]，X[i:j]                              |
-  | __setitem__                                    | 索引赋值语句，类似于 X[key], X[i:j]=sequence                 |
-  | __delitem__                                    | 索引和分片删除                                               |
-  | __get__, __set__, __delete__                   | 描述符属性，类似于 X.attr，X.attr=value，del X.attr          |
-  | __len__                                        | 计算长度，类似于 len(X)                                      |
-  | __lt__，__gt__，__le__，__ge__，__eq__，__ne__ | 比较，分别对应于 <、>、<=、>=、=、!= 运算符。                |
-  | __iter__，__next__                             | 迭代环境下，生成迭代器与取下一条，类似于 I=iter(X) 和 next() |
-  | __contains__                                   | 成员关系测试，类似于 item in X                               |
-  | __index__                                      | 整数值，类似于 hex(X)，bin(X)，oct(X)                        |
-  | __enter__，__exit__                            | 在对类对象执行类似 with obj as var 的操作之前，会先调用 __enter__ 方法，其结果会传给 var；在最终结束该操作之前，会调用 __exit__ 方法（常用于做一些清理、扫尾的工作） |
+  | 重载运算符                                       | 含义                                                         |
+  | ------------------------------------------------ | ------------------------------------------------------------ |
+  | \__new__                                         | 创建类，在 `__init__` 之前创建对象                           |
+  | \__init__                                        | 类的构造函数，其功能是创建类对象时做初始化工作。             |
+  | \__del__                                         | 析构函数，其功能是销毁对象时进行回收资源的操作               |
+  | \__add__                                         | 加法运算符 +，当类对象 X 做例如 X+Y 或者 X+=Y 等操作，内部会调用此方法。但如果类中对 `__iadd__` 方法进行了重载，则类对象 X 在做 X+=Y 类似操作时，会优先选择调用 `__iadd__` 方法。 |
+  | \__radd__                                        | 当类对象 X 做类似 Y+X 的运算时，会调用此方法。               |
+  | \__iadd__                                        | 重载 += 运算符，也就是说，当类对象 X 做类似 X+=Y 的操作时，会调用此方法。 |
+  | \__or__                                          | “或”运算符 \|，如果没有重载 `__ior__`，则在类似 X\|Y、X\|=Y 这样的语句中，“或”符号生效 |
+  | `__repr__，__str__`                              | 格式转换方法，分别对应函数 repr(X)、str(X)                   |
+  | `__call__`                                       | 函数调用，类似于 X(*args, **kwargs) 语句                     |
+  | `__getattr__`                                    | 点号运算，用来获取类属性                                     |
+  | `__setattr__`                                    | 属性赋值语句，类似于 X.any=value                             |
+  | `__delattr__`                                    | 删除属性，类似于 del X.any                                   |
+  | `__getattribute__`                               | 获取属性，类似于 X.any                                       |
+  | `__getitem__`                                    | 索引运算，类似于 X[key]，X[i:j]                              |
+  | `__setitem__`                                    | 索引赋值语句，类似于 X[key], X[i:j]=sequence                 |
+  | `__delitem__`                                    | 索引和分片删除                                               |
+  | `__get__, __set__, __delete__`                   | 描述符属性，类似于 X.attr，X.attr=value，del X.attr          |
+  | `__len__`                                        | 计算长度，类似于 len(X)                                      |
+  | `__lt__，__gt__，__le__，__ge__，__eq__，__ne__` | 比较，分别对应于 <、>、<=、>=、=、!= 运算符。                |
+  | `__iter__，__next__`                             | 迭代环境下，生成迭代器与取下一条，类似于 I=iter(X) 和 next() |
+  | `__contains__`                                   | 成员关系测试，类似于 item in X                               |
+  | `__index__`                                      | 整数值，类似于 hex(X)，bin(X)，oct(X)                        |
+  | `__enter__，__exit__`                            | 在对类对象执行类似 with obj as var 的操作之前，会先调用 `__enter__` 方法，其结果会传给 var；在最终结束该操作之前，会调用 `__exit__` 方法（常用于做一些清理、扫尾的工作） |
+
+###### 重载运算符实现自定义序列
+
+- 除了前面章节介绍的几个类特殊方法（方法名以双下划线（__）开头和结尾），在 Python 类中，我们还可以通过重写几个特殊方法，实现自定义一个序列类。表 1 列出了和自定义序列类有关的几个特殊方法。
+
+  | 方法名                      | 功能                                           |
+  | --------------------------- | ---------------------------------------------- |
+  | `__len__(self)`             | 返回序列类中存储元素的个数。                   |
+  | `__contains__(self, value)` | 判断当前序列中是否包含 value 这个指定元素。    |
+  | `__getitem__(self, key)`    | 通过指定的 key（键），返回对应的 value（值）。 |
+  | `__setitem__(self, key)`    | 修改指定 key（键）对应的 value（值）。         |
+  | `__delitem__(self, key)`    | 删除指定键值对。                               |
+
+- 在对表 1 中的这些特殊方法进行重写时，在实现其基础功能的基础上，还可以根据实际情况，对各个方法的具体实现进行适当调整。以 `__setitem__()` 方法为例，当在序列中未找到指定 key 的情况下，该方法可以报错，当然也可以将此键值对添加到当前序列中。
+
+- 另外值得一提的是，在实现自定义序列类时，并不是必须重写表 1 中全部的特殊方法。如果该自定义序列是一个不可变序列（即序列中的元素不能做修改），则无需重写 `__setitem__()` 和 `__delitem__()` 方法；反之，如果该自定义序列是一个可变序列，可以重写以上 5 个特殊方法。
+
+- 下面程序实现了一个比较简单的序列类，这是一个字典类，其特点是只能存储 int 类型的元素：
+
+  ```
+  class IntDic:   
+      def __init__(self):
+          # 用于存储数据的字典
+          self.__date = {}
+      def __len__(self):
+          return len(list(self.__date.values()))
+             
+      def __getitem__(self, key):
+          # 如果在self.__changed中找到已经修改后的数据
+          if key in self.__date :
+              return self.__date[key]
+          return None
+      
+      def __setitem__(self, key, value):
+          #判断value是否为整数
+          if not isinstance(value, int):
+              raise TypeError('必须是整数')
+          #修改现有 key 对应的 value 值，或者直接添加
+          self.__date[key] = value
+      def __delitem__(self, key):
+          if key in self.__date : del self.__date[key]
+  dic = IntDic()
+  #输出序列中元素的个数，调用 __len__() 方法
+  print(len(dic))
+  #向序列中添加元素，调用 __setitem__() 方法
+  dic['a'] = 1
+  dic['b'] = 2
+  print(len(dic))
+  dic['a'] = 3
+  dic['c'] = 4
+  print(dic['a'])
+  #删除指定元素，调用 __delitem__() 方法
+  del dic['a']
+  print(dic['a'])
+  print(len(dic))
+  
+  0
+  2
+  3
+  None
+  2
+  ```
+
+###### 迭代器
+
+- 前面章节中，已经对列表（list）、元组（tuple）、字典（dict）、集合（set）这些序列式容器做了详细的介绍。值得一提的是，这些序列式容器有一个共同的特性，它们都支持使用 for 循环遍历存储的元素，都是可迭代的，因此它们又有一个别称，即迭代器。
+
+- 从字面来理解，迭代器指的就是支持迭代的容器，更确切的说，是支持迭代的容器类对象，这里的容器可以是列表、元组等这些 [Python](http://c.biancheng.net/python/) 提供的基础容器，也可以是自定义的容器类对象，只要该容器支持迭代即可。
+
+- 《[Python实现自定义序列](http://c.biancheng.net/view/vip_6085.html)》一节中，已经学会了如何自定义一个序列类，但该序列类对象并不支持迭代，因此还不能称之为迭代器。如果要自定义实现一个迭代器，则类中必须实现如下 2 个方法：
+
+  1. `__next__(self)`：返回容器的下一个元素。
+  2. `__iter__(self)`：该方法返回一个迭代器（iterator）。
+
+- 下面程序自定义了一个简易的列表容器迭代器，支持迭代：
+
+  ```
+  class listDemo:
+      def __init__(self):
+          self.__date=[]
+          self.__step = 0
+      def __next__(self):
+          if self.__step <= 0:
+              raise StopIteration
+          self.__step -= 1
+          #返回下一个元素
+          return self.__date[self.__step]
+      def __iter__(self):
+          #实例对象本身就是迭代器对象，因此直接返回 self 即可
+          return self
+      #添加元素
+      def __setitem__(self,key,value):
+          self.__date.insert(key,value)
+          self.__step += 1
+  mylist = listDemo()
+  mylist[0]=1
+  mylist[1]=2
+  for i in mylist:
+      print (i)
+      
+  2
+  1
+  ```
+
+- 除此之外，Python 内置的 iter() 函数也会返回一个迭代器，该函数的语法格式如下：
+
+  ```
+  iter(obj[, sentinel])
+  ```
+
+  - 其中，obj 必须是一个可迭代的容器对象，而 sentinel 作为可选参数，如果使用此参数，要求 obj 必须是一个可调用对象，具体功能后面会讲。
+  - 可调用对象，指的是该类的实例对象可以像函数那样，直接以“对象名()”的形式被使用。通过在类中添加 `__call__()` 方法，就可以将该类的实例对象编程可调用对象。
+
+- 我们常用的是仅有 1 个参数的 iter() 函数，通过传入一个可迭代的容器对象，我们可以获得一个迭代器，通过调用该迭代器中的 `__next__()` 方法即可实现迭代。
+
+  ```
+  # 将列表转换为迭代器
+  myIter = iter([1, 2, 3])
+  # 依次获取迭代器的下一个元素
+  print(myIter.__next__())
+  print(myIter.__next__())
+  print(myIter.__next__())
+  print(myIter.__next__())
+  
+  1
+  2
+  3
+  Traceback (most recent call last):
+    File "C:\Users\mengma\Desktop\demo.py", line 7, in <module>
+      print(myIter.__next__())
+  StopIteration
+  ```
+
+  - 也可以使用 next() 内置函数来迭代，即 next(myIter)，和 `__next__()` 方法是完全一样的。
+  - 从程序的执行结果可以看出，当迭代完存储的所有元素之后，如果继续迭代，则 `__next__()` 方法会抛出 StopIteration 异常。
+
+- 这里介绍 iter() 函数第 2 个参数的作用，如果使用该参数，则要求第一个 obj 参数必须传入可调用对象（可以不支持迭代），这样当使用返回的迭代器调用 `__next__()` 方法时，它会通过执行 obj() 调用 `__call__()` 方法，如果该方法的返回值和第 2 个参数值相同，则输出 StopInteration 异常；反之，则输出 `__call__()` 方法的返回值。
+
+  ```
+  class listDemo:
+      def __init__(self):
+          self.__date=[]
+          self.__step = 0
+      def __setitem__(self,key,value):
+          self.__date.insert(key,value)
+          self.__step += 1
+      #是该类实例对象成为可调用对象
+      def __call__(self):
+          self.__step-=1
+          return self.__date[self.__step]
+  mylist = listDemo()
+  mylist[0]=1
+  mylist[1]=2
+  #将 mylist 变为迭代器
+  a = iter(mylist,1)
+  print(a.__next__())
+  print(a.__next__())
+  
+  2
+  Traceback (most recent call last):
+    File "D:\python3.6\1.py", line 20, in <module>
+      print(a.__next__())
+  StopIteration
+  ```
+
+  - 输出结果中，之所以最终抛出 StopIteration 异常，是因为这里原本要输出的元素 1 和 iter() 函数的第 2 个参数相同。
+  - 迭代器本身是一个底层的特性和概念，在程序中并不常用，但它为生成器这一更有趣的特性提供了基础。有关生成器的相关知识，会在后续章节中介绍。
+
+- 迭代去实现字符串的逆序输出
+
+  - 项目要求是这样的，定义一个类，要求在实现迭代器功能的基础上，能够对用户输入的字符串做逆序输出操作。
+  - 实现思路是这样的，自定义一个类并重载其 `__init__()` 初始化方法，实现为自身私有成员赋值。同时重载 `__iter__()` 和 `__next__()` 方法，使其具有迭代器功能。在此基础上，如果想实现对用户输入的字符串进行逆序输出，就需要在 `__next__()` 方法中实现从后往前返回字符。
+
+  ```
+  class Reverse:
+      def __init__(self, string):
+          self.__string = string
+          self.__index = len(string)
+      def __iter__(self):
+          return self
+      def __next__(self):
+          self.__index -= 1
+          return self.__string[self.__index]
+  revstr = Reverse('Python')
+  for c in revstr:
+      print(c,end=" ")
+      
+  n o h t y P n o h t y P Traceback (most recent call last):
+    File "C:\Users\mengma\Desktop\demo.py", line 11, in <module>
+      for c in revstr:
+    File "C:\Users\mengma\Desktop\demo.py", line 9, in __next__
+      return self.__string[self.__index]
+  IndexError: string index out of range
+  ```
+
+  - 可以看到，上面程序在逆序输出两遍"python"的同时，Python解释器报出 IndexError 错误，这是什么原因呢？
+
+  - 很简单，因为程序没有设置遍历的终止条件，换句话说，没有对 `__index` 私有变量的值对限制，这里 `__index` 的取值范围应为（`-len(self.__index), len(self.__index)`），这也是导致上面程序运行结果的根本原因。
+
+  - 编写迭代器最容易忽视的一个环节，就是在自定义类中加入对循环结束的判断，并抛出 StopIteration 异常，只有这么做了，for 循环才会接收到 StopIteration 异常，并当做终止信号来结束循环。
+
+    ```
+    class Reverse:
+        def __init__(self, string):
+            self.__string = string
+            self.__index = len(string)
+        def __iter__(self):
+            return self
+        def __next__(self):
+            if self.__index == 0:
+                raise(StopIteration)
+            self.__index -= 1
+            return self.__string[self.__index]
+    revstr = Reverse('Python')
+    for c in revstr:
+        print(c,end=" ")
+        
+    n o h t y P
+    ```
+
+###### 生成器
+
+- 前面章节中，已经详细介绍了什么是迭代器。生成器本质上也是迭代器，不过它比较特殊。
+
+- 以 list 容器为例，在使用该容器迭代一组数据时，必须事先将所有数据存储到容器中，才能开始迭代；而生成器却不同，它可以实现在迭代的同时生成元素。
+
+- 也就是说，对于可以用某种算法推算得到的多个数据，生成器并不会一次性生成它们，而是什么时候需要，才什么时候生成。
+
+- 不仅如此，生成器的创建方式也比迭代器简单很多，大体分为以下 2 步：
+
+  1. 定义一个以 yield 关键字标识返回值的函数；
+  2. 调用刚刚创建的函数，即可创建一个生成器。
+
+  ```
+  def intNum():
+      print("开始执行")
+      for i in range(5):
+          yield i
+          print("继续执行")
+  num = intNum()
+  ```
+
+  - 由此，我们就成功创建了一个 num 生成器对象。显然，和普通函数不同，intNum() 函数的返回值用的是 yield 关键字，而不是 return 关键字，此类函数又成为生成器函数。
+  - 和 return 相比，yield 除了可以返回相应的值，还有一个更重要的功能，即每当程序执行完该语句时，程序就会暂停执行。不仅如此，即便调用生成器函数，[Python](http://c.biancheng.net/python/) 解释器也不会执行函数中的代码，它只会返回一个生成器（对象）。
+  - 要想使生成器函数得以执行，或者想使执行完 yield 语句立即暂停的程序得以继续执行，有以下 2 种方式：
+    1. 通过生成器（上面程序中的 num）调用 next() 内置函数或者 `__next__()` 方法；
+    2. 通过 for 循环遍历生成器。
+
+  ```
+  #调用 next() 内置函数
+  print(next(num))
+  #调用 __next__() 方法
+  print(num.__next__())
+  #通过for循环遍历生成器
+  for i in num:
+      print(i)
+  
+  开始执行
+  0
+  继续执行
+  1
+  继续执行
+  2
+  继续执行
+  3
+  继续执行
+  4
+  继续执行
+  ```
+
+  - 首先，在创建有 num 生成器的前提下，通过其调用 next() 内置函数，会使 Python 解释器开始执行 intNum() 生成器函数中的代码，因此会输出“开始执行”，程序会一直执行到`yield i`，而此时的 i==0，因此 Python 解释器输出“0”。由于受到 yield 的影响，程序会在此处暂停。
+  - 然后，我们使用 num 生成器调用 `__next__()` 方法，该方法的作用和 next() 函数完全相同（事实上，next() 函数的底层执行的也是 `__next__()` 方法），它会是程序继续执行，即输出“继续执行”，程序又会执行到`yield i`，此时 i==1，因此输出“1”，然后程序暂停。
+  - 最后，我们使用 for 循环遍历 num 生成器，之所以能这么做，是因为 for 循环底层会不断地调用 next() 函数，使暂停的程序继续执行，因此会输出后续的结果。
+  - 注意，在 Python 2.x 版本中不能使用 `__next__()` 方法，可以使用 next() 内置函数，另外生成器还有 next() 方法（即以 num.next() 的方式调用）。
+
+- 除此之外，还可以使用 list() 函数和 tuple() 函数，直接将生成器能生成的所有值存储成列表或者元组的形式。
+
+  ```
+  num = intNum()
+  print(list(num))
+  num = intNum()
+  print(tuple(num))
+  
+  开始执行
+  继续执行
+  继续执行
+  继续执行
+  继续执行
+  继续执行
+  [0, 1, 2, 3, 4]
+  开始执行
+  继续执行
+  继续执行
+  继续执行
+  继续执行
+  继续执行
+  (0, 1, 2, 3, 4)
+  ```
+
+  - 通过输出结果可以判断出，list() 和 tuple() 底层实现和 for 循环的遍历过程是类似的。
+  - 相比迭代器，生成器最明显的优势就是节省内存空间，即它不会一次性生成所有的数据，而是什么时候需要，什么时候生成。
+
+###### 生成器(send, close,throw)方法
+
+- send()方法
+
+  - 我们知道，通过调用 next() 或者 `__next__()` 方法，可以实现从外界控制生成器的执行。除此之外，通过 send() 方法，还可以向生成器中传值。
+
+  - 值得一提的是，send() 方法可带一个参数，也可以不带任何参数（用 None 表示）。其中，当使用不带参数的 send() 方法时，它和 next() 函数的功能完全相同。例如：
+
+    ```
+    def intNum():
+        print("开始执行")
+        for i in range(5):
+            yield i
+            print("继续执行")
+    num = intNum()
+    print(num.send(None))
+    print(num.send(None))
+    
+    开始执行
+    0
+    继续执行
+    1
+    ```
+
+    - 虽然 send(None) 的功能是 next() 完全相同，但更推荐使用 next()，不推荐使用 send(None)。
+
+  - 这里重点讲解一些带参数的 send(value) 的用法，其具备 next() 函数的部分功能，即将暂停在 yield 语句出的程序继续执行，但与此同时，该函数还会将 value 值作为 yield 语句返回值赋值给接收者。
+
+  - 注意，带参数的 send(value) 无法启动执行生成器函数。也就是说，程序中第一次使用生成器调用 next() 或者 send() 函数时，不能使用带参数的 send() 函数。
+
+    ```
+    def foo():
+        bar_a = yield "hello"
+        bar_b = yield bar_a
+        yield bar_b
+    f = foo()
+    print(f.send(None))
+    print(f.send("C语言中文网"))
+    print(f.send("http://c.biancheng.net"))
+    
+    hello
+    C语言中文网
+    http://c.biancheng.net
+    ```
+
+    - 分析一下此程序的执行流程：
+
+      1) 首先，构建生成器函数，并利用器创建生成器（对象）f 。
+
+      2) 使用生成器 f 调用无参的 send() 函数，其功能和 next() 函数完全相同，因此开始执行生成器函数，即执行到第一个 yield "hello" 语句，该语句会返回 "hello" 字符串，然后程序停止到此处（注意，此时还未执行对 bar_a 的赋值操作）。
+
+      3) 下面开始使用生成器 f 调用有参的 send() 函数，首先它会将暂停的程序开启，同时还会将其参数“C语言中文网”赋值给当前 yield 语句的接收者，也就是 bar_a 变量。程序一直执行完 yield bar_a 再次暂停，因此会输出“C语言中文网”。
+      4)  最后依旧是调用有参的 send() 函数，同样它会启动餐厅的程序，同时将参数“http://c.biancheng.net”传给 bar_b，然后执行完 yield bar_b 后（输出 http://c.biancheng.net），程序执行再次暂停。
+
+- close()
+
+  - 当程序在生成器函数中遇到 yield 语句暂停运行时，此时如果调用 close() 方法，会阻止生成器函数继续执行，该函数会在程序停止运行的位置抛出 GeneratorExit 异常。
+
+    ```
+    def foo():
+        try:
+            yield 1
+        except GeneratorExit:
+            print('捕获到 GeneratorExit')
+    f = foo()
+    print(next(f))
+    f.close()
+    
+    1
+    捕获到 GeneratorExit
+    ```
+
+  - 注意，虽然通过捕获 GeneratorExit 异常，可以继续执行生成器函数中剩余的代码，带这部分代码中不能再包含 yield 语句，否则程序会抛出 RuntimeError 异常
+
+    ```
+    def foo():
+        try:
+            yield 1
+        except GeneratorExit:
+            print('捕获到 GeneratorExit')
+            yield 2 #抛出 RuntimeError 异常
+    f = foo()
+    print(next(f))
+    f.close()
+    
+    1
+    捕获到 GeneratorExit Traceback (most recent call last):
+      File "D:\python3.6\1.py", line 10, in <module>
+        f.close()
+    RuntimeError: generator ignored GeneratorExit
+    ```
+
+  - 另外，生成器函数一旦使用 close() 函数停止运行，后续将无法再调用 next() 函数或者 `__next__()` 方法启动执行，否则会抛出 StopIteration 异常。例如：
+
+    ```
+    def foo():
+        yield "c.biancheng.net"
+        print("生成器停止执行")
+    f = foo()
+    print(next(f)) #输出 "c.biancheng.net"
+    f.close()
+    next(f) #原本应输出"生成器停止执行"
+    
+    c.biancheng.net
+    Traceback (most recent call last):
+      File "D:\python3.6\1.py", line 8, in <module>
+        next(f) #原本应输出"生成器停止执行"
+    StopIteration
+    ```
+
+- throw()
+
+  - 生成器 throw() 方法的功能是，在生成器函数执行暂停处，抛出一个指定的异常，之后程序会继续执行生成器函数中后续的代码，直到遇到下一个 yield 语句。需要注意的是，如果到剩余代码执行完毕没有遇到下一个 yield 语句，则程序会抛出 StopIteration 异常。
+
+    ```
+    def foo():
+        try:
+            yield 1
+        except ValueError:
+            print('捕获到 ValueError')
+    f = foo()
+    print(next(f))
+    f.throw(ValueError)
+    
+    1
+    捕获到 ValueError
+    Traceback (most recent call last):
+      File "D:\python3.6\1.py", line 9, in <module>
+        f.throw(ValueError)
+    StopIteration
+    ```
+
+    - 显然，一开始生成器函数在 yield 1 处暂停执行，当执行 throw() 方法时，它会先抛出 ValueError 异常，然后继续执行后续代码找到下一个 yield 语句，该程序中由于后续不再有 yield 语句，因此程序执行到最后，会抛出一个 StopIteration 异常。
+
+###### @函数装饰器及用法
+
+- 前面章节中，我们已经讲解了 [Python](http://c.biancheng.net/python/) 内置的 3 种函数装饰器，分别是 ＠staticmethod、＠classmethod 和 @property，其中 staticmethod()、classmethod() 和 property() 都是 Python 的内置函数。
+
+- 那么，函数装饰器的工作原理是怎样的呢？假设用 funA() 函数装饰器去装饰 funB() 函数
+
+  ```
+  #funA 作为装饰器函数
+  def funA(fn):
+      #...
+      fn() # 执行传入的fn参数
+      #...
+      return '...'
+  @funA
+  def funB():
+      #...
+  ```
+
+  - 上面程序完全等价于下面的程序
+
+    ```
+    def funA(fn):
+        #...
+        fn() # 执行传入的fn参数
+        #...
+        return '...'
+    def funB():
+        #...
+    funB = funA(funB)
+    ```
+
+  - 通过比对以上 2 段程序不难发现，使用函数装饰器 A() 去装饰另一个函数 B()，其底层执行了如下 2 步操作：
+
+    1. 将 B 作为参数传给 A() 函数；
+    2. 将 A() 函数执行完成的返回值反馈回 B。
+
+- 举个实例：
+
+  ```
+  #funA 作为装饰器函数
+  def funA(fn):
+      print("C语言中文网")
+      fn() # 执行传入的fn参数
+      print("http://c.biancheng.net")
+      return "装饰器函数的返回值"
+  @funA
+  def funB():
+      print("学习 Python")
+      
+  C语言中文网
+  学习 Python
+  http://c.biancheng.net
+  
+  在此基础上，如果在程序末尾添加如下语句：
+  print(funB)
+  
+  装饰器函数的返回值
+  ```
+
+  - 显然，被“＠函数”修饰的函数不再是原来的函数，而是被替换成一个新的东西（取决于装饰器的返回值），即如果装饰器函数的返回值为普通变量，那么被修饰的函数名就变成了变量名；同样，如果装饰器返回的是一个函数的名称，那么被修饰的函数名依然表示一个函数。
+  - 实际上，所谓函数装饰器，就是通过装饰器函数，在不修改原函数的前提下，来对函数的功能进行合理的扩充。
+
+- 在分析 funA() 函数装饰器和 funB() 函数的关系时，细心的读者可能会发现一个问题，即当 funB() 函数无参数时，可以直接将 funB 作为 funA() 的参数传入。但是，如果被修饰的函数本身带有参数，那应该如何传值呢？
+
+  - 比较简单的解决方法就是在函数装饰器中嵌套一个函数，该函数带有的参数个数和被装饰器修饰的函数相同
+
+    ```
+    def funA(fn):
+        # 定义一个嵌套函数
+        def say(arc):
+            print("Python教程:",arc)
+        return say
+    @funA
+    def funB(arc):
+        print("funB():", a)
+    funB("http://c.biancheng.net/python")
+    
+    Python教程: http://c.biancheng.net/python
+    ```
+
+  - 其实，它和如下程序是等价的：
+
+    ```
+    def funA(fn):
+        # 定义一个嵌套函数
+        def say(arc):
+            print("Python教程:",arc)
+        return say
+    def funB(arc):
+        print("funB():", a)
+       
+    funB = funA(funB)
+    funB("http://c.biancheng.net/python")
+    ```
+
+  - 显然，通过 funB() 函数被装饰器 funA() 修饰，funB 就被赋值为 say。这意味着，虽然我们在程序显式调用的是 funB() 函数，但其实执行的是装饰器嵌套的 say() 函数。
+
+  - 但还有一个问题需要解决，即如果当前程序中，有多个（≥ 2）函数被同一个装饰器函数修饰，这些函数带有的参数个数并不相等，怎么办呢？最简单的解决方式是用 *args 和 **kwargs 作为装饰器内部嵌套函数的参数，*args 和 **kwargs 表示接受任意数量和类型的参数。
+
+    ```
+    def funA(fn):
+        # 定义一个嵌套函数
+        def say(*args,**kwargs):
+            fn(*args,**kwargs)
+        return say
+    @funA
+    def funB(arc):
+        print("C语言中文网：",arc)
+    @funA
+    def other_funB(name,arc):
+        print(name,arc)
+    funB("http://c.biancheng.net")
+    other_funB("Python教程：","http://c.biancheng.net/python")
+    
+    C语言中文网： http://c.biancheng.net
+    Python教程： http://c.biancheng.net/python
+    ```
+
+- 上面示例中，都是使用一个装饰器的情况，但实际上，Python 也支持多个装饰器
+
+  ```
+  @funA
+  @funB
+  @funC
+  def fun():
+      #...
+      
+  上面程序的执行顺序是里到外，所以它等效于下面这行代码：
+  fun = funA( funB ( funC (fun) ) )
+  ```
+
+###### 装饰器的应用场景
+
+- 装饰器用于身份认证
+
+  - 首先是最常见的身份认证的应用。这个很容易理解，举个最常见的例子，大家登录微信，需要输入用户名密码，然后点击确认，这样服务器端便会查询你的用户名是否存在、是否和密码匹配等等。如果认证通过，就可以顺利登录；反之，则提示你登录失败。
+
+  - 再比如一些网站，你不登录也可以浏览内容，但如果你想要发布文章或留言，在点击发布时，服务器端便会查询你是否登录。如果没有登录，就不允许这项操作等等。
+
+  - 如下是一个实现身份认证的简单示例：
+
+    ```
+    import functools
+    def authenticate(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            request = args[0]
+            # 如果用户处于登录状态
+            if check_user_logged_in(request):
+                # 执行函数 post_comment()
+                return func(*args, **kwargs)  
+            else:
+                raise Exception('Authentication failed')
+        return wrapper
+       
+    @authenticate
+    def post_comment(request, ...)
+        ...
+    ```
+
+    - 对于函数来说，它也有自己的一些属性，例如 `__name__` 属性，代码中 @functools.wraps(func) 也是一个装饰器，如果不使用它，则 `post_comment.__name__` 的值为 wrapper。而使用它之后，则 `post_comment.__name__` 的值依然为 post_comment。
+    - 上面这段代码中，定义了装饰器 authenticate，函数 post_comment() 则表示发表用户对某篇文章的评论，每次调用这个函数前，都会先检查用户是否处于登录状态，如果是登录状态，则允许这项操作；如果没有登录，则不允许。
+
+- 装饰器用于日志记录
+
+  - 日志记录同样是很常见的一个案例。在实际工作中，如果你怀疑某些函数的耗时过长，导致整个系统的延迟增加，想在线上测试某些函数的执行时间，那么，装饰器就是一种很常用的手段。
+
+    ```
+    import time
+    import functools
+    def log_execution_time(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            start = time.perf_counter()
+            res = func(*args, **kwargs)
+            end = time.perf_counter()
+            print('{} took {} ms'.format(func.__name__, (end - start) * 1000))
+            return res
+        return wrapper
+       
+    @log_execution_time
+    def calculate_similarity(items):
+        ...
+    ```
+
+    - 装饰器 log_execution_time 记录某个函数的运行时间，并返回其执行结果。如果你想计算任何函数的执行时间，在这个函数上方加上@log_execution_time即可。
+
+- 装饰器用于输入合理性检查
+
+  - 在大型公司的机器学习框架中，调用机器集群进行模型训练前，往往会用装饰器对其输入（往往是很长的 json 文件）进行合理性检查。这样就可以大大避免输入不正确对机器造成的巨大开销。
+
+    ```
+    import functools
+    def validation_check(input):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            ... # 检查输入是否合法
+       
+    @validation_check
+    def neural_network_training(param1, param2, ...):
+        ...
+    ```
+
+  - 其实在工作中，很多情况下都会出现输入不合理的现象。因为我们调用的训练模型往往很复杂，输入的文件有成千上万行，很多时候确实也很难发现。
+
+  - 试想一下，如果没有输入的合理性检查，很容易出现“模型训练了好几个小时后，系统却报错说输入的一个参数不对，成果付之一炬”的现象。这样的“惨案”，大大减缓了开发效率，也对机器资源造成了巨大浪费。
+
+- 缓存装饰器
+
+  - 关于缓存装饰器的用法，其实十分常见，这里以 Python 内置的 LRU cache 为例来说明。LRU cache，在 Python 中的表示形式是 @lru_cache。@lru_cache 会缓存进程中的函数参数和结果，当缓存满了以后，会删除最近最久未使用的数据。
+
+  - 正确使用缓存装饰器，往往能极大地提高程序运行效率。举个例子，大型公司服务器端的代码中往往存在很多关于设备的检查，比如使用的设备是安卓还是 iPhone，版本号是多少。这其中的一个原因，就是一些新的功能，往往只在某些特定的手机系统或版本上才有（比如 Android v200+）。
+
+  - 这样一来，我们通常使用缓存装饰器来包裹这些检查函数，避免其被反复调用，进而提高程序运行效率，比如写成下面这样：
+
+    ```
+    @lru_cache
+    def check(param1, param2, ...) # 检查用户设备类型，版本号等等
+        ...
+    ```
+
+#### 文件操作
+
+
+
+
 
