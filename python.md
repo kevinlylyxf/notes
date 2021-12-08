@@ -4568,4 +4568,400 @@ __init__()
 
 ###### \__del__():销毁对象
 
+- 调用 `__init__()` 方法构造当前类的实例化对象，而本节要学的 `__del__()` 方法，功能正好和 `__init__()` 相反，其用来销毁实例化对象。
+
+- 事实上在编写程序时，如果之前创建的类实例化对象后续不再使用，最好在适当位置手动将其销毁，释放其占用的内存空间（整个过程称为垃圾回收（简称GC））。
+
+- 大多数情况下，Python 开发者不需要手动进行垃圾回收，因为 Python 有自动的垃圾回收机制（下面会讲），能自动将不需要使用的实例对象进行销毁。
+
+- 无论是手动销毁，还是 Python 自动帮我们销毁，都会调用 `__del__()` 方法
+
+  ```
+  class CLanguage:
+      def __init__(self):
+          print("调用 __init__() 方法构造对象")
+      def __del__(self):
+          print("调用__del__() 销毁对象，释放其空间")
+  clangs = CLanguage()
+  del clangs
+  
+  调用 __init__() 方法构造对象
+  调用__del__() 销毁对象，释放其空间
+  ```
+
+- 但是，读者千万不要误认为，只要为该实例对象调用 `__del__()` 方法，该对象所占用的内存空间就会被释放
+
+  ```
+  class CLanguage:
+      def __init__(self):
+          print("调用 __init__() 方法构造对象")
+      def __del__(self):
+          print("调用__del__() 销毁对象，释放其空间")
+  clangs = CLanguage()
+  #添加一个引用clangs对象的实例对象
+  cl = clangs
+  del clangs
+  print("***********")
+  
+  调用 __init__() 方法构造对象
+  ***********
+  调用__del__() 销毁对象，释放其空间
+  ```
+
+  - 注意，最后一行输出信息，是程序执行即将结束时调用 `__del__()` 方法输出的。
+  - 可以看到，当程序中有其它变量（比如这里的 cl）引用该实例对象时，即便手动调用 `__del__()` 方法，该方法也不会立即执行。这和 Python 的垃圾回收机制的实现有关。
+
+- Python 采用自动引用计数（简称 ARC）的方式实现垃圾回收机制。该方法的核心思想是：每个 Python 对象都会配置一个计数器，初始 Python 实例对象的计数器值都为 0，如果有变量引用该实例对象，其计数器的值会加 1，依次类推；反之，每当一个变量取消对该实例对象的引用，计数器会减 1。如果一个 Python 对象的的计数器值为 0，则表明没有变量引用该 Python 对象，即证明程序不再需要它，此时 Python 就会自动调用 `__del__()` 方法将其回收。
+
+- 如果在上面程序结尾，添加如下语句：
+
+  ```
+  del cl
+  print("-----------")
+  
+  调用 __init__() 方法构造对象
+  ***********
+  调用__del__() 销毁对象，释放其空间
+  -----------
+  ```
+
+  - 可以看到，当执行 del cl 语句时，其应用的对象实例对象 C 的计数器继续 -1（变为 0），对于计数器为 0 的实例对象，Python 会自动将其视为垃圾进行回收。
+
+- 需要额外说明的是，如果我们重写子类的 `__del__()` 方法（父类为非 object 的类），则必须显式调用父类的 `__del__()` 方法，这样才能保证在回收子类对象时，其占用的资源（可能包含继承自父类的部分资源）能被彻底释放。
+
+  ```
+  class CLanguage:
+      def __del__(self):
+          print("调用父类 __del__() 方法")
+  class cl(CLanguage):
+      def __del__(self):
+          print("调用子类 __del__() 方法")
+  c = cl()
+  del c
+  
+  调用子类 __del__() 方法
+  ```
+
+###### \__dir__():列出对象的所有属性
+
+- 前面在介绍 [Python](http://c.biancheng.net/python/) 内置函数时，提到了 dir() 函数，通过此函数可以某个对象拥有的所有的属性名和方法名，该函数会返回一个包含有所有属性名和方法名的有序列表。
+
+  ```
+  class CLanguage:
+      def __init__ (self,):
+          self.name = "C语言中文网"
+          self.add = "http://c.biancheng.net"
+      def say():
+          pass
+  clangs = CLanguage()
+  print(dir(clangs))
+  
+  ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', 'add', 'name', 'say']
+  ```
+
+  - 通过 dir() 函数，不仅仅输出本类中新添加的属性名和方法（最后 3 个），还会输出从父类（这里为 object 类）继承得到的属性名和方法名。
+  - 值得一提的是，dir() 函数的内部实现，其实是在调用参数对象 `__dir__()` 方法的基础上，对该方法返回的属性名和方法名做了排序。
+
+- 除了使用 dir() 函数，我们完全可以自行调用该对象具有的 `__dir__()` 方法：
+
+  ```
+  class CLanguage:
+      def __init__ (self,):
+          self.name = "C语言中文网"
+          self.add = "http://c.biancheng.net"
+      def say():
+          pass
+  clangs = CLanguage()
+  print(clangs.__dir__())
+  
+  ['name', 'add', '__module__', '__init__', 'say', '__dict__', '__weakref__', '__doc__', '__repr__', '__hash__', '__str__', '__getattribute__', '__setattr__', '__delattr__', '__lt__', '__le__', '__eq__', '__ne__', '__gt__', '__ge__', '__new__', '__reduce_ex__', '__reduce__', '__subclasshook__', '__init_subclass__', '__format__', '__sizeof__', '__dir__', '__class__']
+  ```
+
+  - 显然，使用 `__dir__()` 方法和 dir() 函数输出的数据是相同，仅仅顺序不同。
+
+###### \__dict__:查看对象内部所有属性名和属性值组成的字典
+
+- 在 [Python](http://c.biancheng.net/python/) 类的内部，无论是类属性还是实例属性，都是以字典的形式进行存储的，其中属性名作为键，而值作为该键对应的值。
+
+- 为了方便用户查看类中包含哪些属性，Python 类提供了 `__dict__` 属性。需要注意的一点是，该属性可以用类名或者类的实例对象来调用，用类名直接调用 `__dict__`，会输出该由类中所有类属性组成的字典；而使用类的实例对象调用 `__dict__`，会输出由类中所有实例属性组成的字典。
+
+  ```
+  class CLanguage:
+      a = 1
+      b = 2
+      def __init__ (self):
+          self.name = "C语言中文网"
+          self.add = "http://c.biancheng.net"
+  #通过类名调用__dict__
+  print(CLanguage.__dict__)
+  #通过类实例对象调用 __dict__
+  clangs = CLanguage()
+  print(clangs.__dict__)
+  
+  {'__module__': '__main__', 'a': 1, 'b': 2, '__init__': <function CLanguage.__init__ at 0x0000022C69833E18>, '__dict__': <attribute '__dict__' of 'CLanguage' objects>, '__weakref__': <attribute '__weakref__' of 'CLanguage' objects>, '__doc__': None}
+  {'name': 'C语言中文网', 'add': 'http://c.biancheng.net'}
+  ```
+
+- 不仅如此，对于具有继承关系的父类和子类来说，父类有自己的 `__dict__`，同样子类也有自己的 `__dict__`，它不会包含父类的 `__dict__`
+
+  ```
+  class CLanguage:
+      a = 1
+      b = 2
+      def __init__ (self):
+          self.name = "C语言中文网"
+          self.add = "http://c.biancheng.net"
+         
+  class CL(CLanguage):
+      c = 1
+      d = 2
+      def __init__ (self):
+          self.na = "Python教程"
+          self.ad = "http://c.biancheng.net/python"
+  #父类名调用__dict__
+  print(CLanguage.__dict__)
+  #子类名调用__dict__
+  print(CL.__dict__)
+  #父类实例对象调用 __dict__
+  clangs = CLanguage()
+  print(clangs.__dict__)
+  #子类实例对象调用 __dict__
+  cl = CL()
+  print(cl.__dict__)
+  
+  {'__module__': '__main__', 'a': 1, 'b': 2, '__init__': <function CLanguage.__init__ at 0x000001721A853E18>, '__dict__': <attribute '__dict__' of 'CLanguage' objects>, '__weakref__': <attribute '__weakref__' of 'CLanguage' objects>, '__doc__': None}
+  {'__module__': '__main__', 'c': 1, 'd': 2, '__init__': <function CL.__init__ at 0x000001721CD15510>, '__doc__': None}
+  {'name': 'C语言中文网', 'add': 'http://c.biancheng.net'}
+  {'na': 'Python教程', 'ad': 'http://c.biancheng.net/python'}
+  ```
+
+  - 显然，通过子类直接调用的 `__dict__` 中，并没有包含父类中的 a 和 b 类属性；同样，通过子类对象调用的 `__dict__`，也没有包含父类对象拥有的 name 和 add 实例属性。
+
+- 除此之外，借助由类实例对象调用 `__dict__` 属性获取的字典，可以使用字典的方式对其中实例属性的值进行修改
+
+  ```
+  class CLanguage:
+      a = "aaa"
+      b = 2
+      def __init__ (self):
+          self.name = "C语言中文网"
+          self.add = "http://c.biancheng.net"
+  #通过类实例对象调用 __dict__
+  clangs = CLanguage()
+  print(clangs.__dict__)
+  clangs.__dict__['name'] = "Python教程"
+  print(clangs.name)
+  
+  {'name': 'C语言中文网', 'add': 'http://c.biancheng.net'}
+  Python教程
+  ```
+
+  - 注意，无法通过类似的方式修改类变量的值。
+
+###### setattr、getattr、hasattr
+
+- hasattr() 函数用来判断某个类实例对象是否包含指定名称的属性或方法。该函数的语法格式如下：
+
+  ```
+  hasattr(obj, name)
+  ```
+
+  - 其中 obj 指的是某个类的实例对象，name 表示指定的属性名或方法名。同时，该函数会将判断的结果（True 或者 False）作为返回值反馈回来。
+
+    ```
+    class CLanguage:
+        def __init__ (self):
+            self.name = "C语言中文网"
+            self.add = "http://c.biancheng.net"
+        def say(self):
+            print("我正在学Python")
+    clangs = CLanguage()
+    print(hasattr(clangs,"name"))
+    print(hasattr(clangs,"add"))
+    print(hasattr(clangs,"say"))
+    
+    True
+    True
+    True
+    ```
+
+  - 显然，无论是属性名还是方法名，都在 hasattr() 函数的匹配范围内。因此，我们只能通过该函数判断实例对象是否包含该名称的属性或方法，但不能精确判断，该名称代表的是属性还是方法。
+
+- getattr() 函数获取某个类实例对象中指定属性的值。没错，和 hasattr() 函数不同，该函数只会从类对象包含的所有属性中进行查找。
+
+  ```
+  getattr(obj, name[, default])
+  ```
+
+  - 其中，obj 表示指定的类实例对象，name 表示指定的属性名，而 default 是可选参数，用于设定该函数的默认返回值，即当函数查找失败时，如果不指定 default 参数，则程序将直接报 AttributeError 错误，反之该函数将返回 default 指定的值。
+
+    ```
+    class CLanguage:
+        def __init__ (self):
+            self.name = "C语言中文网"
+            self.add = "http://c.biancheng.net"
+        def say(self):
+            print("我正在学Python")
+    clangs = CLanguage()
+    print(getattr(clangs,"name"))
+    print(getattr(clangs,"add"))
+    print(getattr(clangs,"say"))
+    print(getattr(clangs,"display",'nodisplay'))
+    
+    C语言中文网
+    http://c.biancheng.net
+    <bound method CLanguage.say of <__main__.CLanguage object at 0x000001FC2F2E3198>>
+    nodisplay
+    ```
+
+  - 可以看到，对于类中已有的属性，getattr() 会返回它们的值，而如果该名称为方法名，则返回该方法的状态信息；反之，如果该明白不为类对象所有，要么返回默认的参数，要么程序报 AttributeError 错误。
+
+- setattr() 函数的功能相对比较复杂，它最基础的功能是修改类实例对象中的属性值。其次，它还可以实现为实例对象动态添加属性或者方法。
+
+  ```
+  setattr(obj, name, value)
+  ```
+
+  - 下面例子演示如何通过该函数修改某个类实例对象的属性值：
+
+    ```
+    class CLanguage:
+        def __init__ (self):
+            self.name = "C语言中文网"
+            self.add = "http://c.biancheng.net"
+        def say(self):
+            print("我正在学Python")
+    clangs = CLanguage()
+    print(clangs.name)
+    print(clangs.add)
+    setattr(clangs,"name","Python教程")
+    setattr(clangs,"add","http://c.biancheng.net/python")
+    print(clangs.name)
+    print(clangs.add)
+    
+    C语言中文网
+    http://c.biancheng.net
+    Python教程
+    http://c.biancheng.net/python
+    ```
+
+  - 甚至利用 setattr() 函数，还可以将类属性修改为一个类方法，同样也可以将类方法修改成一个类属性。例如：
+
+    ```
+    def say(self):
+        print("我正在学Python")
+    class CLanguage:
+        def __init__ (self):
+            self.name = "C语言中文网"
+            self.add = "http://c.biancheng.net"
+    clangs = CLanguage()
+    print(clangs.name)
+    print(clangs.add)
+    setattr(clangs,"name",say)
+    clangs.name(clangs)
+    
+    C语言中文网
+    http://c.biancheng.net
+    我正在学Python
+    ```
+
+  - 使用 setattr() 函数对实例对象中执行名称的属性或方法进行修改时，如果该名称查找失败，Python 解释器不会报错，而是会给该实例对象动态添加一个指定名称的属性或方法
+
+    ```
+    def say(self):
+        print("我正在学Python")
+    class CLanguage:
+        pass
+    clangs = CLanguage()
+    setattr(clangs,"name","C语言中文网")
+    setattr(clangs,"say",say)
+    print(clangs.name)
+    clangs.say(clangs)
+    
+    C语言中文网
+    我正在学Python
+    ```
+
+    - 可以看到，虽然 CLanguage 为空类，但通过 setattr() 函数，我们为 clangs 对象动态添加了一个 name 属性和一个 say() 方法。
+
+###### issubclass和isinstance：检查类型
+
+- [Python](http://c.biancheng.net/python/) 提供了如下两个函数来检查类型：
+  - issubclass(cls, class_or_tuple)：检查 cls 是否为后一个类或元组包含的多个类中任意类的子类。
+  - isinstance(obj, class_or_tuple)：检查 obj 是否为后一个类或元组包含的多个类中任意类的对象。
+
+- 通过使用上面两个函数，程序可以方便地先执行检查，然后才调用方法，这样可以保证程序不会出现意外情况。
+
+  ```
+  # 定义一个字符串
+  hello = "Hello";
+  # "Hello"是str类的实例，输出True
+  print('"Hello"是否是str类的实例: ', isinstance(hello, str))
+  # "Hello"是object类的子类的实例，输出True
+  print('"Hello"是否是object类的实例: ', isinstance(hello, object))
+  # str是object类的子类，输出True
+  print('str是否是object类的子类: ', issubclass(str, object))
+  # "Hello"不是tuple类及其子类的实例，输出False
+  print('"Hello"是否是tuple类的实例: ', isinstance(hello, tuple))
+  # str不是tuple类的子类，输出False
+  print('str是否是tuple类的子类: ', issubclass(str, tuple))
+  # 定义一个列表
+  my_list = [2, 4]
+  # [2, 4]是list类的实例，输出True
+  print('[2, 4]是否是list类的实例: ', isinstance(my_list, list))
+  # [2, 4]是object类的子类的实例，输出True
+  print('[2, 4]是否是object类及其子类的实例: ', isinstance(my_list, object))
+  # list是object类的子类，输出True
+  print('list是否是object类的子类: ', issubclass(list, object))
+  # [2, 4]不是tuple类及其子类的实例，输出False
+  print('[2, 4]是否是tuple类及其子类的实例: ', isinstance([2, 4], tuple))
+  # list不是tuple类的子类，输出False
+  print('list是否是tuple类的子类: ', issubclass(list, tuple))
+  ```
+
+  - 通过上面程序可以看出，issubclass() 和 isinstance() 两个函数的用法差不多，区别只是 issubclass() 的第一个参数是类名，而 isinstance() 的第一个参数是变量，这也与两个函数的意义对应：issubclass 用于判断是否为子类，而 isinstance() 用于判断是否为该类或子类的实例。
+
+- issubclass() 和 isinstance() 两个函数的第二个参数都可使用元组
+
+  ```
+  data = (20, 'fkit')
+  print('data是否为列表或元组: ', isinstance(data, (list, tuple))) # True
+  # str不是list或者tuple的子类，输出False
+  print('str是否为list或tuple的子类: ', issubclass(str, (list, tuple)))
+  # str是list或tuple或object的子类，输出True
+  print('str是否为list或tuple或object的子类 ', issubclass(str, (list, tuple, object)))
+  ```
+
+- 此外，Python 为所有类都提供了一个 `__bases__` 属性，通过该属性可以查看该类的所有直接父类，该属性返回所有直接父类组成的元组
+
+  ```
+  class A:
+      pass
+  class B:
+      pass
+  class C(A, B):
+      pass
+  print('类A的所有父类:', A.__bases__)
+  print('类B的所有父类:', B.__bases__)
+  print('类C的所有父类:', C.__bases__)
+  
+  类A的所有父类: (<class 'object'>,)
+  类B的所有父类: (<class 'object'>,)
+  类C的所有父类: (<class '__main__.A'>, <class '__main__.B'>)
+  ```
+
+  - 从上面的运行结果可以看出，如果在定义类时没有显式指定它的父类，则这些类默认的父类是 object 类。
+
+- Python 还为所有类都提供了一个 `__subclasses__()` 方法，通过该方法可以查看该类的所有直接子类，该方法返回该类的所有子类组成的列表。例如在上面程序中增加如下两行：
+
+  ```
+  print('类A的所有子类:', A.__subclasses__())
+  print('类B的所有子类:', B.__subclasses__())
+  
+  类A的所有子类: [<class '__main__.C'>]
+  类B的所有子类: [<class '__main__.C'>]
+  ```
+
+###### \__call__()
+
 - 
