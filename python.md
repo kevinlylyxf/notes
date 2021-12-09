@@ -5751,7 +5751,546 @@ __init__()
 
 #### 文件操作
 
+- 路径中的 D:\ 指的是“根文件夹”，它包含了所有其他文件夹。在 Windows 中，根文件夹名为 D:\，也称为 D: 盘。在 OS X 和 Linux 中，根文件夹是 /。本教程使用的是 Windows 风格的根文件夹，如果你在 OS X 或 Linux 上输入交互式环境的例子，请用 / 代替。
+
+- 另外，附加卷（诸如 DVD 驱动器或 USB 闪存驱动器），在不同的操作系统上显示也不同。在 Windows 上，它们表示为新的、带字符的根驱动器。诸如 D:\ 或 E:\。在 OS X 上，它们表示为新的文件夹，在 /Volumes 文件夹下。在 Linux 上，它们表示为新的文件夹，在 /mnt 文件夹下。同时也要注意，虽然文件夹名称和文件名在 Windows 和 OS X 上是不区分大小写的，但在 Linux 上是区分大小写的。
+
+- 在 Windows 上，路径书写使用反斜杠 "\\" 作为文件夹之间的分隔符。但在 OS X 和 Linux 上，使用正斜杠 "/" 作为它们的路径分隔符。如果想要程序运行在所有操作系统上，在编写 Python 脚本时，就必须处理这两种情况。
+
+- 好在，用 os.path.join() 函数来做这件事很简单。如果将单个文件和路径上的文件夹名称的字符串传递给它，os.path.join() 就会返回一个文件路径的字符串，包含正确的路径分隔符。在交互式环境中输入以下代码：
+
+  ```
+  >>> import os
+  >>> os.path.join('demo', 'exercise')
+  'demo\\exercise'
+  ```
+
+  - 因为此程序是在 Windows 上运行的，所以 os.path.join('demo', 'exercise') 返回 'demo\\exercise'（请注意，反斜杠有两个，因为每个反斜杠需要由另一个反斜杠字符来转义）。如果在 OS X 或 Linux 上调用这个函数，该字符串就会是 'demo/exercise'。
+
+- 不仅如此，如果需要创建带有文件名称的文件存储路径，os.path.join() 函数同样很有用。例如，下面的例子将一个文件名列表中的名称，添加到文件夹名称的末尾：
+
+  ```
+  import os
+  myFiles = ['accounts.txt', 'details.csv', 'invite.docx']
+  for filename in myFiles:
+      print(os.path.join('C:\\demo\\exercise', filename))
+      
+  C:\demo\exercise\accounts.txt
+  C:\demo\exercise\details.csv
+  C:\demo\exercise\invite.docx
+  ```
+
+- 在 [Python](http://c.biancheng.net/python/) 中，利用 os.getcwd() 函数可以取得当前工作路径的字符串，还可以利用 os.chdir() 改变它。
+
+  ```
+  >>> import os
+  >>> os.getcwd()
+  'C:\\Users\\mengma\\Desktop'
+  >>> os.chdir('C:\\Windows\\System32')
+  >>> os.getcwd()
+  'C:\\Windows\\System32'
+  ```
+
+  - 可以看到，原本当前工作路径为 'C:\\Users\\mengma\\Desktop'（也就是桌面），通过 os.chdir() 函数，将其改成了 'C:\\Windows\\System32'。
+
+  - 需要注意的是，如果使用 os.chdir() 修改的工作目录不存在，Python 解释器会报错
+
+    ```
+    >>> os.chdir('C:\\error')
+    Traceback (most recent call last):
+      File "<pyshell#6>", line 1, in <module>
+        os.chdir('C:\\error')
+    FileNotFoundError: [WinError 2] 系统找不到指定的文件。: 'C:\\error'
+    ```
+
+- Python os.path 模块提供了一些函数，可以实现绝对路径和相对路径之间的转换，以及检查给定的路径是否为绝对路径，比如说：
+
+  - 调用 os.path.abspath(path) 将返回 path 参数的绝对路径的字符串，这是将相对路径转换为绝对路径的简便方法。
+
+  - 调用 os.path.isabs(path)，如果参数是一个绝对路径，就返回 True，如果参数是一个相对路径，就返回 False。
+
+  - 调用 os.path.relpath(path, start) 将返回从 start 路径到 path 的相对路径的字符串。如果没有提供 start，就使用当前工作目录作为开始路径。
+
+  - 调用 os.path.dirname(path) 将返回一个字符串，它包含 path 参数中最后一个斜杠之前的所有内容；调用 os.path.basename(path) 将返回一个字符串，它包含 path 参数中最后一个斜杠之后的所有内容。
+
+    ```
+    >>> os.getcwd()
+    'C:\\Windows\\System32'
+    >>> os.path.abspath('.')
+    'C:\\Windows\\System32'
+    >>> os.path.abspath('.\\Scripts')
+    'C:\\Windows\\System32\\Scripts'
+    >>> os.path.isabs('.')
+    False
+    >>> os.path.isabs(os.path.abspath('.'))
+    True
+    >>> os.path.relpath('C:\\Windows', 'C:\\')
+    'Windows'
+    >>> os.path.relpath('C:\\Windows', 'C:\\spam\\eggs')
+    '..\\..\\Windows'
+    >>> path = 'C:\\Windows\\System32\\calc.exe'
+    >>> os.path.basename(path)
+    'calc.exe'
+    >>> os.path.dirname(path)
+    'C:\\Windows\\System32'
+    ```
+
+  - 除此之外，如果同时需要一个路径的目录名称和基本名称，就可以调用 os.path.split() 获得这两个字符串的元组
+
+    ```
+    >>> path = 'C:\\Windows\\System32\\calc.exe'
+    >>> os.path.split(path)
+    ('C:\\Windows\\System32', 'calc.exe')
+    ```
+
+    - 可以调用 os.path.dirname()和 os.path.basename()，将它们的返回值放在一个元组中，从而得到同样的元组。但使用 os.path.split() 无疑是很好的快捷方式。
+
+- 同时，如果提供的路径不存在，许多 Python 函数就会崩溃并报错，但好在 os.path 模块提供了以下函数用于检测给定的路径是否存在，以及它是文件还是文件夹：
+
+  - 如果 path 参数所指的文件或文件夹存在，调用 os.path.exists(path) 将返回 True，否则返回 False。
+
+  - 如果 path 参数存在，并且是一个文件，调用 os.path.isfile(path) 将返回 True，否则返回 False。
+
+  - 如果 path 参数存在，并且是一个文件夹，调用 os.path.isdir(path) 将返回 True，否则返回 False。
+
+    ```
+    >>> os.path.exists('C:\\Windows')
+    True
+    >>> os.path.exists('C:\\some_made_up_folder')
+    False
+    >>> os.path.isdir('C:\\Windows\\System32')
+    True
+    >>> os.path.isfile('C:\\Windows\\System32')
+    False
+    >>> os.path.isdir('C:\\Windows\\System32\\calc.exe')
+    False
+    >>> os.path.isfile('C:\\Windows\\System32\\calc.exe')
+    True
+    ```
+
+- 文件的应用级操作可以分为以下 3 步，每一步都需要借助对应的函数实现：
+
+  1. 打开文件：使用 open() 函数，该函数会返回一个文件对象；
+  2. 对已打开文件做读/写操作：读取文件内容可使用 read()、readline() 以及 readlines() 函数；向文件中写入内容，可以使用 write() 函数。
+  3. 关闭文件：完成对文件的读/写操作之后，最后需要关闭文件，可以使用 close() 函数。
+
+###### open()
+
+- open() 函数用于创建或打开指定文件，该函数的常用语法格式如下：
+
+  ```
+  file = open(file_name [, mode='r' [ , buffering=-1 [ , encoding = None ]]])
+  ```
+
+  - 此格式中，用 [] 括起来的部分为可选参数，即可以使用也可以省略。其中，各个参数所代表的含义如下：
+
+    - file：表示要创建的文件对象。
+    - file_name：要创建或打开文件的文件名称，该名称要用引号（单引号或双引号都可以）括起来。需要注意的是，如果要打开的文件和当前执行的代码文件位于同一目录，则直接写文件名即可；否则，此参数需要指定打开文件所在的完整路径。
+    - mode：可选参数，用于指定文件的打开模式。可选的打开模式如表 1 所示。如果不写，则默认以只读（r）模式打开文件。
+    - buffering：可选参数，用于指定对文件做读写操作时，是否使用缓冲区（本节后续会详细介绍）。
+    - encoding：手动设定打开文件时所使用的编码格式，不同平台的 ecoding 参数值也不同，以 Windows 为例，其默认为 cp936（实际上就是 GBK 编码）。
+
+    | 模式 | 意义                                                         | 注意事项                                                     |
+    | ---- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+    | r    | 只读模式打开文件，读文件内容的指针会放在文件的开头。         | 操作的文件必须存在。                                         |
+    | rb   | 以二进制格式、采用只读模式打开文件，读文件内容的指针位于文件的开头，一般用于非文本文件，如图片文件、音频文件等。 |                                                              |
+    | r+   | 打开文件后，既可以从头读取文件内容，也可以从开头向文件中写入新的内容，写入的新内容会覆盖文件中等长度的原有内容。 |                                                              |
+    | rb+  | 以二进制格式、采用读写模式打开文件，读写文件的指针会放在文件的开头，通常针对非文本文件（如音频文件）。 |                                                              |
+    | w    | 以只写模式打开文件，若该文件存在，打开时会清空文件中原有的内容。 | 若文件存在，会清空其原有内容（覆盖文件）；反之，则创建新文件。 |
+    | wb   | 以二进制格式、只写模式打开文件，一般用于非文本文件（如音频文件） |                                                              |
+    | w+   | 打开文件后，会对原有内容进行清空，并对该文件有读写权限。     |                                                              |
+    | wb+  | 以二进制格式、读写模式打开文件，一般用于非文本文件           |                                                              |
+    | a    | 以追加模式打开一个文件，对文件只有写入权限，如果文件已经存在，文件指针将放在文件的末尾（即新写入内容会位于已有内容之后）；反之，则会创建新文件。 |                                                              |
+    | ab   | 以二进制格式打开文件，并采用追加模式，对文件只有写权限。如果该文件已存在，文件指针位于文件末尾（新写入文件会位于已有内容之后）；反之，则创建新文件。 |                                                              |
+    | a+   | 以读写模式打开文件；如果文件存在，文件指针放在文件的末尾（新写入文件会位于已有内容之后）；反之，则创建新文件。 |                                                              |
+    | ab+  | 以二进制模式打开文件，并采用追加模式，对文件具有读写权限，如果文件存在，则文件指针位于文件的末尾（新写入文件会位于已有内容之后）；反之，则创建新文件。 |                                                              |
+
+  ![](http://c.biancheng.net/uploads/allimg/190228/2-1Z22QI61c59.gif)
+
+- 默认打开 "a.txt" 文件。
+
+  ```
+  #当前程序文件同目录下没有 a.txt 文件
+  file = open("a.txt")
+  print(file)
+  
+  <_io.TextIOWrapper name='a.txt' mode='r' encoding='cp936'>
+  ```
+
+  - 当以默认模式打开文件时，默认使用 r 权限，该权限要求打开的文件必须存在
+  - 可以看到，当前输出结果中，输出了 file 文件对象的相关信息，包括打开文件的名称、打开模式、打开文件时所使用的编码格式。
+
+- 使用 open() 打开文件时，默认采用 GBK 编码。但当要打开的文件不是 GBK 编码格式时，可以在使用 open() 函数时，手动指定打开文件的编码格式，例如：
+
+  ```
+  file = open("a.txt",encoding="utf-8")
+  ```
+
+  - 手动修改 encoding 参数的值，仅限于文件以文本的形式打开，也就是说，以二进制格式打开时，不能对 encoding 参数的值做任何修改，否则程序会抛出 ValueError 异常
+
+- 通常情况下、建议大家在使用 open() 函数时打开缓冲区，即不需要修改 buffing 参数的值。如果 buffing 参数的值为 0（或者 False），则表示在打开指定文件时不使用缓冲区；如果 buffing 参数值为大于 1 的整数，该整数用于指定缓冲区的大小（单位是字节）；如果 buffing 参数的值为负数，则代表使用默认的缓冲区大小。
+
+- 成功打开文件之后，可以调用文件对象本身拥有的属性获取当前文件的部分信息，其常见的属性为：
+
+  - file.name：返回文件的名称；
+
+  - file.mode：返回打开文件时，采用的文件打开模式；
+
+  - file.encoding：返回打开文件时使用的编码格式；
+
+  - file.closed：判断文件是否己经关闭。
+
+    ```
+    # 以默认方式打开文件
+    f = open('my_file.txt')
+    # 输出文件是否已经关闭
+    print(f.closed)
+    # 输出访问模式
+    print(f.mode)
+    #输出编码格式
+    print(f.encoding)
+    # 输出文件名
+    print(f.name)
+    
+    False
+    r
+    cp936
+    my_file.txt
+    ```
+
+- 使用 open() 函数打开的文件对象，必须手动进行关闭（后续章节会详细讲解），Python 垃圾回收机制无法自动回收打开文件所占用的资源。
+
+###### 文本格式和二进制格式
+
+- open() 函数第二个参数是一个字符串，用于指定文件的打开方式，如果该字符串中出现 b，则表示以二进制格式打开文件；反之，则以普通的文本格式打开文件。
+- 根据我们以往的经验，文本文件通常用来保存肉眼可见的字符，比如 .txt 文件、.c 文件、.dat 文件等，用文本编辑器打开这些文件，我们能够顺利看懂文件的内容。而二进制文件通常用来保存视频、图片、音频等不可阅读的内容，当用文本编辑器打开这些文件，会看到一堆乱码，根本看不懂。
+- 实际上，从数据存储的角度上分析，二进制文件和文本文件没有区别，它们的内容都是以二进制的形式保存在磁盘中的。
+- 我们之所以能看懂文本文件的内容，是因为文本文件中采用的是 ASCII、UTF-8、GBK 等字符编码，文本编辑器可以识别出这些编码格式，并将编码值转换成字符展示出来。而对于二进制文件，文本编辑器无法识别这些文件的编码格式，只能按照字符编码格式胡乱解析，所以最终看到的是一堆乱码。
+- 使用 open() 函数以文本格式打开文件和以二进制格式打开文件，唯一的区别是对文件中换行符的处理不同。
+- 在 Windows 系统中，文件中用 "\r\n" 作为行末标识符（即换行符），当以文本格式读取文件时，会将 "\r\n" 转换成 "\n"；反之，以文本格式将数据写入文件时，会将 "\n" 转换成 "\r\n"。这种隐式转换换行符的行为，对用文本格式打开文本文件是没有问题的，但如果用文本格式打开二进制文件，就有可能改变文本中的数据（将 \r\n 隐式转换为 \n）。
+- 而在 Unix/Linux 系统中，默认的文件换行符就是 \n，因此在 Unix/Linux 系统中文本格式和二进制格式并无本质的区别。
+- 总的来说，为了保险起见，对于 Windows平台最好用 b 打开二进制文件；对于 Unix/Linux 平台，打开二进制文件，可以用 b，也可以不用。
+
+###### read()
+
+- [Python](http://c.biancheng.net/python/) 提供了如下 3 种函数，它们都可以帮我们实现读取文件中数据的操作：
+
+  1. read() 函数：逐个字节或者字符读取文件中的内容；
+  2. readline() 函数：逐行读取文件中的内容；
+  3. readlines() 函数：一次性读取文件中多行内容。
+
+- read()函数
+
+  - 对于借助 open() 函数，并以可读模式（包括 r、r+、rb、rb+）打开的文件，可以调用 read() 函数逐个字节（或者逐个字符）读取文件中的内容。如果文件是以文本模式（非二进制模式）打开的，则 read() 函数会逐个字符进行读取；反之，如果文件以二进制模式打开，则 read() 函数会逐个字节进行读取。
+
+    ```
+    file.read([size])
+    ```
+
+  - file 表示已打开的文件对象；size 作为一个可选参数，用于指定一次最多可读取的字符（字节）个数，如果省略，则默认一次性读取所有内容。
+
+  - 当操作文件结束后，必须调用 close() 函数手动将打开的文件进行关闭，这样可以避免程序发生不必要的错误。
+
+  - 我们也可以通过使用 size 参数，指定 read() 每次可读取的最大字符（或者字节）数
+
+    ```
+    #以 utf-8 的编码格式打开指定文件
+    f = open("my_file.txt",encoding = "utf-8")
+    #输出读取到的数据
+    print(f.read(6))
+    #关闭文件
+    f.close()
+    
+    Python
+    ```
+
+  - 再次强调，size 表示的是一次最多可读取的字符（或字节）数，因此，即便设置的 size 大于文件中存储的字符（字节）数，read() 函数也不会报错，它只会读取文件中所有的数据。
+
+  - 除此之外，对于以二进制格式打开的文件，read() 函数会逐个字节读取文件中的内容
+
+    ```
+    #以二进制形式打开指定文件
+    f = open("my_file.txt",'rb+')
+    #输出读取到的数据
+    print(f.read())
+    #关闭文件
+    f.close()
+    
+    b'Python\xe6\x95\x99\xe7\xa8\x8b\r\nhttp://c.biancheng.net/python/'
+    ```
+
+    - 可以看到，输出的数据为 bytes 字节串。我们可以调用 decode() 方法，将其转换成我们认识的字符串。
+
+  - 在使用 read() 函数时，如果 Python 解释器提示`UnicodeDecodeError`异常，其原因在于，目标文件使用的编码格式和 open() 函数打开该文件时使用的编码格式不匹配。要解决这个问题，要么将 open() 函数中的 encoding 参数值修改为和目标文件相同的编码格式，要么重新生成目标文件（即将该文件的编码格式改为和 open() 函数中的 encoding 参数相同）。除此之外，还有一种方法：先使用二进制模式读取文件，然后调用 bytes 的 decode() 方法，使用目标文件的编码格式，将读取到的字节串转换成认识的字符串。
+
+    ```
+    #以二进制形式打开指定文件，该文件编码格式为 utf-8
+    f = open("my_file.txt",'rb+')
+    byt = f.read()
+    print(byt)
+    print("\n转换后：")
+    print(byt.decode('utf-8'))
+    #关闭文件
+    f.close()
+    
+    b'Python\xe6\x95\x99\xe7\xa8\x8b\r\nhttp://c.biancheng.net/python/'
+    
+    转换后：
+    Python教程
+    http://c.biancheng.net/python/
+    ```
+
+- readline()用于读取文件中的一行，包含最后的换行符“\n”
+
+  ```
+  file.readline([size])
+  ```
+
+  - file 为打开的文件对象；size 为可选参数，用于指定读取每一行时，一次最多读取的字符（字节）数。
+  - size是每一行最多读取的字节数，并不是读取多少行，所以这个函数最多读取一行
+
+- readlines() 函数用于读取文件中的所有行，它和调用不指定 size 参数的 read() 函数类似，只不过该函数返回是一个字符串列表，其中每个元素为文件中的一行内容。
+
+  ```
+  file.readlines()
+  
+  f = open("my_file.txt",'rb')
+  byt = f.readlines()
+  print(byt)
+  
+  [b'Python\xbd\xcc\xb3\xcc\r\n', b'http://c.biancheng.net/python/']
+  ```
+
+###### write()和writelines()
+
+- [Python](http://c.biancheng.net/python/) 中的文件对象提供了 write() 函数，可以向文件中写入指定内容。该函数的语法格式如下：
+
+  ```
+  file.write(string)
+  ```
+
+  - file 表示已经打开的文件对象；string 表示要写入文件的字符串（或字节串，仅适用写入二进制文件中）。
+
+  - 在使用 write() 向文件中写入数据，需保证使用 open() 函数是以 r+、w、w+、a 或 a+ 的模式打开文件，否则执行 write() 函数会抛出 io.UnsupportedOperation 错误。
+
+  - 如果向文件写入数据后，不想马上关闭文件，也可以调用文件对象提供的 flush() 函数，它可以实现将缓冲区的数据写入文件中。
+
+    ```
+    f = open("a.txt", 'w')
+    f.write("写入一行新数据")
+    f.flush()
+    ```
+
+  - 有读者可能会想到，通过设置 open() 函数的 buffering 参数可以关闭缓冲区，这样数据不就可以直接写入文件中了？对于以二进制格式打开的文件，可以不使用缓冲区，写入的数据会直接进入磁盘文件；但对于以文本格式打开的文件，必须使用缓冲区，否则 Python 解释器会 ValueError 错误。
+
+- Python 的文件对象中，不仅提供了 write() 函数，还提供了 writelines() 函数，可以实现将字符串列表写入文件中。写入函数只有 write() 和 writelines() 函数，而没有名为 writeline 的函数。
+
+  - 还是以 a.txt 文件为例，通过使用 writelines() 函数，可以轻松实现将 a.txt 文件中的数据复制到其它文件中
+
+    ```
+    f = open('a.txt', 'r')
+    n = open('b.txt','w+')
+    n.writelines(f.readlines())
+    n.close()
+    f.close()
+    ```
+
+  - 执行此代码，在 a.txt 文件同级目录下会生成一个 b.txt 文件，且该文件中包含的数据和 a.txt 完全一样。
+
+  - 需要注意的是，使用 writelines() 函数向文件中写入多行数据时，不会自动给各行添加换行符。上面例子中，之所以 b.txt 文件中会逐行显示数据，是因为 readlines() 函数在读取各行数据时，读入了行尾的换行符。
+
+###### seek()和tell()
+
+- 文件指针用于标明文件读写的起始位置。假如把文件看成一个水流，文件中每个数据（以 b 模式打开，每个数据就是一个字节；以普通模式打开，每个数据就是一个字符）就相当于一个水滴，而文件指针就标明了文件将要从文件的哪个位置开始读起
+
+- tell() 函数用于判断文件指针当前所处的位置，而 seek() 函数用于移动文件指针到文件的指定位置。
+
+- 当向文件中写入数据时，如果不是文件的尾部，写入位置的原有数据不会自行向后移动，新写入的数据会将文件中处于该位置的数据直接覆盖掉。
+
+- tell() 函数
+
+  ```
+  file.tell()
+  
+  http://c.biancheng.net
+  
+  f = open("a.txt",'r')
+  print(f.tell())
+  print(f.read(3))
+  print(f.tell())
+  
+  0
+  htt
+  3
+  ```
+
+  - 可以看到，当使用 open() 函数打开文件时，文件指针的起始位置为 0，表示位于文件的开头处，当使用 read() 函数从文件中读取 3 个字符之后，文件指针同时向后移动了 3 个字符的位置。这就表明，当程序使用文件对象读写数据时，文件指针会自动向后移动：读写了多少个数据，文件指针就自动向后移动多少个位置。
+
+- seek() 函数用于将文件指针移动至指定位置
+
+  ```
+  file.seek(offset[, whence])
+  ```
+
+  - file：表示文件对象；
+
+  - whence：作为可选参数，用于指定文件指针要放置的位置，该参数的参数值有 3 个选择：0 代表文件头（默认值）、1 代表当前位置、2 代表文件尾。
+
+  - offset：表示相对于 whence 位置文件指针的偏移量，正数表示向后偏移，负数表示向前偏移。例如，当`whence == 0 &&offset == 3`（即 seek(3,0) ），表示文件指针移动至距离文件开头处 3 个字符的位置；当`whence == 1 &&offset == 5`（即 seek(5,1) ），表示文件指针向后移动，移动至距离当前位置 5 个字符处。
+
+  - 当 offset 值非 0 时，[Python](http://c.biancheng.net/python/) 要求文件必须要以二进制格式打开，否则会抛出 io.UnsupportedOperation 错误。
+
+    ```
+    f = open('a.txt', 'rb')
+    # 判断文件指针的位置
+    print(f.tell())
+    # 读取一个字节，文件指针自动后移1个数据
+    print(f.read(1))
+    print(f.tell())
+    # 将文件指针从文件开头，向后移动到 5 个字符的位置
+    f.seek(5)
+    print(f.tell())
+    print(f.read(1))
+    # 将文件指针从当前位置，向后移动到 5 个字符的位置
+    f.seek(5, 1)
+    print(f.tell())
+    print(f.read(1))
+    # 将文件指针从文件结尾，向前移动到距离 2 个字符的位置
+    f.seek(-1, 2)
+    print(f.tell())
+    print(f.read(1))
+    
+    0
+    b'h'
+    1
+    5
+    b'/'
+    11
+    b'a'
+    21
+    b't'
+    ```
+
+###### with as
+
+- 任何一门编程语言中，文件的输入输出、数据库的连接断开等，都是很常见的资源管理操作。但资源都是有限的，在写程序时，必须保证这些资源在使用过后得到释放，不然就容易造成资源泄露，轻者使得系统处理缓慢，严重时会使系统崩溃。
+
+- 例如，前面在介绍文件操作时，一直强调打开的文件最后一定要关闭，否则会程序的运行造成意想不到的隐患。但是，即便使用 close() 做好了关闭文件的操作，如果在打开文件或文件操作过程中抛出了异常，还是无法及时关闭文件。
+
+- 为了更好地避免此类问题，不同的编程语言都引入了不同的机制。在 [Python](http://c.biancheng.net/python/) 中，对应的解决方式是使用 with as 语句操作上下文管理器（context manager），它能够帮助我们自动分配并且释放资源。
+
+- 简单的理解，同时包含 `__enter__()` 和 `__exit__()` 方法的对象就是上下文管理器。常见构建上下文管理器的方式有 2 种，分别是基于类实现和基于生成器实现
+
+- 例如，使用 with as 操作已经打开的文件对象（本身就是上下文管理器），无论期间是否抛出异常，都能保证 with as 语句执行完毕后自动关闭已经打开的文件。
+
+  ```
+  with 表达式 [as target]：
+      代码块
+  ```
+
+  - 此格式中，用 [] 括起来的部分可以使用，也可以省略。其中，target 参数用于指定一个变量，该语句会将 expression 指定的结果保存到该变量中。with as 语句中的代码块如果不想执行任何语句，可以直接使用 pass 语句代替。
+
+  ```
+  举个例子，假设有一个 a.txt 文件
+  C语言中文网
+  http://c.biancheng.net
+  在和 a.txt 同级目录下，创建一个 .py 文件，并编写如下代码：
+  with open('a.txt', 'a') as f:
+      f.write("\nPython教程")
+      
+  C语言中文网
+  http://c.biancheng.net
+  Python教程
+  ```
+
+  - 可以看到，通过使用 with as 语句，即便最终没有关闭文件，修改文件内容的操作也能成功。
+
+###### with as底层原理
+
+- 在介绍 with as 语句时讲到，该语句操作的对象必须是上下文管理器。那么，到底什么是上下文管理器呢？
+- 简单的理解，同时包含 `__enter__()` 和 `__exit__()` 方法的对象就是上下文管理器。也就是说，上下文管理器必须实现如下两个方法：
+  1. `__enter__`(self)：进入上下文管理器自动调用的方法，该方法会在 with as 代码块执行之前执行。如果 with 语句有 as子句，那么该方法的返回值会被赋值给 as 子句后的变量；该方法可以返回多个值，因此在 as 子句后面也可以指定多个变量（多个变量必须由“()”括起来组成元组）。
+  2. `__exit__`（self, exc_type, exc_value, exc_traceback）：退出上下文管理器自动调用的方法。该方法会在 with as 代码块执行之后执行。如果 with as 代码块成功执行结束，程序自动调用该方法，调用该方法的三个参数都为 None：如果 with as 代码块因为异常而中止，程序也自动调用该方法，使用 sys.exc_info 得到的异常信息将作为调用该方法的参数。
+
+- 当 with as 操作上下文管理器时，就会在执行语句体之前，先执行上下文管理器的 `__enter__()` 方法，然后再执行语句体，最后执行 `__exit__()` 方法。
 
 
+- 构建上下文管理器，常见的有 2 种方式：基于类实现和基于生成器实现。
 
+- 基于类的上下文管理器
+
+  - 通过上面的介绍不难发现，只要一个类实现了 `__enter__()` 和 `__exit__()` 这 2 个方法，程序就可以使用 with as 语句来管理它，通过 `__exit__()` 方法的参数，即可判断出 with 代码块执行时是否遇到了异常。其实，上面程序中的文件对象也实现了这两个方法，因此可以接受 with as 语句的管理。
+
+  - 下面我们自定义一个实现上下文管理协议的类，并尝试用 with as 语句来管理它：
+
+    ```
+    class FkResource:
+        def __init__(self, tag):
+            self.tag = tag
+            print('构造器,初始化资源: %s' % tag)
+        # 定义__enter__方法，with体之前的执行的方法
+        def __enter__(self):
+            print('[__enter__ %s]: ' % self.tag)
+            # 该返回值将作为as子句中变量的值
+            return 'fkit'  # 可以返回任意类型的值
+        # 定义__exit__方法，with体之后的执行的方法
+        def __exit__(self, exc_type, exc_value, exc_traceback):
+            print('[__exit__ %s]: ' % self.tag)
+            # exc_traceback为None，代表没有异常
+            if exc_traceback is None:
+                print('没有异常时关闭资源')
+            else:
+                print('遇到异常时关闭资源')
+                return False   # 可以省略，默认返回None也被看做是False
+    with FkResource('孙悟空') as dr:
+        print(dr)
+        print('[with代码块] 没有异常')
+    print('------------------------------')
+    with FkResource('白骨精'):
+        print('[with代码块] 异常之前的代码')
+        raise Exception
+        print('[with代码块] ~~~~~~~~异常之后的代码')
+        
+    构造器,初始化资源: 孙悟空
+    [__enter__ 孙悟空]:
+    fkit
+    [with代码块] 没有异常
+    [__exit__ 孙悟空]:
+    没有异常时关闭资源
+    ------------------------------
+    构造器,初始化资源: 白骨精
+    [__enter__ 白骨精]:
+    [with代码块] 异常之前的代码
+    [__exit__ 白骨精]:
+    遇到异常时关闭资源
+    Traceback (most recent call last):
+      File "C:\Users\mengma\Desktop\1.py", line 26, in <module>
+        raise Exception
+    Exception
+    ```
+
+    - 上面程序定义了一个 FkResource 类，并包含了 `__enter__()` 和 `__exit__()` 两个方法，因此该类的对象可以被 with as 语句管理。
+    - 此外，程序中两次使用 with as 语句管理 FkResource 对象。第一次代码块没有出现异常，第二次代码块出现了异常。从上面的输出结果来看，使用 with as 语句管理资源，无论代码块是否有异常，程序总可以自动执行 `__exit__()` 方法。
+    - 注意，当出现异常时，如果 `__exit__` 返回 False（默认不写返回值时，即为 False），则会重新抛出异常，让 with as 之外的语句逻辑来处理异常；反之，如果返回 True，则忽略异常，不再对异常进行处理。
+
+- 基于生成器的上下文管理器
+
+  - 除了基于类的上下文管理器，它还可以基于生成器实现。接下来先看一个例子。比如，我们可以使用装饰器 contextlib.contextmanager，来定义自己所需的基于生成器的上下文管理器，用以支持 with as 语句：
+
+    ```
+    from contextlib import contextmanager
+    @contextmanager
+    def file_manager(name, mode):
+        try:
+            f = open(name, mode)
+            yield f
+        finally:
+            f.close()
+           
+    with file_manager('a.txt', 'w') as f:
+        f.write('hello world')
+    ```
+
+    - 这段代码中，函数 file_manager() 就是一个生成器，当我们执行 with as 语句时，便会打开文件，并返回文件对象 f；当 with 语句执行完后，finally 中的关闭文件操作便会执行。另外可以看到，使用基于生成器的上下文管理器时，不再用定义 `__enter__()` 和 `__exit__()` 方法，但需要加上装饰器 @contextmanager，这一点新手很容易疏忽。
+    - 需要强调的是，基于类的上下文管理器和基于生成器的上下文管理器，这两者在功能上是一致的。只不过，基于类的上下文管理器更加灵活，适用于大型的系统开发，而基于生成器的上下文管理器更加方便、简洁，适用于中小型程序。但是，无论使用哪一种，不用忘记在方法“`__exit__()`”或者是 finally 块中释放资源，这一点尤其重要。
 
