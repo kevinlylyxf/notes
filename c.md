@@ -724,6 +724,61 @@
 
 - 除了可以对成员进行逐一赋值，也可以在定义时整体赋值struct stu{}stu1,stu2 = { "Tom", 12, 18, 'A', 136.5 };不过整体赋值仅限于定义结构体变量的时候，在使用过程中只能对成员逐一赋值，这和数组的赋值非常类似。
 
+  ```c
+  typedef struct __ERROR_INFO
+  {
+  	unsigned int error;
+  	char desc[256];
+  }ERROR_INFO;
+  
+  static ERROR_INFO g_error_info[] = {
+  	{__BUS_ERROR_INVALID_SRC_NODE, "invalid node"},
+  	{__BUS_ERROR_INVALID_TOPIC, "invalid topic"},
+  	{__BUS_ERROR_INVALID_TOPIC_SESSION, "invalid topic session"},
+  	{__BUS_ERROR_FAILED_TO_TOPIC_OWNER, "failed to bind topic"},
+  	{__BUS_ERROR_FAILED_GET_MSG, "failed to read message"},
+  	{__BUS_ERROR_NODE_ALREADY_EXIST, "node is already exist"},
+  	{__BUS_ERROR_NODE_NOT_EXIST, "node is not exist"},
+  	{__BUS_ERROR_TOPIC_ALREADY_EXIST, "topic is already exist"},
+  	{__BUS_ERROR_TOPIC_NOT_EXIST, "topic is not exist"},
+  	{__BUS_ERROR_FAILED_ALLOC, "failed to allocate memory"},
+  	{__BUS_ERROR_FAILED_CONNECT, "failed to connect"},
+  	{__BUS_ERROR_FAILED_SEND_MSG, "failed to send message"},
+  	{__BUS_ERROR_FAILED_RECV_MSG, "failed to receive message"},
+  	{__BUS_ERROR_FAILED_SEND_TIMEOUT, "send timeout"},
+  	{__BUS_ERROR_FAILED_RECV_TIMEOUT, "receive timeout"},
+  	{__BUS_ERROR_FAILED_MSG_MISMATCH, "mismatch message"},
+  	{__BUS_ERROR_MISMATCH_LOOP_OBJECT_TYPE, "loop with mismatch object type"},
+  	{__BUS_ERROR_DATA_FORMAT, "data format error"},
+  };
+  ```
+
+  - 上面这种初始化结构体数组的形式是正确的，上面说的只能对成员逐一赋值说的是先用ERROR_INFO定义一个结构体，但是没有定义，然后在后面使用的时候在在{}赋值，这是错误的，但是我们可以在定义结构的时候直接用{}初始化这个结构体变量
+  - 上面程序中的这种赋值方法是正确的，结构体数组这是在定义的时候初始化，而且里面的结构体也是在直接定义的时候初始化，这相当于直接定义了n个结构体，并且在定义的时候初始化
+
+  - 结构体里面套结构体初始化方法
+
+    ```c
+    struct teacher{
+        char *name;
+        int age;
+        struct address addr;
+    };
+    
+    //先定义结构体变量，再进行定义结构体数组
+    struct teacher teacher_one = {"zhangsan",20,{"china","shanghai"}};
+    struct teacher teacher_two = {"lisi",25,{"china","hefei"}};
+    struct teacher teachers_one [] = {teacher_one,teacher_two};
+    
+    //在定义结构体数组的时候，直接进行结构体数组的初始化工作
+    struct teacher  teachers_two [] = {{"wangwu",30,{"china","tianjin"}},{"zhaoliu",40,		 {"china","jiaozuo"}},{"tianqi",50,{"china","shenzhen"}}};
+    
+    ```
+
+    
+
+  
+
 - 结构体数组：是指数组中的每个元素都是一个结构体。在实际应用中C语言结构体数组常被用来表示一个拥有相同数据结构的群体，比如一个班的学生、一个车间的职工等。struct stu{}class[5];表示一个班级有五个学生
 
 - 结构体指针：当一个指针变量指向结构体时，我们就称它为结构体指针。

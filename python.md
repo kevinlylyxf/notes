@@ -380,7 +380,13 @@ c1*c2:  (72.24-13.2j)
   | %s         | 使用 str() 函数将表达式转换为字符串    |
 
   ```
-  age = 8print("C语言中文网已经%d岁了！" % age)输出结果  C语言中文网已经8岁了！在 print() 函数中，由引号包围的是格式化字符串，它相当于一个字符串模板，可以放置一些转换说明符（占位符）。本例的格式化字符串中包含一个%d说明符，它最终会被后面的 age 变量的值所替代。中间的%是一个分隔符，它前面是格式化字符串，后面是要输出的表达式。格式化字符串中也可以包含多个转换说明符，这个时候也得提供多个表达式，用以替换对应的转换说明符；多个表达式必须使用小括号( )包围起来。name = "C语言中文网"age = 8url = "http://c.biancheng.net/"print("%s已经%d岁了，它的网址是%s。" % (name, age, url))C语言中文网已经8岁了，它的网址是http://c.biancheng.net/。如果没有中间的%分割就会出错，另外如果没有% ，两个中间有逗号分隔输出结果为  C语言中文网已经%d岁了！ 8
+  age = 8
+  print("C语言中文网已经%d岁了！" % age)
+  输出结果  C语言中文网已经8岁了！在 print() 函数中，由引号包围的是格式化字符串，它相当于一个字符串模板，可以放置一些转换说明符（占位符）。本例的格式化字符串中包含一个%d说明符，它最终会被后面的 age 变量的值所替代。中间的%是一个分隔符，它前面是格式化字符串，后面是要输出的表达式。格式化字符串中也可以包含多个转换说明符，这个时候也得提供多个表达式，用以替换对应的转换说明符；多个表达式必须使用小括号( )包围起来。
+  name = "C语言中文网"
+  age = 8
+  url = "http://c.biancheng.net/"
+  print("%s已经%d岁了，它的网址是%s。" % (name, age, url))C语言中文网已经8岁了，它的网址是http://c.biancheng.net/。如果没有中间的%分割就会出错，另外如果没有% ，两个中间有逗号分隔输出结果为  C语言中文网已经%d岁了！ 8
   ```
 
 - 指定最小输出宽度
@@ -5759,7 +5765,7 @@ __init__()
 
 - 好在，用 os.path.join() 函数来做这件事很简单。如果将单个文件和路径上的文件夹名称的字符串传递给它，os.path.join() 就会返回一个文件路径的字符串，包含正确的路径分隔符。在交互式环境中输入以下代码：
 
-  ```
+  ```python
   >>> import os
   >>> os.path.join('demo', 'exercise')
   'demo\\exercise'
@@ -5769,7 +5775,7 @@ __init__()
 
 - 不仅如此，如果需要创建带有文件名称的文件存储路径，os.path.join() 函数同样很有用。例如，下面的例子将一个文件名列表中的名称，添加到文件夹名称的末尾：
 
-  ```
+  ```python
   import os
   myFiles = ['accounts.txt', 'details.csv', 'invite.docx']
   for filename in myFiles:
@@ -5782,7 +5788,7 @@ __init__()
 
 - 在 [Python](http://c.biancheng.net/python/) 中，利用 os.getcwd() 函数可以取得当前工作路径的字符串，还可以利用 os.chdir() 改变它。
 
-  ```
+  ```python
   >>> import os
   >>> os.getcwd()
   'C:\\Users\\mengma\\Desktop'
@@ -5795,7 +5801,7 @@ __init__()
 
   - 需要注意的是，如果使用 os.chdir() 修改的工作目录不存在，Python 解释器会报错
 
-    ```
+    ```python
     >>> os.chdir('C:\\error')
     Traceback (most recent call last):
       File "<pyshell#6>", line 1, in <module>
@@ -5813,7 +5819,7 @@ __init__()
 
   - 调用 os.path.dirname(path) 将返回一个字符串，它包含 path 参数中最后一个斜杠之前的所有内容；调用 os.path.basename(path) 将返回一个字符串，它包含 path 参数中最后一个斜杠之后的所有内容。
 
-    ```
+    ```python
     >>> os.getcwd()
     'C:\\Windows\\System32'
     >>> os.path.abspath('.')
@@ -5837,7 +5843,7 @@ __init__()
 
   - 除此之外，如果同时需要一个路径的目录名称和基本名称，就可以调用 os.path.split() 获得这两个字符串的元组
 
-    ```
+    ```python
     >>> path = 'C:\\Windows\\System32\\calc.exe'
     >>> os.path.split(path)
     ('C:\\Windows\\System32', 'calc.exe')
@@ -5853,7 +5859,7 @@ __init__()
 
   - 如果 path 参数存在，并且是一个文件夹，调用 os.path.isdir(path) 将返回 True，否则返回 False。
 
-    ```
+    ```python
     >>> os.path.exists('C:\\Windows')
     True
     >>> os.path.exists('C:\\some_made_up_folder')
@@ -5878,7 +5884,7 @@ __init__()
 
 - open() 函数用于创建或打开指定文件，该函数的常用语法格式如下：
 
-  ```
+  ```python
   file = open(file_name [, mode='r' [ , buffering=-1 [ , encoding = None ]]])
   ```
 
@@ -5909,7 +5915,7 @@ __init__()
 
 - 默认打开 "a.txt" 文件。
 
-  ```
+  ```python
   #当前程序文件同目录下没有 a.txt 文件
   file = open("a.txt")
   print(file)
@@ -5940,7 +5946,7 @@ __init__()
 
   - file.closed：判断文件是否己经关闭。
 
-    ```
+    ```python
     # 以默认方式打开文件
     f = open('my_file.txt')
     # 输出文件是否已经关闭
@@ -5983,7 +5989,7 @@ __init__()
 
   - 对于借助 open() 函数，并以可读模式（包括 r、r+、rb、rb+）打开的文件，可以调用 read() 函数逐个字节（或者逐个字符）读取文件中的内容。如果文件是以文本模式（非二进制模式）打开的，则 read() 函数会逐个字符进行读取；反之，如果文件以二进制模式打开，则 read() 函数会逐个字节进行读取。
 
-    ```
+    ```python
     file.read([size])
     ```
 
@@ -5993,7 +5999,9 @@ __init__()
 
   - 我们也可以通过使用 size 参数，指定 read() 每次可读取的最大字符（或者字节）数
 
-    ```
+    ```python
+    Python教程
+    http://c.biancheng.net/python/
     #以 utf-8 的编码格式打开指定文件
     f = open("my_file.txt",encoding = "utf-8")
     #输出读取到的数据
@@ -6008,7 +6016,7 @@ __init__()
 
   - 除此之外，对于以二进制格式打开的文件，read() 函数会逐个字节读取文件中的内容
 
-    ```
+    ```python
     #以二进制形式打开指定文件
     f = open("my_file.txt",'rb+')
     #输出读取到的数据
@@ -6019,11 +6027,12 @@ __init__()
     b'Python\xe6\x95\x99\xe7\xa8\x8b\r\nhttp://c.biancheng.net/python/'
     ```
 
+    - 上面中的\x的6个字节其实是中文的字符，因为是以b格式打开的，只是会读取二进制的，但是ASCII二进制的会输出字母，但是中文的不会输出来
     - 可以看到，输出的数据为 bytes 字节串。我们可以调用 decode() 方法，将其转换成我们认识的字符串。
 
   - 在使用 read() 函数时，如果 Python 解释器提示`UnicodeDecodeError`异常，其原因在于，目标文件使用的编码格式和 open() 函数打开该文件时使用的编码格式不匹配。要解决这个问题，要么将 open() 函数中的 encoding 参数值修改为和目标文件相同的编码格式，要么重新生成目标文件（即将该文件的编码格式改为和 open() 函数中的 encoding 参数相同）。除此之外，还有一种方法：先使用二进制模式读取文件，然后调用 bytes 的 decode() 方法，使用目标文件的编码格式，将读取到的字节串转换成认识的字符串。
 
-    ```
+    ```python
     #以二进制形式打开指定文件，该文件编码格式为 utf-8
     f = open("my_file.txt",'rb+')
     byt = f.read()
@@ -6051,7 +6060,7 @@ __init__()
 
 - readlines() 函数用于读取文件中的所有行，它和调用不指定 size 参数的 read() 函数类似，只不过该函数返回是一个字符串列表，其中每个元素为文件中的一行内容。
 
-  ```
+  ```python
   file.readlines()
   
   f = open("my_file.txt",'rb')
@@ -6075,7 +6084,7 @@ __init__()
 
   - 如果向文件写入数据后，不想马上关闭文件，也可以调用文件对象提供的 flush() 函数，它可以实现将缓冲区的数据写入文件中。
 
-    ```
+    ```python
     f = open("a.txt", 'w')
     f.write("写入一行新数据")
     f.flush()
@@ -6087,7 +6096,7 @@ __init__()
 
   - 还是以 a.txt 文件为例，通过使用 writelines() 函数，可以轻松实现将 a.txt 文件中的数据复制到其它文件中
 
-    ```
+    ```python
     f = open('a.txt', 'r')
     n = open('b.txt','w+')
     n.writelines(f.readlines())
@@ -6109,7 +6118,7 @@ __init__()
 
 - tell() 函数
 
-  ```
+  ```python
   file.tell()
   
   http://c.biancheng.net
@@ -6140,7 +6149,7 @@ __init__()
 
   - 当 offset 值非 0 时，[Python](http://c.biancheng.net/python/) 要求文件必须要以二进制格式打开，否则会抛出 io.UnsupportedOperation 错误。
 
-    ```
+    ```python
     f = open('a.txt', 'rb')
     # 判断文件指针的位置
     print(f.tell())
@@ -6223,7 +6232,7 @@ __init__()
 
   - 下面我们自定义一个实现上下文管理协议的类，并尝试用 with as 语句来管理它：
 
-    ```
+    ```python
     class FkResource:
         def __init__(self, tag):
             self.tag = tag
@@ -6277,7 +6286,7 @@ __init__()
 
   - 除了基于类的上下文管理器，它还可以基于生成器实现。接下来先看一个例子。比如，我们可以使用装饰器 contextlib.contextmanager，来定义自己所需的基于生成器的上下文管理器，用以支持 with as 语句：
 
-    ```
+    ```python
     from contextlib import contextmanager
     @contextmanager
     def file_manager(name, mode):
