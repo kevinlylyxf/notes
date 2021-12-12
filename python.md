@@ -6199,7 +6199,7 @@ __init__()
 
   - 此格式中，用 [] 括起来的部分可以使用，也可以省略。其中，target 参数用于指定一个变量，该语句会将 expression 指定的结果保存到该变量中。with as 语句中的代码块如果不想执行任何语句，可以直接使用 pass 语句代替。
 
-  ```
+  ```python
   举个例子，假设有一个 a.txt 文件
   C语言中文网
   http://c.biancheng.net
@@ -6302,4 +6302,1058 @@ __init__()
 
     - 这段代码中，函数 file_manager() 就是一个生成器，当我们执行 with as 语句时，便会打开文件，并返回文件对象 f；当 with 语句执行完后，finally 中的关闭文件操作便会执行。另外可以看到，使用基于生成器的上下文管理器时，不再用定义 `__enter__()` 和 `__exit__()` 方法，但需要加上装饰器 @contextmanager，这一点新手很容易疏忽。
     - 需要强调的是，基于类的上下文管理器和基于生成器的上下文管理器，这两者在功能上是一致的。只不过，基于类的上下文管理器更加灵活，适用于大型的系统开发，而基于生成器的上下文管理器更加方便、简洁，适用于中小型程序。但是，无论使用哪一种，不用忘记在方法“`__exit__()`”或者是 finally 块中释放资源，这一点尤其重要。
+
+###### Pickle模块
+
+- [Python](http://c.biancheng.net/python/) 中有个序列化过程叫作 pickle，它能够实现任意对象与文本之间的相互转化，也可以实现任意对象与二进制之间的相互转化。也就是说，pickle 可以实现 Python 对象的存储及恢复。
+
+- 值得一提的是，pickle 是 python 语言的一个标准模块，安装 python 的同时就已经安装了 pickle 库，因此它不需要再单独安装，使用 import 将其导入到程序中，就可以直接使用。
+
+- pickle 模块提供了以下 4 个函数供我们使用：
+
+  - dumps()：将 Python 中的对象序列化成二进制对象，并返回；
+  - loads()：读取给定的二进制对象数据，并将其转换为 Python 对象；
+  - dump()：将 Python 中的对象序列化成二进制对象，并写入文件；
+  - load()：读取指定的序列化数据文件，并返回对象。
+  - 以上这 4 个函数可以分成两类，其中 dumps 和 loads 实现基于内存的 Python 对象与二进制互转；dump 和 load 实现基于文件的 Python 对象与二进制互转。
+
+  ```
+  dumps(obj, protocol=None, *, fix_imports=True)
+  
+  import pickle
+  tup1 = ('I love Python', {1,2,3}, None)
+  #使用 dumps() 函数将 tup1 转成 p1
+  p1 = pickle.dumps(tup1)
+  print(p1)
+  
+  b'\x80\x03X\r\x00\x00\x00I love Pythonq\x00cbuiltins\nset\nq\x01]q\x02(K\x01K\x02K\x03e\x85q\x03Rq\x04N\x87q\x05.'
+  ```
+
+- 此格式中各个参数的含义为：
+
+  - obj：要转换的 Python 对象；
+  - protocol：pickle 的转码协议，取值为 0、1、2、3、4，其中 0、1、2 对应 Python 早期的版本，3 和 4 则对应 Python 3.x 版本及之后的版本。未指定情况下，默认为 3。
+  - 其它参数：为了兼容 Python 2.x 版本而保留的参数，Python 3.x 中可以忽略。
+
+  ```
+  loads(data, *, fix_imports=True, encoding='ASCII', errors='strict')
+  
+  import pickle
+  tup1 = ('I love Python', {1,2,3}, None)
+  p1 = pickle.dumps(tup1)
+  #使用 loads() 函数将 p1 转成 Python 对象
+  t2 = pickle.loads(p1)
+  print(t2)
+  
+  ('I love Python', {1, 2, 3}, None)
+  ```
+
+  - data 参数表示要转换的二进制对象，其它参数只是为了兼容 Python 2.x 版本而保留的，可以忽略。
+  - 注意，在使用 loads() 函数将二进制对象反序列化成 Python 对象时，会自动识别转码协议，所以不需要将转码协议当作参数传入。并且，当待转换的二进制对象的字节数超过 pickle 的 Python 对象时，多余的字节将被忽略。
+
+  ```
+  dump (obj, file,protocol=None, *, fix mports=True)
+  
+  import pickle
+  tup1 = ('I love Python', {1,2,3}, None)
+  #使用 dumps() 函数将 tup1 转成 p1
+  with open ("a.txt", 'wb') as f: #打开文件
+      pickle.dump(tup1, f) #用 dump 函数将 Python 对象转成二进制对象文件
+  ```
+
+- 其中各个参数的具体含义如下：
+
+  - obj：要转换的 Python 对象。
+  - file：转换到指定的二进制文件中，要求该文件必须是以"wb"的打开方式进行操作。
+  - protocol：和 dumps() 函数中 protocol 参数的含义完全相同，因此这里不再重复描述。
+  - 其他参数：为了兼容以前 Python 2.x版本而保留的参数，可以忽略。
+  - 运行完此程序后，会在该程序文件同级目录中，生成 a.txt 文件，但由于其内容为二进制数据，因此直接打开会看到乱码。
+
+  ```
+  load(file, *, fix_imports=True, encoding='ASCII', errors='strict')
+  
+  import pickle
+  tup1 = ('I love Python', {1,2,3}, None)
+  #使用 dumps() 函数将 tup1 转成 p1
+  with open ("a.txt", 'wb') as f: #打开文件
+      pickle.dump(tup1, f) #用 dump 函数将 Python 对象转成二进制对象文件
+  with open ("a.txt", 'rb') as f: #打开文件
+      t3 = pickle.load(f) #将二进制文件对象转换成 Python 对象
+      print(t3)
+      
+  ('I love Python', {1, 2, 3}, None)
+  ```
+
+  - file 参数表示要转换的二进制对象文件（必须以 "rb" 的打开方式操作文件），其它参数只是为了兼容 Python 2.x 版本而保留的参数，可以忽略。
+
+- 看似强大的 pickle 模块，其实也有它的短板，即 pickle 不支持并发地访问持久性对象，在复杂的系统环境下，尤其是读取海量数据时，使用 pickle 会使整个系统的`I/O`读取性能成为瓶颈。这种情况下，可以使用 ZODB。
+
+- ZODB 是一个健壮的、多用户的和面向对象的数据库系统，专门用于存储 Python 语言中的对象数据，它能够存储和管理任意复杂的 Python 对象，并支持事务操作和并发控制。并且，ZODB 也是在 Python 的序列化操作基础之上实现的，因此要想有效地使用 ZODB，必须先学好 pickle。
+
+###### fileinput模块
+
+- 前面章节中，我们学会了使用 open() 和 read()（或者 readline()、readlines() ）组合，来读取单个文件中的数据。但在某些场景中，可能需要读取多个文件的数据，这种情况下，再使用这个组合，显然就不合适了。
+
+- 庆幸的是，[Python](http://c.biancheng.net/python/) 提供了 fileinput 模块，通过该模块中的 input() 函数，我们能同时打开指定的多个文件，还可以逐个读取这些文件中的内容。
+
+  ```
+  fileinput.input（files="filename1, filename2, ...", inplace=False, backup='', bufsize=0, mode='r', openhook=None）
+  ```
+
+- 此函数会返回一个 FileInput 对象，它可以理解为是将多个指定文件合并之后的文件对象。其中，各个参数的含义如下：
+
+  - files：多个文件的路径列表；
+  - inplace：用于指定是否将标准输出的结果写回到文件，此参数默认值为 False；
+  - backup：用于指定备份文件的扩展名；
+  - bufsize：指定缓冲区的大小，默认为 0；
+  - mode：打开文件的格式，默认为 r（只读格式）；
+  - openhook：控制文件的打开方式，例如编码格式等。
+
+- 和 open() 函数不同，input() 函数不能指定打开文件的编码格式，这意味着使用该函数读取的所有文件，除非以二进制方式进行读取，否则该文件编码格式都必须和当前操作系统默认的编码格式相同，不然 Python 解释器可能会提示 UnicodeDecodeError 错误。
+
+- 和 open() 函数返回单个的文件对象不同，fileinput 对象无需调用类似 read()、readline()、readlines() 这样的函数，直接通过 for 循环即可按次序读取多个文件中的数据。
+
+  | 函数名                  | 功能描述                                        |
+  | ----------------------- | ----------------------------------------------- |
+  | fileinput.filename()    | 返回当前正在读取的文件名称。                    |
+  | fileinput.fileno()      | 返回当前正在读取文件的文件描述符。              |
+  | fileinput.lineno()      | 返回当前读取了多少行。                          |
+  | fileinput.filelineno()  | 返回当前正在读取的内容位于当前文件中的行号。    |
+  | fileinput.isfirstline() | 判断当前读取的内容在当前文件中是否位于第 1 行。 |
+  | fileinput.nextfile()    | 关闭当前正在读取的文件，并开始读取下一个文件。  |
+  | fileinput.close()       | 关闭 FileInput 对象。                           |
+
+```
+举个例子。假设使用 input() 读取 2 个文件，分别为 my_file.txt 和 file.txt，它们位于同一目录，且各自包含的内容如下所示：
+
+#file.txt
+Python教程
+http://c.biancheng.net/python/
+
+#my_file.txt
+Linux教程
+http://c.biancheng.net/linux_tutorial/
+
+import fileinput
+#使用for循环遍历 fileinput 对象
+for line in fileinput.input(files=('my_file.txt', 'file.txt')):
+    # 输出读取到的内容
+    print(line)
+# 关闭文件流
+fileinput.close()
+
+Linux教程
+
+http://c.biancheng.net/linux_tutorial/
+Python教程
+
+http://c.biancheng.net/python/
+```
+
+- 读取文件内容的次序，取决于 input() 函数中文件名的先后次序。
+
+###### linecache模块：随机读取文件指定行
+
+- 除了可以借助 fileinput 模块实现读取文件外，[Python](http://c.biancheng.net/python/) 还提供了 linecache 模块。和前者不同，linecache 模块擅长读取指定文件中的指定行。换句话说，如果我们想读取某个文件中指定行包含的数据，就可以使用 linecache 模块。
+
+- 值得一提的是，linecache 模块常用来读取 Python 源文件中的代码，它使用的是 UTF-8 编码格式来读取文件内容。这意味着，使用该模块读取的文件，其编码格式也必须为 UTF-8，否则要么读取出来的数据是乱码，要么直接读取失败（Python 解释器会报 SyntaxError 异常）。
+
+  | 函数基本格式                                             | 功能                                                         |
+  | -------------------------------------------------------- | ------------------------------------------------------------ |
+  | linecache.getline(filename, lineno, module_globals=None) | 读取指定模块中指定文件的指定行（仅读取指定文件时，无需指定模块）。其中，filename 参数用来指定文件名，lineno 用来指定行号，module_globals 参数用来指定要读取的具体模块名。注意，当指定文件以相对路径的方式传给 filename 参数时，该函数以按照 sys.path 规定的路径查找该文件。 |
+  | linecache.clearcache()                                   | 如果程序某处，不再需要之前使用 getline() 函数读取的数据，则可以使用该函数清空缓存。 |
+  | linecache.checkcache(filename=None)                      | 检查缓存的有效性，即如果使用 getline() 函数读取的数据，其实在本地已经被修改，而我们需要的是新的数据，此时就可以使用该函数检查缓存的是否为新的数据。注意，如果省略文件名，该函数将检车所有缓存数据的有效性。 |
+
+```
+import linecache
+import string
+#读取string模块中第 3 行的数据
+print(linecache.getline(string.__file__, 3))
+# 读取普通文件的第2行
+print(linecache.getline('my_file.txt', 2))
+
+Public module variables:
+
+http://c.biancheng.net/linux_tutorial/
+
+在执行该程序之前，需保证 my_file.txt 文件是以 UTF-8 编码格式保存的（Python 提供的模块，通常编码格式为 UTF-8）
+```
+
+###### pathlib模块
+
+- 和前面章节中引入的模板不同，pathlib 模块中包含的是一些类，它们的继承关系如图 1 所示。
+
+  ![](http://c.biancheng.net/uploads/allimg/200110/2-2001101134132V.gif)
+
+- pathlib 模块的操作对象是各种操作系统中使用的路径（例如指定文件位置的路径，包括绝对路径和相对路径）。这里简单介绍一下图 1 中包含的几个类的具体功能：
+
+  - PurePath 类会将路径看做是一个普通的字符串，它可以实现将多个指定的字符串拼接成适用于当前操作系统的路径格式，同时还可以判断任意两个路径是否相等。注意，使用 PurePath 操作的路径，它并不会关心该路径是否真实有效。
+  - PurePosixPath 和 PureWindowsPath 是 PurePath 的子类，前者用于操作 UNIX（包括 Mac OS X）风格的路径，后者用于操作 Windows 风格的路径。
+  - Path 类和以上 3 个类不同，它操作的路径一定是真实有效的。Path 类提供了判断路径是否真实存在的方法。
+  - PosixPath 和 WindowPath 是 Path 的子类，分别用于操作 Unix（Mac OS X）风格的路径和 Windows 风格的路径。
+
+- 注意，UNIX 操作系统和 Windows 操作系统上，路径的格式是完全不同的，主要区别在于根路径和路径分隔符，UNIX 系统的根路径是斜杠（/），而 Windows 系统的根路径是盘符（C:）；UNIX 系统路径使用的分隔符是斜杠（/），而 Windows 使用的是反斜杠（\）。
+
+- PurePath 类（以及 PurePosixPath 类和 PureWindowsPath 类）都提供了大量的构造方法、实例方法以及类实例属性，供我们使用。
+
+  - 需要注意的是，在使用 PurePath 类时，考虑到操作系统的不同，如果在 UNIX 或 Mac OS X 系统上使用 PurePath 创建对象，该类的构造方法实际返回的是 PurePosixPath 对象；反之，如果在 Windows 系统上使用 PurePath 创建对象，该类的构造方法返回的是 PureWindowsPath 对象。
+  - 当然，我们完全可以直接使用 PurePosixPath 类或者 PureWindowsPath 类创建指定操作系统使用的类对象。
+
+  ```
+  例如，在 Windows 系统上执行如下语句：
+  from pathlib import *
+  # 创建PurePath，实际上使用PureWindowsPath
+  path = PurePath('my_file.txt')
+  print(type(path))
+  
+  <class 'pathlib.PureWindowsPath'>
+  显然，在 Windows 操作系统上，使用 PurePath 类构造函数创建的是 PureWindowsPath 类对象。
+  
+  除此之外，PurePath 在创建对象时，也支持传入多个路径字符串，它们会被拼接成一个路径格式的字符串。
+  from pathlib import *
+  # 创建PurePath，实际上使用PureWindowsPath
+  path = PurePath('http:','c.biancheng.net','python')
+  print(path)
+  http:\c.biancheng.net\python
+  
+  可以看到，由于本机为 Windows 系统，因此这里输出的是适用于 Windows 平台的路径。如果想在 Windows 系统上输出 UNIX 风格的路径字符串，就需要使用 PurePosixPath 类
+  from pathlib import *
+  path = PurePosixPath('http:','c.biancheng.net','python')
+  print(path)
+  
+  http:/c.biancheng.net/python
+  
+  值的一提的是，如果在使用 PurePath 类构造方法时，不传入任何参数，则等同于传入点‘.’（表示当前路径）作为参数
+  from pathlib import *
+  path = PurePath()
+  print(path)
+  path = PurePath('.')
+  print(path)
+  
+  .
+  .
+  
+  另外，如果传入 PurePath 构造方法中的多个参数中，包含多个根路径，则只会有最后一个根路径及后面的子路径生效。
+  from pathlib import *
+  path = PurePath('C://','D://','my_file.txt')
+  print(path)
+  
+  D:\my_file.txt
+  
+  需要注意的是，如果传给 PurePath 构造方法的参数中包含有多余的斜杠或者点（ . ，表示当前路径），会直接被忽略（ .. 不会被忽略）。举个例子：
+  from pathlib import *
+  path = PurePath('C://./my_file.txt')
+  print(path)
+  
+  C:\my_file.txt
+  
+  PurePath 类还重载各种比较运算符，多余同种风格的路径字符串来说，可以判断是否相等，也可以比较大小（实际上就是比较字符串的大小）；对于不同种风格的路径字符串之间，只能判断是否相等（显然，不可能相等），但不能比较大小。
+  from pathlib import *
+  # Unix风格的路径区分大小写
+  print(PurePosixPath('C://my_file.txt') == PurePosixPath('c://my_file.txt'))
+  # Windows风格的路径不区分大小写
+  print(PureWindowsPath('C://my_file.txt') == PureWindowsPath('c://my_file.txt'))
+  
+  False
+  True
+  
+  比较特殊的是，PurePath 类对象支持直接使用斜杠（/）作为多个字符串之间的连接符，
+  from pathlib import *
+  path = PurePosixPath('C://')
+  print(path / 'my_file.txt')
+  
+  C:/my_file.txt
+  
+  通过以上方式构建的路径，其本质上就是字符串，因此我们完全可以使用 str() 将 PurePath 对象转换成字符串
+  from pathlib import *
+  # Unix风格的路径区分大小写
+  path = PurePosixPath('C://','my_file.txt')
+  print(str(path))
+  
+  C:/my_file.txt
+  
+  ```
+
+- 表 1 中罗列出了常用的以下 PurePath 类实例方法和属性。由于从本质上讲，PurePath 的操作对象是字符串，因此表 1 中的这些实例属性和实例方法，实质也是对字符串进行操作。这些方法在官网手册上查看
+
+- 和 PurPath 类相比，Path 类的最大不同，就是支持对路径的真实性进行判断。
+
+- Path 是 PurePath 的子类，因此 Path 类除了支持 PurePath 提供的各种构造函数、实例属性以及实例方法之外，还提供甄别路径字符串有效性的方法，甚至还可以判断该路径对应的是文件还是文件夹，如果是文件，还支持对文件进行读写等操作。
+
+- 和 PurePath 一样，Path 同样有 2 个子类，分别为 PosixPath（表示 UNIX 风格的路径）和 WindowsPath（表示 Windows 风格的路径）。
+
+###### os.path模块
+
+- 相比 pathlib 模块，os.path 模块不仅提供了一些操作路径字符串的方法，还包含一些或者指定文件属性的一些方法
+
+  | 方法                                | 说明                                                         |
+  | ----------------------------------- | ------------------------------------------------------------ |
+  | os.path.abspath(path)               | 返回 path 的绝对路径。                                       |
+  | os.path.basename(path)              | 获取 path 路径的基本名称，即 path 末尾到最后一个斜杠的位置之间的字符串。 |
+  | os.path.commonprefix(list)          | 返回 list（多个路径）中，所有 path 共有的最长的路径。        |
+  | os.path.dirname(path)               | 返回 path 路径中的目录部分。                                 |
+  | os.path.exists(path)                | 判断 path 对应的文件是否存在，如果存在，返回 True；反之，返回 False。和 lexists() 的区别在于，exists()会自动判断失效的文件链接（类似 Windows 系统中文件的快捷方式），而 lexists() 却不会。 |
+  | os.path.lexists(path)               | 判断路径是否存在，如果存在，则返回 True；反之，返回 False。  |
+  | os.path.expanduser(path)            | 把 path 中包含的 "~" 和 "~user" 转换成用户目录。             |
+  | os.path.expandvars(path)            | 根据环境变量的值替换 path 中包含的 "$name" 和 "${name}"。    |
+  | os.path.getatime(path)              | 返回 path 所指文件的最近访问时间（浮点型秒数）。             |
+  | os.path.getmtime(path)              | 返回文件的最近修改时间（单位为秒）。                         |
+  | os.path.getctime(path)              | 返回文件的创建时间（单位为秒，自 1970 年 1 月 1 日起（又称 Unix 时间））。 |
+  | os.path.getsize(path)               | 返回文件大小，如果文件不存在就返回错误。                     |
+  | os.path.isabs(path)                 | 判断是否为绝对路径。                                         |
+  | os.path.isfile(path)                | 判断路径是否为文件。                                         |
+  | os.path.isdir(path)                 | 判断路径是否为目录。                                         |
+  | os.path.islink(path)                | 判断路径是否为链接文件（类似 Windows 系统中的快捷方式）。    |
+  | os.path.ismount(path)               | 判断路径是否为挂载点。                                       |
+  | os.path.join(path1[, path2[, ...]]) | 把目录和文件名合成一个路径。                                 |
+  | os.path.normcase(path)              | 转换 path 的大小写和斜杠。                                   |
+  | os.path.normpath(path)              | 规范 path 字符串形式。                                       |
+  | os.path.realpath(path)              | 返回 path 的真实路径。                                       |
+  | os.path.relpath(path[, start])      | 从 start 开始计算相对路径。                                  |
+  | os.path.samefile(path1, path2)      | 判断目录或文件是否相同。                                     |
+  | os.path.sameopenfile(fp1, fp2)      | 判断 fp1 和 fp2 是否指向同一文件。                           |
+  | os.path.samestat(stat1, stat2)      | 判断 stat1 和 stat2 是否指向同一个文件。                     |
+  | os.path.split(path)                 | 把路径分割成 dirname 和 basename，返回一个元组。             |
+  | os.path.splitdrive(path)            | 一般用在 windows 下，返回驱动器名和路径组成的元组。          |
+  | os.path.splitext(path)              | 分割路径，返回路径名和文件扩展名的元组。                     |
+  | os.path.splitunc(path)              | 把路径分割为加载点与文件。                                   |
+  | os.path.walk(path, visit, arg)      | 遍历path，进入每个目录都调用 visit 函数，visit 函数必须有 3 个参数(arg, dirname, names)，dirname 表示当前目录的目录名，names 代表当前目录下的所有文件名，args 则为 walk 的第三个参数。 |
+  | os.path.supports_unicode_filenames  | 设置是否可以将任意 Unicode 字符串用作文件名。                |
+
+  ```
+  from os import path
+  # 获取绝对路径
+  print(path.abspath("my_file.txt"))
+  # 获取共同前缀
+  print(path.commonprefix(['C://my_file.txt', 'C://a.txt']))
+  # 获取共同路径
+  print(path.commonpath(['http://c.biancheng.net/python/', 'http://c.biancheng.net/shell/']))
+  # 获取目录
+  print(path.dirname('C://my_file.txt'))
+  # 判断指定目录是否存在
+  print(path.exists('my_file.txt'))
+  
+  C:\Users\mengma\Desktop\my_file.txt
+  C://
+  http:\c.biancheng.net
+  C://
+  True
+  ```
+
+###### fnmatch模块
+
+- fnmatch 模块主要用于文件名称的匹配，其能力比简单的字符串匹配更强大，但比使用正则表达式相比稍弱。。如果在数据处理操作中，只需要使用简单的通配符就能完成文件名的匹配，则使用 fnmatch 模块是不错的选择。
+
+  | 函数名                                 | 功能                                                         |
+  | -------------------------------------- | ------------------------------------------------------------ |
+  | fnmatch.filter(names, pattern)         | 对 names 列表进行过滤，返回 names 列表中匹配 pattern 的文件名组成的子集合。 |
+  | fnmatch.fnmatch(filename, pattern)     | 判断 filename 文件名，是否和指定 pattern 字符串匹配          |
+  | fnmatch.fnmatchcase(filename, pattern) | 和 fnmatch() 函数功能大致相同，只是该函数区分大小写。        |
+  | fnmatch.translate(pattern)             | 将一个 UNIX shell 风格的 pattern 字符串，转换为正则表达式    |
+
+- fnmatch 模块匹配文件名的模式使用的就是 UNIX shell 风格，其支持使用如下几个通配符：
+
+  - *：可匹配任意个任意字符。
+  - ？：可匹配一个任意字符。
+  - [字符序列]：可匹配中括号里字符序列中的任意字符。该字符序列也支持中画线表示法。比如 [a-c] 可代表 a、b 和 c 字符中任意一个。
+  - [!字符序列]：可匹配不在中括号里字符序列中的任意字符。
+
+  ```
+  import fnmatch
+  #filter()
+  print(fnmatch.filter(['dlsf', 'ewro.txt', 'te.py', 'youe.py'], '*.txt'))
+  #fnmatch()
+  for file in ['word.doc','index.py','my_file.txt']:
+      if fnmatch.fnmatch(file,'*.txt'):
+          print(file)
+  #fnmatchcase()
+  print([addr for addr in ['word.doc','index.py','my_file.txt','a.TXT'] if fnmatch.fnmatchcase(addr, '*.txt')])
+  #translate()
+  print(fnmatch.translate('a*b.txt'))
+  
+  ['ewro.txt']
+  my_file.txt
+  ['my_file.txt']
+  (?s:a.*b\.txt)\Z
+  ```
+
+###### os模块
+
+- 除前面章节介绍的各种函数之外，os 模块还提供了大量操作文件和目录的函数，本节将介绍 os 模块下常用的函数。
+
+- os模块与目录相关的函数
+
+  - os.getcwd()：获取当前目录。
+
+  - os.chdir(path)：改变当前目录。
+
+  - os.fchdir(fd)：通过文件描述利改变当前目录。该函数与上一个函数的功能基本相似，只是该函数以文件描述符作为参数来代表目录。
+
+  - os.chroot(path)：改变当前进程的根目录。
+
+  - os.listdir(path)：返回 path 对应目录下的所有文件和子目录。
+
+  - os.mkdir(path[, mode])：创建 path 对应的目录，其中 mode 用于指定该目录的权限。该 mode参数代表一个 UNIX 风格的权限，比如 0o777 代表所有者可读/可写/可执行、组用户可读/可写/可执行、其他用户可读/可写/可执行。
+
+  - os.makedirs(path[, mode])：其作用类似于 mkdir()，但该函数的功能更加强大，它可以边归创建目录。比如要创建 abc/xyz/wawa 目录，如果在当前目录下没有 abc 目录，那么使用 mkdir() 函数就会报错，而使用 makedirs() 函数则会先创建 abc，然后在其中创建 xyz 子目录，最后在 xyz 子目录下创建 wawa 子目录。
+
+  - os.rmdir(path)：删除 path 对应的空目录。如果目录非空，则抛出一个 OSError 异常。程序可以先用 os.remove() 函数删除文件。
+
+  - os.removedirs(path)：边归删除目录。其功能类似于 rmdir()，但该函数可以递归删除 abc/xyz/wawa 目录，它会从 wawa 子目录开始删除，然后删除 xyz 子目录，最后删除 abc 目录。
+
+    ```
+    import os
+    # 获取当前目录
+    print(os.getcwd())  # G:\publish\codes\12.7
+    # 改变当前目录
+    os.chdir('../12.6')
+    # 再次获取当前目录
+    print(os.getcwd())  # G:\publish\codes\12.6
+    
+    import os
+    path = 'my_dir'
+    # 直接在当前目录下创建目录
+    os.mkdir(path, 0o755)
+    path = "abc/xyz/wawa"
+    # 递归创建目录
+    os.makedirs(path, 0o755)
+    
+    正如从上面代码所看到的，直接在当前目录下创建 mydir 子目录，因此可以使用 mkdir() 函数创建；需要程序递归创建 abc/xyz/wawa 目录，因此使用 makedirs() 函数。
+    
+    import os
+    path = 'my_dir'
+    # 直接删除当前目录下的子目录
+    os.rmdir(path)
+    path = "abc/xyz/wawa"
+    # 递归删除子目录
+    os.removedirs(path)
+    
+    上面程序中第 5 行代码使用 rmdir() 函数删除当前目录下的 my_dir 子目录，该函数不会执行递归删除；第 8 行代码使用 removedirs() 函数删除 abc/xyz/wawa 目录，该函数会执行递归删除，它会先删除 wawa 子目录，然后删除 xyz 子目录，最后才删除 abc 目录。
+    
+    import os
+    path = 'my_dir'
+    # 直接重命名当前目录下的子目录
+    os.rename(path, 'your_dir')
+    path = "abc/xyz/wawa"
+    # 递归重命名子目录
+    os.renames(path, 'foo/bar/haha')
+    
+    上面程序中第 5 行代码直接重命名当前目录下的 my_dir 子目录，程序会将该子目录重命名为 your_dir；第 8 行代码则执行递归重命名，程序会将 wawa 重命名为 haba，将 xyz 重命名为 bar，将 abc 重命名为 foo。
+    ```
+
+- os模块与权限相关的函数
+
+  - os.access(path, mode)：检查 path 对应的文件或目录是否具有指定权限。该函数的第二个参数可能是以下四个状态值的一个或多个值：
+
+    - os.F_OK：判断是否存在。
+    - os.R_OK：判断是否可读。
+    - os.W_OK：判断是否可写。
+    - os.X_OK：判断是否可执行。
+
+  - os.chrnod(path, mode)：更改权限。其中 mode 参数代表要改变的权限，该参数支持的值可以是以下一个或多个值的组合：
+
+    - stat.S_IXOTH：其他用户有执行权限。
+    - stat.S_IWOTH：其他用户有写权限。
+    - stat.S_TROTH：其他用户有读权限。
+    - stat.S_IRWXO：其他用户有全部权限。
+    - stat.S_IXGRP：组用户有执行权限。
+    - stat.S_IWGRP：组用户有写权限。
+    - stat.S_IRGRP：组用户有读权限。
+    - stat.S_IRWXG：组用户有全部权限。
+    - stat.S_IXUSR：所有者有执行权限。
+    - stat.S_IWUSR：所有者有写权限。
+    - stat.S_IRUSR：所有者有读权限。
+    - stat.S_IRWXU：所有者有全部权限。
+    - stat.S_IREAD：Windows 将该文件设为只读的。
+    - stat.S_IWRITE：Windows 将该文件设为可写的。
+
+  - os.chown(path, uid, gid)：更改文件的所有者。其中 uid 代表用户 id，gid 代表组 id。该命令主要在 UNIX 文件系统下有效。
+
+  - os.fchmod(fd, mode)：改变一个文件的访问权限，该文件由文件描述符 fd 指定。该函数的功能与 os.chmod() 函数的功能相似，只是该函数使用 fd 代表文件。
+
+  - os.fchown(fd, uid, gid)：改变文件的所有者，该文件由文件描述符 fd 指定。该函数的功能与 os.chown() 函数的功能相似，只是该函数使用 fd 代表文件。
+
+    ```
+    import os
+    # 判断当前目录的权限
+    ret = os.access('.', os.F_OK|os.R_OK|os.W_OK|os.X_OK)
+    print("os.F_OK|os.R_OK|os.W_OK|os.X_OK - 返回值:", ret)
+    # 判断os.access_test.py文件的权限
+    ret = os.access('os.access_test.py', os.F_OK|os.R_OK|os.W_OK)
+    print("os.F_OK|os.R_OK|os.W_OK - 返回值:", ret)
+    
+    os.F_OK|os.R_OK|os.W_OK|os.X_OK - 返回值：True
+    os.F_OK|os.R_OK|os.W_OK - 返回值：False
+    
+    import os, stat
+    # 将os.chmod_test.py文件改为只读
+    os.chmod('os.chmod_test.py', stat.S_IREAD)
+    # 判断是否可写
+    ret = os.access('os.chmod_test.py', os.W_OK)
+    print("os.W_OK - 返回值:", ret)
+    
+    os.chmod_test.py 变成只读文件。
+    ```
+
+- os模块与文件访问相关的函数
+
+  - os.open(file, flags[, mode])：打开一个文件，并且设置打开选项，mode 参数是可选的。该函数返回文件描述符。其中 flags 代表打开文件的旗标，它支持如下一个或多个选项：
+
+    - os.O_RDONLY：以只读的方式打开。
+    - os.O_WRONLY：以只写的方式打开。
+    - os.O_RDWR：以读写的方式打开。
+    - os.O_NONBLOCK：打开时不阻塞。
+    - os.O_APPEND：以追加的方式打开。
+    - os.O_CREAT：创建并打开一个新文件。
+    - os.O_TRUNC：打开一个文件并截断它的长度为0（必须有写权限）。
+    - os.O_EXCL：在创建文件时，如果指定的文件存在，则返回错误。
+    - os.O_SHLOCK：自动获取共享锁。
+    - os.O_EXLOCK：自动获取独立锁。
+    - os.O_DIRECT：消除或减少缓存效果。
+    - os.O_FSYNC：同步写入。
+    - os.O_NOFOLLOW：不追踪软链接。
+
+  - os.read(fd, n)：从文件描述符 fd 中读取最多 n 个字节，返回读到的字符串。如果文件描述符副对应的文件己到达结尾，则返回一个空字节串。
+
+  - os.write(fd, str)：将字节串写入文件描述符 fd 中，返回实际写入的字节串长度。
+
+  - os.close(fd)：关闭文件描述符 fd。
+
+  - os.lseek(fd, pos, how)：该函数同样用于移动文件指针。其中 how 参数指定从哪里开始移动，如果将 how 设为 0 或 SEEK_SET，则表明从文件开头开始移动；如果将 how 设为 1 或 SEEK_CUR，则表明从文件指针当前位置开始移动；如果将 how 设为 2 或 SEEK_END，则表明从文件结束处开始移动。上面几个函数同样可用于执行文件的读写，程序通常会先通过 os.open() 打开文件，然后调用 os.read()、os.write() 来读写文件，当操作完成后通过 os.close() 关闭文件。
+
+  - os.fdopen(fd[, mode[, bufsize]])：通过文件描述符 fd 打开文件，并返回对应的文件对象。
+
+  - os.closerange(fd_low, fd_high)：关闭从 fd_low（包含）到 fd_high（不包含）范围的所有文件描述符。
+
+  - os.dup(fd)：复制文件描述符。
+
+  - os.dup2(fd,fd2)：将一个文件描述符fd复制到另一个文件描述符fd2中。
+
+  - os.ftruncate(fd, length)：将 fd 对应的文件截断到 length 长度，因此此处传入的 length 参数不应该超过文件大小。
+
+  - os.remove(path)：删除 path 对应的文件。如果 path 是一个文件夹，则抛出 OSError 错误。如果要删除目录，则使用 os.rmdir()。
+
+  - os.link(src, dst)：创建从 src 到 dst 的硬链接。硬链接是 UNIX 系统的概念，如果在 Windows 系统中就是复制目标文件。
+
+  - os.symlink(src, dst)：创建从 src 到 dst 的符号链接，对应于 Windows 的快捷方式。、
+
+    - 由于 Windows 权限的缘故，因此必须以管理员身份执行 os.symlink() 函数来创建快捷方式。
+
+    ```
+    import os
+    # 以读写、创建方式打开文件
+    f = os.open('abc.txt', os.O_RDWR|os.O_CREAT)
+    # 写入文件内容
+    len1 = os.write(f, '水晶潭底银鱼跃，\n'.encode('utf-8'))
+    len2 = os.write(f, '清徐风中碧竿横。\n'.encode('utf-8'))
+    # 将文件指针移动到开始处
+    os.lseek(f, 0, os.SEEK_SET)
+    # 读取文件内容
+    data = os.read(f, len1 + len2)
+    # 打印读取到字节串
+    print(data)
+    # 将字节串恢复成字符串
+    print(data.decode('utf-8'))
+    os.close(f)
+    
+    import os
+    # 为os.link_test.py文件创建快捷方式
+    os.symlink('os.link_test.py', 'tt')
+    # 为os.link_test.py文件创建硬连接（Windows上就是复制文件）
+    os.link('os.link_test.py', 'dst')
+    
+    上面程序使用 symlink() 函数为指定文件创建符号链接，在 Windows 系统中就是创建快捷方式；使用 link() 函数创建硬链接，在 Windows 系统中就是复制文件。
+    将会看到程序在当前目录下创建了一个名为“tt”的快捷方式，并将 os.link_test.py 文件复制为 dst 文件。
+    ```
+
+###### tempfile模块：生成临时文件和临时目录
+
+- tempfile 模块专门用于创建临时文件和临时目录，它既可以在 UNIX 平台上运行良好，也可以在 Windows 平台上运行良好。
+
+  | tempfile 模块函数                                            | 功能描述                                                     |
+  | ------------------------------------------------------------ | ------------------------------------------------------------ |
+  | tempfile.TemporaryFile(mode='w+b', buffering=None, encoding=None, newline=None, suffix=None, prefix=None, dir=None) | 创建临时文件。该函数返回一个类文件对象，也就是支持文件 I/O。 |
+  | tempfile.NamedTemporaryFile(mode='w+b', buffering=None, encoding=None, newline=None, suffix=None, prefix=None, dir=None, delete=True) | 创建临时文件。该函数的功能与上一个函数的功能大致相同，只是它生成的临时文件在文件系统中有文件名。 |
+  | tempfile.SpooledTemporaryFile(max_size=0, mode='w+b', buffering=None, encoding=None, newline=None, suffix=None, prefix=None, dir=None) | 创建临时文件。与 TemporaryFile 函数相比，当程序向该临时文件输出数据时，会先输出到内存中，直到超过 max_size 才会真正输出到物理磁盘中。 |
+  | tempfile.TemporaryDirectory(suffix=None, prefix=None, dir=None) | 生成临时目录。                                               |
+  | tempfile.gettempdir()                                        | 获取系统的临时目录。                                         |
+  | tempfile.gettempdirb()                                       | 与 gettempdir() 相同，只是该函数返回字节串。                 |
+  | tempfile.gettempprefix()                                     | 返回用于生成临时文件的前缀名。                               |
+  | tempfile.gettempprefixb()                                    | 与 gettempprefix() 相同，只是该函数返回字节串。              |
+
+- tempfile 模块还提供了 tempfile.mkstemp() 和 tempfile.mkdtemp() 两个低级别的函数。上面介绍的 4 个用于创建临时文件和临时目录的函数都是高级别的函数，高级别的函数支持自动清理，而且可以与 with 语句一起使用，而这两个低级别的函数则不支持，因此一般推荐使用高级别的函数来创建临时文件和临时目录。
+
+- tempfile 模块还提供了 tempfile.tempdir 属性，通过对该属性赋值可以改变系统的临时目录。
+
+  ```
+  import tempfile
+  # 创建临时文件
+  fp = tempfile.TemporaryFile()
+  print(fp.name)
+  fp.write('两情若是久长时，'.encode('utf-8'))
+  fp.write('又岂在朝朝暮暮。'.encode('utf-8'))
+  # 将文件指针移到开始处，准备读取文件
+  fp.seek(0)
+  print(fp.read().decode('utf-8')) # 输出刚才写入的内容
+  # 关闭文件，该文件将会被自动删除
+  fp.close()
+  # 通过with语句创建临时文件，with会自动关闭临时文件
+  with tempfile.TemporaryFile() as fp:
+      # 写入内容
+      fp.write(b'I Love Python!')
+      # 将文件指针移到开始处，准备读取文件
+      fp.seek(0)
+      # 读取文件内容
+      print(fp.read()) # b'I Love Python!'
+  # 通过with语句创建临时目录
+  with tempfile.TemporaryDirectory() as tmpdirname:
+      print('创建临时目录', tmpdirname)
+      
+  C:\Users\admin\AppData\Local\Temp\tmphvehw9z1
+  两情若是久长时，又岂在朝朝暮暮。
+  b'I Love Python!'
+  创建临时目录C:\Users\admin\AppData\Local\Temp\tmp3sjbnwob
+  
+  上面第一行输出结果就是程序生成的临时文件的文件名，最后一行输出结果就是程序生成的临时目录的目录名。需要注意的是，不要去找临时文件或临时文件夹，因为程序退出时该临时文件和临时文件夹都会被删除。
+  ```
+
+- 上面程序以两种方式来创建临时文件：
+
+  1. 第一种方式是手动创建临时文件，读写临时文件后需要主动关闭它，当程序关闭该临时文件时，该文件会被自动删除。
+  2. 第二种方式则是使用 with 语句创建临时文件，这样 with 语句会自动关闭临时文件
+
+- 上面程序最后还创建了临时目录。由于程序使用 with 语句来管理临时目录，因此程序也会自动删除该临时目录。
+
+#### 模块
+
+- 模块，英文为 Modules，至于模块到底是什么，可以用一句话总结：模块就是 Python 程序。换句话说，任何 Python 程序都可以作为模块，包括在前面章节中写的所有 Python 程序，都可以作为模块。
+
+  ```
+  举个简单的例子，在某一目录下（桌面也可以）创建一个名为 hello.py 文件，其包含的代码如下：
+  def say ():
+      print("Hello,World!")
+      
+  在同一目录下，再创建一个 say.py 文件，其包含的代码如下：
+  #通过 import 关键字，将 hello.py 模块引入此文件
+  import hello
+  hello.say()
+  
+  Hello,World!
+  ```
+
+  - say.py 文件中使用了原本在 hello.py 文件中才有的 say() 函数，相对于 day.py 来说，hello.py 就是一个自定义的模块（有关自定义模块，后续章节会做详细讲解），我们只需要将 hellp.py 模块导入到 say.py 文件中，就可以直接在 say.py 文件中使用模块中的资源。
+  - 与此同时，当调用模块中的 say() 函数时，使用的语法格式为“模块名.函数”，这是因为，相对于 say.py 文件，hello.py 文件中的代码自成一个命名空间，因此在调用其他模块中的函数时，需要明确指明函数的出处，否则 Python 解释器将会报错。
+
+###### import导入模块
+
+- 我们使用了一些数学函数，例如余弦函数 cos()、绝对值函数 fabs() 等，它们位于 Python 标准库中的 math（或 cmath）模块中，只需要将此模块导入到当前程序，就可以直接拿来用。
+
+- import 还有更多详细的用法，主要有以下两种：
+
+  1. `import 模块名1 [as 别名1], 模块名2 [as 别名2]，…`：使用这种语法格式的 import 语句，会导入指定模块中的所有成员（包括变量、函数、类等）。不仅如此，当需要使用模块中的成员时，需用该模块名（或别名）作为前缀，否则 Python 解释器会报错。
+  2. `from 模块名 import 成员名1 [as 别名1]，成员名2 [as 别名2]，…`： 使用这种语法格式的 import 语句，只会导入模块中指定的成员，而不是全部成员。同时，当程序中使用该成员时，无需附加任何前缀，直接使用成员名（或别名）即可。
+
+- 如果模块中包含空格或者以数字开头，就需要使用 Python 提供的 `__import__()` 内置函数引入模块。例如，当模块名为"demo text" 时，引入方法如下：
+
+  ```
+  __import__("demo text")
+  
+  C语言中文网
+  ```
+
+  - 使用 `__import__()` 函数引入模块名时，要以字符串的方式将模块名引入，否则会报 SyntaxError 错误。
+
+###### 自定义模块
+
+- 当直接运行一个模块时，name 变量的值为 __main__；而将模块被导入其他程序中并运行该程序时，处于模块中的 `__name__` 变量的值就变成了模块名。因此，如果希望测试函数只有在直接运行模块文件时才执行，则可在调用测试函数时增加判断，即只有当 `__name__ =='__main__'` 时才调用测试函数。
+
+- 为自定义模块添加说明文档，和函数或类的添加方法相同，即只需在模块开头的位置定义一个字符串即可。例如，为 demo.py 模板文件添加一个说明文档：
+
+  ```
+  '''
+  demo 模块中包含以下内容：
+  name 字符串变量：初始值为“Python教程”
+  add    字符串变量：初始值为“http://c.biancheng.net/python”
+  say() 函数
+  CLanguage类：包含 name 和 add 属性和 say() 方法。
+  '''
+  ```
+
+  - 在此基础上，我们可以通过模板的 `__doc__` 属性，来访问模板的说明文档。例如，在 test.py 文件中添加如下代码：
+
+  ```
+  import demo
+  print(demo.__doc__)
+  
+  Python教程 http://c.biancheng.net/python
+  
+  demo 模块中包含以下内容：
+  name 字符串变量：初始值为“Python教程”
+  add    字符串变量：初始值为“http://c.biancheng.net/python”
+  say() 函数
+  CLanguage类：包含 name 和 add 属性和 say() 方法。
+  ```
+
+###### python导入模块的3种方式
+
+- 很多初学者经常遇到这样的问题，即自定义 [Python](http://c.biancheng.net/python/) 模板后，在其它文件中用 import（或 from...import） 语句引入该文件时，Python 解释器同时如下错误：
+
+  ModuleNotFoundError: No module named '模块名'
+
+  意思是 Python 找不到这个模块名，这是什么原因导致的呢？要想解决这个问题，读者要先搞清楚 Python 解释器查找模块文件的过程。
+
+- 通常情况下，当使用 import 语句导入模块后，Python 会按照以下顺序查找指定的模块文件：
+
+  - 在当前目录，即当前执行的程序文件所在目录下查找；
+  - 到 PYTHONPATH（环境变量）下的每个目录中查找；
+  - 到 Python 默认的安装目录下查找。
+
+- 以上所有涉及到的目录，都保存在标准模块 sys 的 sys.path 变量中，通过此变量我们可以看到指定程序文件支持查找的所有目录。换句话说，如果要导入的模块没有存储在 sys.path 显示的目录中，那么导入该模块并运行程序时，Python 解释器就会抛出 ModuleNotFoundError（未找到模块）异常。
+
+- 解决“Python找不到指定模块”的方法有 3 种，分别是：
+
+  1. 向 sys.path 中临时添加模块文件存储位置的完整路径；
+  2. 将模块放在 sys.path 变量中已包含的模块加载路径中；
+  3. 设置 path 系统环境变量。
+
+- 在详细介绍这 3 种方式之前，为了能更方便地讲解，本节使用前面章节已建立好的 hello.py 自定义模块文件（D:\python_module\hello.py）和 say.py 程序文件（C:\Users\mengma\Desktop\say.py，位于桌面上），它们各自包含的代码如下：
+
+  ```
+  #hello.py
+  def say ():
+      print("Hello,World!")
+  #say.py
+  import hello
+  hello.say()
+  
+  显然，hello.py 文件和 say.py 文件并不在同一目录
+  ```
+
+- 导入模块方式一：临时添加模块完整路径
+
+  - 模块文件的存储位置，可以临时添加到 sys.path 变量中，即向 sys.path 中添加 D:\python_module（hello.py 所在目录），在 say.py 中的开头位置添加如下代码：
+
+    ```
+    import sys
+    sys.path.append('D:\\python_module')
+    ```
+
+    - 在添加完整路径中，路径中的 '\' 需要使用 \ 进行转义，否则会导致语法错误
+
+    - 我们在 say.py 文件中输出 sys.path 变量的值，会得到以下结果：
+
+      ```
+      ['C:\\Users\\mengma\\Desktop', 'D:\\python3.6\\Lib\\idlelib', 'D:\\python3.6\\python36.zip', 'D:\\python3.6\\DLLs', 'D:\\python3.6\\lib', 'D:\\python3.6', 'C:\\Users\\mengma\\AppData\\Roaming\\Python\\Python36\\site-packages', 'D:\\python3.6\\lib\\site-packages', 'D:\\python3.6\\lib\\site-packages\\win32', 'D:\\python3.6\\lib\\site-packages\\win32\\lib', 'D:\\python3.6\\lib\\site-packages\\Pythonwin', 'D:\\python_module']
+      ```
+
+    - 该输出信息中，红色部分就是临时添加进去的存储路径。需要注意的是，通过该方法添加的目录，只能在执行当前文件的窗口中有效，窗口关闭后即失效。
+
+- 导入模块方式二：将模块保存在指定位置
+
+  - 如果要安装某些通用性模块，比如复数功能支持的模块、矩阵计算支持的模块、图形界面支持的模块等，这些都属于对 Python 本身进行扩展的模块，这种模块应该直接安装在 Python 内部，以便被所有程序共享，此时就可借助于 Python 默认的模块加载路径。
+
+  - Python 程序默认的模块加载路径保存在 sys.path 变量中，因此，我们可以在 say.py 程序文件中先看看 sys.path 中保存的默认加载路径，向 say.py 文件中输出 sys.path 的值，如下所示：
+
+    ```
+    ['C:\\Users\\mengma\\Desktop', 'D:\\python3.6\\Lib\\idlelib', 'D:\\python3.6\\python36.zip', 'D:\\python3.6\\DLLs', 'D:\\python3.6\\lib', 'D:\\python3.6', 'C:\\Users\\mengma\\AppData\\Roaming\\Python\\Python36\\site-packages', 'D:\\python3.6\\lib\\site-packages', 'D:\\python3.6\\lib\\site-packages\\win32', 'D:\\python3.6\\lib\\site-packages\\win32\\lib', 'D:\\python3.6\\lib\\site-packages\\Pythonwin']
+    ```
+
+  - 上面的运行结果中，列出的所有路径都是 Python 默认的模块加载路径，但通常来说，我们默认将 Python 的扩展模块添加在 `lib\site-packages` 路径下，它专门用于存放 Python 的扩展模块和包。
+
+  - 所以，我们可以直接将我们已编写好的 hello.py 文件添加到 `lib\site-packages` 路径下，就相当于为 Python 扩展了一个 hello 模块，这样任何 Python 程序都可使用该模块。
+
+- 导入模块方式三：设置环境变量
+
+  - PYTHONPATH 环境变量（简称 path 变量）的值是很多路径组成的集合，Python 解释器会按照 path 包含的路径进行一次搜索，直到找到指定要加载的模块。当然，如果最终依旧没有找到，则 Python 就报 ModuleNotFoundError 异常。
+
+  - Linux 平台的环境变量是通过 .bash_profile 文件来设置的，使用无格式编辑器打开该文件，在该文件中添加 PYTHONPATH 环境变量
+
+    ```
+    #设置PYTHON PATH 环境变量
+    PYTHONPATH=.:/home/mengma/python_module
+    ```
+
+  - 在完成了 PYTHONPATH 变量值的设置后，在 .bash_profile 文件的最后添加导出 PYTHONPATH 变量的语句。
+
+    ```
+    #导出PYTHONPATH 环境变量
+    export PYTHONPATH
+    ```
+
+  - 重新登录 Linux 平台，或者执行如下命令
+
+    ```
+    source.bash_profile
+    ```
+
+    - 这两种方式都是为了运行该文件，使在文件中设置的 PYTHONPATH 变量值生效。
+
+- 在导入模块后，可以在模块文件所在目录下看到一个名为“__pycache__”的文件夹，打开该文件夹，可以看到 Python 为每个模块都生成一个 *.cpython-36.pyc 文件，比如 Python 为 fk_module 模块生成一个 fk_ module.cpython-36.pyc 文件，该文件其实是 Python 为模块编译生成的字节码，用于提升该模块的运行效率。
+
+###### \__all__变量
+
+- 事实上，当我们向文件导入某个模块时，导入的是该模块中那些名称不以下划线（单下划线“_”或者双下划线“__”）开头的变量、函数和类。因此，如果我们不想模块文件中的某个成员被引入到其它文件中使用，可以在其名称前添加下划线。
+- 除此之外，还可以借助模块提供的 `__all__` 变量，该变量的值是一个列表，存储的是当前模块中一些成员（变量、函数或者类）的名称。通过在模块文件中设置 `__all__` 变量，当其它文件以“from 模块名 import *”的形式导入该模块时，该文件中只能使用 `__all__` 列表中指定的成员。
+  - 也就是说，只有以“from 模块名 import *”形式导入的模块，当该模块设有 __all__ 变量时，只能导入该变量指定的成员，未指定的成员是无法导入的。
+  - 再次声明，`__all__` 变量仅限于在其它文件中以“from 模块名 import *”的方式引入。也就是说，如果使用以下 2 种方式引入模块，则 `__all__` 变量的设置是无效的。
+    - 以“import 模块名”的形式导入模块。通过该方式导入模块后，总可以通过模块名前缀（如果为模块指定了别名，则可以使用模快的别名作为前缀）来调用模块内的所有成员（除了以下划线开头命名的成员）。
+    - 以“from 模块名 import 成员”的形式直接导入指定成员。使用此方式导入的模块，`__all__` 变量即便设置，也形同虚设。
+
+###### python包：存放多个模块的文件夹
+
+- 实际开发中，一个大型的项目往往需要使用成百上千的 [Python](http://c.biancheng.net/python/) 模块，如果将这些模块都堆放在一起，势必不好管理。而且，使用模块可以有效避免变量名或函数名重名引发的冲突，但是如果模块名重复怎么办呢？因此，Python提出了包（Package）的概念。
+- 什么是包呢？简单理解，包就是文件夹，只不过在该文件夹下必须存在一个名为“`__init__.py`” 的文件。
+  - 注意，这是 Python 2.x 的规定，而在 Python 3.x 中，`__init__.py` 对包来说，并不是必须的。
+- 每个包的目录下都必须建立一个 `__init__.py` 的模块，可以是一个空模块，可以写一些初始化代码，其作用就是告诉 Python 要将该目录当成包来处理。
+  - 注意，`__init__.py` 不同于其他模块文件，此模块的模块名不是 `__init__`，而是它所在的包名。例如，在 settings 包中的 `__init__.py` 文件，其模块名就是 settings。
+- 包是一个包含多个模块的文件夹，它的本质依然是模块，因此包中也可以包含包。例如，在前面章节中，我们安装了 numpy 模块之后可以在 Lib\site-packages 安装目录下找到名为 numpy 的文件夹，它就是安装的 numpy 模块（其实就是一个包）
+
+###### 创建包导入包
+
+- 《[Python包](http://c.biancheng.net/view/4667.html)》一节中已经提到，包其实就是文件夹，更确切的说，是一个包含“`__init__.py`”文件的文件夹。因此，如果我们想手动创建一个包，只需进行以下 2 步操作：
+
+  1. 新建一个文件夹，文件夹的名称就是新建包的包名；
+  2. 在该文件夹中，创建一个 `__init__.py` 文件（前后各有 2 个下划线‘_’），该文件中可以不编写任何代码。当然，也可以编写一些 [Python](http://c.biancheng.net/python/) 初始化代码，则当有其它程序文件导入包时，会自动执行该文件中的代码
+
+- 例如，现在我们创建一个非常简单的包，该包的名称为 my_package
+
+  - 创建一个文件夹，其名称设置为 my_package；
+
+  - 在该文件夹中添加一个 `__init__.py` 文件，此文件中可以不编写任何代码
+
+  - 创建好包之后，我们就可以向包中添加模块（也可以添加包）。这里给 my_package 包添加 2 个模块，分别是 module1.py、module2.py
+
+    ```
+    #module1.py模块文件
+    def display(arc):
+        print(arc)
+    #module2.py 模块文件
+    class CLanguage:
+        def display(self):
+            print("http://c.biancheng.net/python/")
+            
+    my_package
+         ┠── __init__.py
+         ┠── module1.py
+         ┗━━  module2.py
+    ```
+
+- 通过前面的学习我们知道，包其实本质上还是模块，因此导入模块的语法同样也适用于导入包。无论导入我们自定义的包，还是导入从他处下载的第三方包，导入方法可归结为以下 3 种：
+
+  1. `import 包名[.模块名 [as 别名]]`
+  2. `from 包名 import 模块名 [as 别名]`
+  3. `from 包名.模块名 import 成员名 [as 别名]`
+
+- 当直接导入指定包时，程序会自动执行该包所对应文件夹下的 `__init__.py` 文件中的代码
+
+- 直接导入包名，并不会将包中所有模块全部导入到程序中，它的作用仅仅是导入并执行包下的 `__init__.py` 文件，因此，运行该程序，在执行 `__init__.py` 文件中代码的同时，还会抛出 AttributeError 异常（访问的对象不存在）：
+
+- 既然包也是模块，那么这种语法格式自然也支持 `from 包名 import *` 这种写法，它和 import 包名 的作用一样，都只是将该包的 `__init__.py` 文件导入并执行。
+
+###### \__init__.py的作用
+
+- 前面章节中，已经对包的创建和导入进行了详细讲解，并提供了大量的实例，这些实例虽然可以正常运行，但存在一个通病，即为了调用包内模块的成员（变量、函数或者类），代码中包含了诸多的 import 导入语句，非常繁琐。
+
+- 我们知道，导入包就等同于导入该包中的 `__init__.py` 文件，因此完全可以在 `__init__.py` 文件中直接编写实现模块功能的变量、函数和类，但实际上并推荐大家这样做，因为包的主要作用是包含多个模块。因此 `__init__.py` 文件的主要作用是导入该包内的其他模块。
+
+- 也就是说，通过在 `__init__.py` 文件使用 import 语句将必要的模块导入，这样当向其他程序中导入此包时，就可以直接导入包名，也就是使用`import 包名`（或`from 包名 import *`）的形式即可。
+
+- 上节中，我们已经创建好的 my_package 包，该包名包含 module1 模块、module2 模块和 `__init__.py` 文件。现在向 my_package 包的 `__init__.py` 文件中编写如下代码：
+
+  ```
+  # 从当前包导入 module1 模块
+  from . import module1
+  #from .module1 import * 
+  # 从当前包导入 module2 模块
+  #from . import module2
+  from .module2 import * 
+  ```
+
+  - 可以看到，在 `__init__.py` 文件中用点（.）来表示当前包的包名，除此之外，from import 语句的用法和在程序中导入包的用法完全相同。
+
+  - 总的来说，`__init__.py` 文件是通过如下 2 种方式来导入包中模块的：
+
+    ```
+    # 从当前包导入指定模块
+    from . import 模块名
+    # 从.模块名 导入所有成员到包中
+    from .模块名 import *
+    ```
+
+    - 第 1 种方式用于导入当前包（模块）中的指定模块，这样即可在包中使用该模块。当在其他程序使用模块内的成员时，需要添加“包名.模块名”作为前缀
+    - 第 2 种方式表示从指定模块中导入所有成员，采用这种导入方式，在其他程序中使用该模块的成员时，只要使用包名作为前缀即可
+
+###### 查看模块方法
+
+- 正确导入模块或者包之后，怎么知道该模块中具体包含哪些成员（变量、函数或者类）呢？
+
+- dir()函数
+
+  - 通过 dir() 函数，我们可以查看某指定模块包含的全部成员（包括变量、函数和类）。注意这里所指的全部成员，不仅包含可供我们调用的模块成员，还包含所有名称以双下划线“__”开头和结尾的成员，而这些“特殊”命名的成员，是为了在本模块中使用的，并不希望被其它文件调用。
+
+  - 这里以导入 string 模块为例，string 模块包含操作字符串相关的大量方法
+
+    ```
+    import string
+    print(dir(string))
+    
+    ['Formatter', 'Template', '_ChainMap', '_TemplateMetaclass', '__all__', '__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', '_re', '_string', 'ascii_letters', 'ascii_lowercase', 'ascii_uppercase', 'capwords', 'digits', 'hexdigits', 'octdigits', 'printable', 'punctuation', 'whitespace']
+    ```
+
+  - 可以看到，通过 dir() 函数获取到的模块成员，不仅包含供外部文件使用的成员，还包含很多“特殊”（名称以 2 个下划线开头和结束）的成员，列出这些成员，对我们并没有实际意义。
+
+  - 这里给读者推荐一种可以忽略显示 dir() 函数输出的特殊成员的方法
+
+    ```
+    import string
+    print([e for e in dir(string) if not e.startswith('_')])
+    ```
+
+- 除了使用 dir() 函数之外，还可以使用 `__all__` 变量，借助该变量也可以查看模块（包）内包含的所有成员。
+
+  - 和 dir() 函数相比，`__all__` 变量在查看指定模块成员时，它不会显示模块中的特殊成员，同时还会根据成员的名称进行排序显示。
+  - 不过需要注意的是，并非所有的模块都支持使用 `__all__` 变量，因此对于获取有些模块的成员，就只能使用 dir() 函数。
+
+###### \__doc__属性：查看文档
+
+- 在使用 dir() 函数和 `__all__` 变量的基础上，虽然我们能知晓指定模块（或包）中所有可用的成员（变量、函数和类），比如：
+
+  ```
+  import string
+  print(string.__all__)
+  
+  ['ascii_letters', 'ascii_lowercase', 'ascii_uppercase', 'capwords', 'digits', 'hexdigits', 'octdigits', 'printable', 'punctuation', 'whitespace', 'Formatter', 'Template']
+  ```
+
+  - 但对于以上的输出结果，对于不熟悉 string 模块的用户，还是不清楚这些名称分别表示的是什么意思，更不清楚各个成员有什么功能。
+
+- 针对这种情况，我们可以使用 help() 函数来获取指定成员（甚至是该模块）的帮助信息。以前面章节创建的 my_package 包为例，该包中包含 `__init__.py` 、module1.py 和 module2.py 这 3 个模块，它们各自包含的内容分别如下所示：
+
+  ```
+  #***__init__.py 文件中的内容***
+  from my_package.module1 import *
+  from my_package.module2 import *
+  #***module1.py 中的内容***
+  #module1.py模块文件
+  def display(arc):
+      '''
+      直接输出指定的参数
+      '''
+      print(arc)
+  #***module2.py中的内容***
+  #module2.py 模块文件
+  class CLanguage:
+      '''
+      CLanguage是一个类，其包含：
+      display() 方法
+      '''
+      def display(self):
+          print("http://c.biancheng.net/python/")
+  ```
+
+  - 现在，我们先借助 dir() 函数，查看 my_package 包中有多少可供我们调用的成员：
+
+    ```
+    import my_package
+    print([e for e in dir(my_package) if not e.startswith('_')])
+    
+    ['CLanguage', 'display', 'module1', 'module2']
+    
+    通过此输出结果可以得知，在 my_package 包中，有以上 4 个成员可供我们使用。接下来，我们使用 help() 函数来查看这些成员的具体含义（以 module1 为例）：
+    import my_package
+    help(my_package.module1)
+    
+    Help on module my_package.module1 in my_package:
+    
+    NAME
+        my_package.module1 - #module1.py模块文件
+    
+    FUNCTIONS
+        display(arc)
+            直接输出指定的参数
+    
+    FILE
+        c:\users\mengma\desktop\my_package\module1.py
+    ```
+
+    - 通过输出结果可以得知，module1 实际上是一个模块文件，其包含 display() 函数，该函数的功能是直接输出指定的 arc 参数。同时，还显示出了该模块具体的存储位置。
+
+  - 值得一提的是，之所以我们可以使用 help() 函数查看具体成员的信息，是因为该成员本身就包含表示自身身份的说明文档（本质是字符串，位于该成员内部开头的位置）。前面讲过，无论是函数还是类，都可以使用 `__doc__` 属性获取它们的说明文档，模块也不例外。
+
+    ```
+    import my_package
+    print(my_package.module1.display.__doc__)
+    
+    直接输出指定的参数
+    ```
+
+    - help() 函数底层也是借助 `__doc__` 属性实现的。
+
+###### \__file__:查看模块的源文件路径
+
+- 前面章节提到，当指定模块（或包）没有说明文档时，仅通过 help() 函数或者 `__doc__` 属性，无法有效帮助我们理解该模块（包）的具体功能。在这种情况下，我们可以通过 `__file__` 属性查找该模块（或包）文件所在的具体存储位置，直接查看其源代码。
+
+- 仍以前面章节创建的 my_package 包为例，下面代码尝试使用 `__file__` 属性获取该包的存储路径：
+
+  ```
+  import my_package
+  print(my_package.__file__)
+  
+  C:\Users\mengma\Desktop\my_package\__init__.py
+  ```
+
+  - 注意，因为当引入 my_package 包时，其实际上执行的是 `__init__.py` 文件，因此这里查看 my_package 包的存储路径，输出的 `__init__.py` 文件的存储路径。
+
+- 再以 string 模块为例：
+
+  ```
+  import string
+  print(string.__file__)
+  
+  D:\python3.6\lib\string.py
+  ```
+
+- 注意，并不是所有模块都提供 `__file__` 属性，因为并不是所有模块的实现都采用 [Python](http://c.biancheng.net/python/) 语言，有些模块采用的是其它编程语言（如 C 语言）。
+
+#### 异常处理机制
+
+- 借助异常处理机制，甚至在程序崩溃前也可以做一些必要的工作，例如将内存中的数据写入文件、关闭打开的文件、释放分配的内存等。
+- Python 异常处理机制会涉及 try、except、else、finally 这 4 个关键字，同时还提供了可主动使程序引发异常的 raise 语句
+
+###### 常见异常类型
+
+- 编写程序时遇到的错误可大致分为 2 类，分别为语法错误和运行时错误。
+
+- 语法错误多是开发者疏忽导致的，属于真正意义上的错误，是解释器无法容忍的，因此，只有将程序中的所有语法错误全部纠正，程序才能执行。
+
+  ```
+  SyntaxError: Missing parentheses in call to 'print'
+  ```
+
+- 运行时错误
+
+  ```
+  a = 1/0
+  
+  >>> a = 1/0
+  Traceback (most recent call last):
+    File "<pyshell#2>", line 1, in <module>
+      a = 1/0
+  ZeroDivisionError: division by zero
+  ```
+
+  - 以上运行输出结果中，前两段指明了错误的位置，最后一句表示出错的类型。在 Python 中，把这种运行时产生错误的情况叫做**异常（Exceptions）**。这种异常情况还有很多，常见的几种异常情况如表 1 所示。
+
+    | 异常类型          | 含义                                                         | 实例                                                         |
+    | ----------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+    | AssertionError    | 当 assert 关键字后的条件为假时，程序运行会停止并抛出 AssertionError 异常 | >>> demo_list = ['C语言中文网'] >>> assert len(demo_list) > 0 >>> demo_list.pop() 'C语言中文网' >>> assert len(demo_list) > 0 Traceback (most recent call last):  File "<pyshell#6>", line 1, in <module>   assert len(demo_list) > 0 AssertionError |
+    | AttributeError    | 当试图访问的对象属性不存在时抛出的异常                       | >>> demo_list = ['C语言中文网'] >>> demo_list.len Traceback (most recent call last):  File "<pyshell#10>", line 1, in <module>   demo_list.len AttributeError: 'list' object has no attribute 'len' |
+    | IndexError        | 索引超出序列范围会引发此异常                                 | >>> demo_list = ['C语言中文网'] >>> demo_list[3] Traceback (most recent call last):  File "<pyshell#8>", line 1, in <module>   demo_list[3] IndexError: list index out of range |
+    | KeyError          | 字典中查找一个不存在的关键字时引发此异常                     | >>> demo_dict={'C语言中文网':"c.biancheng.net"} >>> demo_dict["C语言"] Traceback (most recent call last):  File "<pyshell#12>", line 1, in <module>   demo_dict["C语言"] KeyError: 'C语言' |
+    | NameError         | 尝试访问一个未声明的变量时，引发此异常                       | >>> C语言中文网 Traceback (most recent call last):  File "<pyshell#15>", line 1, in <module>   C语言中文网 NameError: name 'C语言中文网' is not defined |
+    | TypeError         | 不同类型数据之间的无效操作                                   | >>> 1+'C语言中文网' Traceback (most recent call last):  File "<pyshell#17>", line 1, in <module>   1+'C语言中文网' TypeError: unsupported operand type(s) for +: 'int' and 'str' |
+    | ZeroDivisionError | 除法运算中除数为 0 引发此异常                                | >>> a = 1/0 Traceback (most recent call last):  File "<pyshell#2>", line 1, in <module>   a = 1/0 ZeroDivisionError: division by zero |
+
+- 当一个程序发生异常时，代表该程序在执行时出现了非正常的情况，无法再执行下去。默认情况下，程序是要终止的。如果要避免程序退出，可以使用捕获异常的方式获取这个异常的名称，再通过其他的逻辑代码让程序继续运行，这种根据异常做出的逻辑处理叫作异常处理。
+- 开发者可以使用异常处理全面地控制自己的程序。异常处理不仅仅能够管理正常的流程运行，还能够在程序出错时对程序进行必的处理。大大提高了程序的健壮性和人机交互的友好性。
 
