@@ -793,10 +793,37 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 ##### 指针参数和内存的问题以及临时指针变量和链表的问题
 
 - 如果一个接口返回指针，说明这个接口里面在堆区申请了空间，所以才会返回指针，否则接口就会出错
+
 - 指针作为形参，并不一定要传入指针变量，可以用取地址符来获取地址，指针本身表示的就是地址。所以可以定义一个非指针变量，然后用取地址符来获取地址传入。这样在函数里面也能根据这个指针修改所指向的值
+
 - 指针要有指向，而且指向的要有地址，不能只申请一个指针变量，int * num，然后将这个num指针当作变量传入到函数中，然后在函数中改变指针指向的值。因为num指针没有实际指向的内存，这样就会出现段错误
+
 - 最主要的是不能只申请一个指针变量，要让指针变量指向有内存，所以如果一个函数返回的是指针，我们可以申请一个指针变量来接收这个返回值，这样是正确的，因为函数内部申请了内存，这样我们可以用指针指向这块区域，不会出现段错误。
-- 指针变量是一个变量，记录着内存的位置，指针要指向具体的内存，不能只有一个指针变量。指针的主要作用就是通过指针变量来找到指向的这块内存，链表的主要作用就是这样的，当我们将临时指针变量赋值给链表的next变量，相当于next指针指向了这块内存，我们目前就可以通过链表的next指针变量来找到这块内存，此时的设置的临时指针变量就没用了，其指向的内存我们用另一种方法记录下来了，所以在使用的时候创建链表，我们可以只设置一个临时指针变量，让后让这个临时变量指向不同的内存，然后将内存赋值给next变量，这样所有申请的内存我们都能找到，只能通过next变量依次寻找。
+
+- 指针变量是一个变量，记录着内存的位置，指针要指向具体的内存，不能只有一个指针变量。指针的主要作用就是通过指针变量来找到指向的这块内存，链表的主要作用就是这样的，当我们将临时指针变量赋值给链表的next变量，相当于next指针指向了这块内存，我们目前就可以通过链表的next指针变量来找到这块内存，此时的设置的临时指针变量就没用了，其指向的内存我们用另一种方法记录下来了，所以在使用的时候创建链表，我们可以只设置一个临时指针变量，然后让这个临时变量指向不同的内存，然后将内存赋值给next变量，这样所有申请的内存我们都能找到，只能通过next变量依次寻找。
+
+  - 如果临时指针变量指向已经存在的地址，其就不用申请空间了，只需要将空间接到next里面，如果临时指针变量指向的地址需要自己申请的话，如果接到next里面，下次在接的话需要重新申请，因为那部分空间已经被占用了，我们在接的话也是需要空间的，不能直接将那部分空间继续接上，应该重新申请空间。
+
+    ```c++
+    for(int i = 0; i < lines; i++){
+    			json_temp = cJSON_CreateObject();
+    			long value;
+    			char * str = NULL;
+    			str = (char *)db_data->m_lines[i]->m_columns[0]->getValue();
+    			cJSON_AddStringToObject(json_temp, "guid", str);
+    			str = (char*)db_data->m_lines[i]->m_columns[1]->getValue();
+    			cJSON_AddStringToObject(json_temp, "command", str);
+    			value = *(long *)db_data->m_lines[i]->m_columns[2]->getValue();
+    			cJSON_AddNumberToObject(json_temp, "level", value);
+    			value = *(long *)db_data->m_lines[i]->m_columns[3]->getValue();
+    			cJSON_AddNumberToObject(json_temp, "stop_type", value);
+    			str = (char *)db_data->m_lines[i]->m_columns[4]->getValue();
+    			cJSON_AddStringToObject(json_temp, "desc", str);
+    			cJSON_AddItemToArray(json_array, json_temp);
+    		}
+    ```
+
+  - 上面的json_temp作为一个临时指针变量往json_array里面放，如果json_temp在外面申请的话，说明接进去的就是一直是一块空间，但是我们接的每一个都是一块空间，所以需要在里面每次接到json_array的时候都要申请json_temp.
 
 ##### Json
 
