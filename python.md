@@ -7357,3 +7357,316 @@ http://c.biancheng.net/linux_tutorial/
 - 当一个程序发生异常时，代表该程序在执行时出现了非正常的情况，无法再执行下去。默认情况下，程序是要终止的。如果要避免程序退出，可以使用捕获异常的方式获取这个异常的名称，再通过其他的逻辑代码让程序继续运行，这种根据异常做出的逻辑处理叫作异常处理。
 - 开发者可以使用异常处理全面地控制自己的程序。异常处理不仅仅能够管理正常的流程运行，还能够在程序出错时对程序进行必的处理。大大提高了程序的健壮性和人机交互的友好性。
 
+###### try except
+
+- 用`try except`语句块捕获并处理异常，其基本语法结构如下所示：
+
+  ```
+  try:
+      可能产生异常的代码块
+  except [ (Error1, Error2, ... ) [as e] ]:
+      处理异常的代码块1
+  except [ (Error3, Error4, ... ) [as e] ]:
+      处理异常的代码块2
+  except  [Exception]:
+      处理其它异常
+  ```
+
+  - 该格式中，[] 括起来的部分可以使用，也可以省略。其中各部分的含义如下：
+    - (Error1, Error2,...) 、(Error3, Error4,...)：其中，Error1、Error2、Error3 和 Error4 都是具体的异常类型。显然，一个 except 块可以同时处理多种异常。
+    - [as e]：作为可选参数，表示给异常类型起一个别名 e，这样做的好处是方便在 except 块中调用异常类型（后续会用到）。
+    - [Exception]：作为可选参数，可以代指程序可能发生的所有异常情况，其通常用在最后一个 except 块。
+
+- 从`try except`的基本语法格式可以看出，try 块有且仅有一个，但 except 代码块可以有多个，且每个 except 块都可以同时处理多种异常。
+
+- 当程序发生不同的意外情况时，会对应特定的异常类型，Python 解释器会根据该异常类型选择对应的 except 块来处理该异常。
+
+- try except 语句的执行流程如下：
+
+  1. 首先执行 try 中的代码块，如果执行过程中出现异常，系统会自动生成一个异常类型，并将该异常提交给 Python 解释器，此过程称为捕获异常。
+  2. 当 Python 解释器收到异常对象时，会寻找能处理该异常对象的 except 块，如果找到合适的 except 块，则把该异常对象交给该 except 块处理，这个过程被称为处理异常。如果 Python 解释器找不到处理异常的 except 块，则程序运行终止，Python 解释器也将退出。
+
+  ```
+  try:
+      a = int(input("输入被除数："))
+      b = int(input("输入除数："))
+      c = a / b
+      print("您输入的两个数相除的结果是：", c )
+  except (ValueError, ArithmeticError):
+      print("程序发生了数字格式异常、算术异常之一")
+  except :
+      print("未知异常")
+  print("程序继续运行")
+  
+  输入被除数：a
+  程序发生了数字格式异常、算术异常之一
+  程序继续运行
+  ```
+
+  - 上面程序中，第 6 行代码使用了（ValueError, ArithmeticError）来指定所捕获的异常类型，这就表明该 except 块可以同时捕获这 2 种类型的异常；第 8 行代码只有 except 关键字，并未指定具体要捕获的异常类型，这种省略异常类的 except 语句也是合法的，它表示可捕获所有类型的异常，一般会作为异常捕获的最后一个 except 块。
+  - 除此之外，由于 try 块中引发了异常，并被 except 块成功捕获，因此程序才可以继续执行，才有了“程序继续运行”的输出结果。
+
+- 通过前面的学习，我们已经可以捕获程序中可能发生的异常，并对其进行处理。但是，由于一个 except 可以同时处理多个异常，那么我们如何知道当前处理的到底是哪种异常呢？其实，每种异常类型都提供了如下几个属性和方法，通过调用它们，就可以获取当前处理异常类型的相关信息：
+
+  - args：返回异常的错误编号和描述字符串；
+  - str(e)：返回异常信息，但不包括异常信息的类型；
+  - repr(e)：返回较全的异常信息，包括异常信息的类型。
+
+  ```
+  try:
+      1/0
+  except Exception as e:
+      # 访问异常的错误编号和详细信息
+      print(e.args)
+      print(str(e))
+      print(repr(e))
+      
+  ('division by zero',)
+  division by zero
+  ZeroDivisionError('division by zero',)
+  ```
+
+- 一个 try 块也可以对应多个 except 块，一个 except 块可以同时处理多种异常。如果我们想使用一个 except 块处理所有异常，就可以这样写
+
+  ```
+  try:
+      #...
+  except Exception:
+      #...
+  ```
+
+  - 对于 try 块中可能出现的任何异常，Python 解释器都会交给仅有的这个 except 块处理，因为它的参数是 Exception，表示可以接收任何类型的异常。
+  - 对于可以接收任何异常的 except 来说，其后可以跟 Exception，也可以不跟任何参数，但表示的含义都是一样的。
+
+- 这里就要详细介绍一下 Exception。要知道，为了表示程序中可能出现的各种异常，Python 提供了大量的异常类，这些异常类之间有严格的继承关系，图 1 显示了 Python 的常见异常类之间的继承关系。
+
+![](http://c.biancheng.net/uploads/allimg/190215/2-1Z2151H054Q0.gif)
+
+- 从图 1 中可以看出，BaseException 是 Python 中所有异常类的基类，但对于我们来说，最主要的是 Exception 类，因为程序中可能出现的各种异常，都继承自 Exception。
+  - 如果用户要实现自定义异常，不应该继承 BaseException ，而应该继承 Exception 类
+  - 当 try 块捕获到异常对象后，Python 解释器会拿这个异常类型依次和各个 except 块指定的异常类进行比较，如果捕获到的这个异常类，和某个 except 块后的异常类一样，又或者是该异常类的子类，那么 Python 解释器就会调用这个 except 块来处理异常；反之，Python 解释器会继续比较，直到和最后一个 except 比较完，如果没有比对成功，则证明该异常无法处理。
+  - 当一个 try 块配有多个 except 块时，这些 except 块应遵循这样一个排序规则，即可处理全部异常的 except 块（参数为 Exception，也可以什么都不写）要放到所有 except 块的后面，且所有父类异常的 except 块要放到子类异常的 except 块的后面。
+
+###### try except else
+
+- 使用 else 包裹的代码，只有当 try 块没有捕获到任何异常时，才会得到执行；反之，如果 try 块捕获到异常，即便调用对应的 except 处理完异常，else 块中的代码也不会得到执行。
+
+  ```
+  try:
+      result = 20 / int(input('请输入除数:'))
+      print(result)
+  except ValueError:
+      print('必须输入整数')
+  except ArithmeticError:
+      print('算术错误，除数不能为 0')
+  else:
+      print('没有出现异常')
+  print("继续执行")
+  
+  请输入除数:4
+  5.0
+  没有出现异常
+  继续执行
+  ```
+
+- 既然 Python 解释器按照顺序执行代码，那么 else 块有什么存在的必要呢？直接将 else 块中的代码编写在 try except 块的后面，不是一样吗？
+
+  ```
+  请输入除数:a
+  必须输入整数
+  继续执行
+  ```
+
+  - 可以看到，当我们试图进行非法输入时，程序会发生异常并被 try 捕获，Python 解释器会调用相应的 except 块处理该异常。但是异常处理完毕之后，Python 解释器并没有接着执行 else 块中的代码，而是跳过 else，去执行后续的代码。
+
+  - 也就是说，else 的功能，只有当 try 块捕获到异常时才能显现出来。在这种情况下，else 块中的代码不会得到执行的机会。而如果我们直接把 else 块去掉，将其中的代码编写到 try except 的后面：
+
+    ```
+    try:
+        result = 20 / int(input('请输入除数:'))
+        print(result)
+    except ValueError:
+        print('必须输入整数')
+    except ArithmeticError:
+        print('算术错误，除数不能为 0')
+    print('没有出现异常')
+    print("继续执行")
+    
+    请输入除数:a
+    必须输入整数
+    没有出现异常
+    继续执行
+    ```
+
+  - 可以看到，如果不使用 else 块，try 块捕获到异常并通过 except 成功处理，后续所有程序都会依次被执行。
+
+###### try except fin'ally
+
+- 和 else 语句不同，finally 只要求和 try 搭配使用，而至于该结构中是否包含 except 以及 else，对于 finally 不是必须的（else 必须和 try except 搭配使用）。
+
+- 在整个异常处理机制中，finally 语句的功能是：无论 try 块是否发生异常，最终都要进入 finally 语句，并执行其中的代码块。
+
+- 基于 finally 语句的这种特性，在某些情况下，当 try 块中的程序打开了一些物理资源（文件、数据库连接等）时，由于这些资源必须手动回收，而回收工作通常就放在 finally 块中。
+
+  - Python 垃圾回收机制，只能帮我们回收变量、类对象占用的内存，而无法自动完成类似关闭文件、数据库连接等这些的工作。
+
+- 读者可能会问，回收这些物理资源，必须使用 finally 块吗？当然不是，但使用 finally 块是比较好的选择。首先，try 块不适合做资源回收工作，因为一旦 try 块中的某行代码发生异常，则其后续的代码将不会得到执行；其次 except 和 else 也不适合，它们都可能不会得到执行。而 finally 块中的代码，无论 try 块是否发生异常，该块中的代码都会被执行。
+
+  ```
+  try:
+      a = int(input("请输入 a 的值:"))
+      print(20/a)
+  except:
+      print("发生异常！")
+  else:
+      print("执行 else 块中的代码")   
+  finally :
+      print("执行 finally 块中的代码")
+      
+  请输入 a 的值:4
+  5.0
+  执行 else 块中的代码
+  执行 finally 块中的代码
+  ```
+
+- 当 try 块中代码发生异常，导致程序崩溃时，在崩溃前 Python 解释器也会执行 finally 块中的代码。
+
+###### raise
+
+- [Python](http://c.biancheng.net/python/) 允许我们在程序中手动设置异常，使用 raise 语句即可。
+
+- raise 语句的基本语法格式为：
+
+  ```
+  raise [exceptionName [(reason)]]
+  ```
+
+  - 其中，用 [] 括起来的为可选参数，其作用是指定抛出的异常名称，以及异常信息的相关描述。如果可选参数全部省略，则 raise 会把当前错误原样抛出；如果仅省略 (reason)，则在抛出异常时，将不附带任何的异常描述信息。
+
+  - 也就是说，raise 语句有如下三种常用的用法：
+
+    1. raise：单独一个 raise。该语句引发当前上下文中捕获的异常（比如在 except 块中），或默认引发 RuntimeError 异常。
+    2. raise 异常类名称：raise 后带一个异常类名称，表示引发执行类型的异常。
+    3. raise 异常类名称(描述信息)：在引发指定类型的异常的同时，附带异常的描述信息。
+
+  - 每次执行 raise 语句，都只能引发一次执行的异常
+
+    ```
+    >>> raise
+    Traceback (most recent call last):
+      File "<pyshell#1>", line 1, in <module>
+        raise
+    RuntimeError: No active exception to reraise
+    >>> raise ZeroDivisionError
+    Traceback (most recent call last):
+      File "<pyshell#0>", line 1, in <module>
+        raise ZeroDivisionError
+    ZeroDivisionError
+    >>> raise ZeroDivisionError("除数不能为零")
+    Traceback (most recent call last):
+      File "<pyshell#2>", line 1, in <module>
+        raise ZeroDivisionError("除数不能为零")
+    ZeroDivisionError: 除数不能为零
+    ```
+
+- 我们手动让程序引发异常，很多时候并不是为了让其崩溃。事实上，raise 语句引发的异常通常用 try except（else finally）异常处理结构来捕获并进行处理。
+
+  ```
+  try:
+      a = input("输入一个数：")
+      #判断用户输入的是否为数字
+      if(not a.isdigit()):
+          raise ValueError("a 必须是数字")
+  except ValueError as e:
+      print("引发异常：",repr(e))
+      
+  输入一个数：a
+  引发异常： ValueError('a 必须是数字',)
+  ```
+
+  - 可以看到，当用户输入的不是数字时，程序会进入 if 判断语句，并执行 raise 引发 ValueError 异常。但由于其位于 try 块中，因为 raise 抛出的异常会被 try 捕获，并由 except 块进行处理。
+  - 虽然程序中使用了 raise 语句引发异常，但程序的执行是正常的，手动抛出的异常并不会导致程序崩溃。
+
+- 正如前面所看到的，在使用 raise 语句时可以不带参数
+
+  ```
+  try:
+      a = input("输入一个数：")
+      if(not a.isdigit()):
+          raise ValueError("a 必须是数字")
+  except ValueError as e:
+      print("引发异常：",repr(e))
+      raise
+      
+  输入一个数：a
+  引发异常： ValueError('a 必须是数字',)
+  Traceback (most recent call last):
+    File "D:\python3.6\1.py", line 4, in <module>
+      raise ValueError("a 必须是数字")
+  ValueError: a 必须是数字
+  ```
+
+  - 这里重点关注位于 except 块中的 raise，由于在其之前我们已经手动引发了 ValueError 异常，因此这里当再使用 raise 语句时，它会再次引发一次。
+  - 当在没有引发过异常的程序使用无参的 raise 语句时，它默认引发的是 RuntimeError 异常
+
+###### sys.exc_info()
+
+- 在实际调试程序的过程中，有时只获得异常的类型是远远不够的，还需要借助更详细的异常信息才能解决问题。
+
+- 捕获异常时，有 2 种方式可获得更多的异常信息，分别是：
+
+  1. 使用 sys 模块中的 exc_info 方法；
+  2. 使用 traceback 模块中的相关函数。
+
+- 模块 sys 中，有两个方法可以返回异常的全部信息，分别是 exc_info() 和 last_traceback()，这两个函数有相同的功能和用法，本节仅以 exc_info() 方法为例。
+
+- exc_info() 方法会将当前的异常信息以元组的形式返回，该元组中包含 3 个元素，分别为 type、value 和 traceback，它们的含义分别是：
+
+  - type：异常类型的名称，它是 BaseException 的子类
+  - value：捕获到的异常实例。
+  - traceback：是一个 traceback 对象。
+
+  ```
+  #使用 sys 模块之前，需使用 import 引入
+  import sys
+  try:
+      x = int(input("请输入一个被除数："))
+      print("30除以",x,"等于",30/x)
+  except:
+      print(sys.exc_info())
+      print("其他异常...")
+  
+  当输入 0 时，程序运行结果为
+  请输入一个被除数：0
+  (<class 'ZeroDivisionError'>, ZeroDivisionError('division by zero',), <traceback object at 0x000001FCF638DD48>)
+  其他异常...
+  ```
+
+  - 输出结果中，第 2 行是抛出异常的全部信息，这是一个元组，有 3 个元素，第一个元素是一个 ZeroDivisionError 类；第 2 个元素是异常类型 ZeroDivisionError 类的一个实例；第 3 个元素为一个 traceback 对象。其中，通过前 2 个元素可以看出抛出的异常类型以及描述信息，对于第 3 个元素，是一个 traceback 对象，无法直接看出有关异常的信息，还需要对其做进一步处理。
+
+- 要查看 traceback 对象包含的内容，需要先引进 traceback 模块，然后调用 traceback 模块中的 print_tb 方法，并将 sys.exc_info() 输出的 traceback 对象作为参数参入。
+
+  ```python
+  #使用 sys 模块之前，需使用 import 引入
+  import sys
+  #引入traceback模块
+  import traceback
+  try:
+      x = int(input("请输入一个被除数："))
+      print("30除以",x,"等于",30/x)
+  except:
+      #print(sys.exc_info())
+      traceback.print_tb(sys.exc_info()[2])
+      print("其他异常...")
+  
+  请输入一个被除数：0
+    File "C:\Users\mengma\Desktop\demo.py", line 7, in <module>
+      print("30除以",x,"等于",30/x)
+  其他异常...
+  ```
+
+  - 可以看到，输出信息中包含了更多的异常信息，包括文件名、抛出异常的代码所在的行数、抛出异常的具体代码。
+
+###### traceback模块
+
+- 除了使用 sys.exc_info() 方法获取更多的异常信息之外，还可以使用 traceback 模块，该模块可以用来查看异常的传播轨迹，追踪异常触发的源头。
