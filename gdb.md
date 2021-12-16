@@ -15,7 +15,7 @@
 - 在进行 run 或者 start 指令启动目标程序之前，还可能需要做一些必要的准备工作，大致包括以下几个方面：
 
   - 如果启动 GDB 调试器时未指定要调试的目标程序，或者由于各种原因 GDB 调试器并为找到所指定的目标程序，这种情况下就需要再次手动指定；file 命令+可执行文件
-  - 有些 C 或者 C++ 程序的执行，需要接收一些参数（程序中用 argc 和 argv[] 接收）启动时--args ， 启动后set args a.txt，启动后 run a.txt
+  - 有些 C 或者 C++ 程序的执行，需要接收一些参数（程序中用 argc 和 argv[] 接收）启动时--args ， 启动后set args a.txt，启动后 run a.txt或者直接set args --test
   - 目标程序在执行过程中，可能需要临时设置 PATH 环境变量；path
   - 默认情况下，GDB 调试器将启动时所在的目录作为工作目录，但很多情况下，该目录并不符合要求，需要在启动程序手动为 GDB 调试器指定工作目录。cd 
   - 默认情况下，GDB 调试器启动程序后，会接收键盘临时输入的数据，并将执行结果会打印在屏幕上。但 GDB 调试器允许对执行程序的输入和输出进行重定向，使其从文件或其它终端接收输入，或者将执行结果输出到文件或其它终端。run > a.txt
@@ -187,6 +187,8 @@
 
   这也就意味着，当程序因某种异常暂停执行时，如果其发生在某个函数内部，我们可以尝试借助该函数对应栈帧中记录的信息，找到程序发生异常的原因。
 
+- main() 主函数对应的栈帧，又称为初始帧或者最外层的帧。除此之外，每当程序中多调用一个函数，执行过程中就会生成一个新的栈帧。更甚者，如果该函数是一个递归函数，则会生成多个栈帧。在程序内部，各个栈帧用地址作为它们的标识符，注意这里的地址并不一定为栈帧的起始地址。我们知道，每个栈帧往往是由连续的多个字节构成，每个字节都有自己的地址，不同操作系统为栈帧选定地址标识符的规则不同，它们会选择其中一个字节的地址作为栈帧的标识符。
+
 - backtrace 命令用于打印当前调试环境中所有栈帧的信息
 
   ```gdb
@@ -231,6 +233,27 @@
   3. 通过函数的函数名指定。注意，如果是类似递归函数，其对应多个栈帧的话，通过此方法指定的是编号最小的那个栈帧。
 
   通过up和down调整当前栈帧。
+
+- frame可以简写为f，gdb起来bt之后显示结果中
+
+  ```c
+  (gdb) bt
+  #0  0x00007f949f622ff4 in _int_malloc () from /lib64/libc.so.6
+  #1  0x00007f949f62678c in malloc () from /lib64/libc.so.6
+  #2  0x000000000040857d in print_string_ptr (str=0x7f9490000a40 "module") at ../common/cJSON.c:222
+  #3  0x00000000004092e4 in print_object (item=<optimized out>, fmt=1, depth=1) at ../common/cJSON.c:472
+  #4  print_value (item=<optimized out>, depth=0, fmt=1) at ../common/cJSON.c:314
+  #5  0x0000000000404981 in createJsonQueryUser (model=model@entry=0x40b2d8 "user_manage", type=type@entry=0x40b2d2 "query", query_info=...,
+      wParam=wParam@entry=0, lParam=<optimized out>) at xUiMessage.cpp:76
+  #6  0x00000000004037a2 in XUISession::__requestLogin (this=this@entry=0x7f9498000900, rpc=0x7f94980009f0, req=req@entry=0x7f94900008f0) at xUISession.cpp:119
+  #7  0x000000000040477f in XUISession::Run (this=0x7f9498000900) at xUISession.cpp:640
+  #8  0x0000000000406bfa in XThread::__threadFunc (lParam=0x7f9498000900) at ../common/xThread.cpp:228
+  #9  0x0000000000406b27 in __posixThread (lParam=0x7f94980008e0) at ../common/xThread.cpp:101
+  #10 0x00007f94a05acea5 in start_thread () from /lib64/libpthread.so.0
+  #11 0x00007f949f69fb0d in clone () from /lib64/libc.so.6
+  ```
+
+  - 其中#0这一行是栈，#0代表第一层栈，#1代表第二层栈，需要看第几层的时候直接看#后面的数字，然后f 数字就能看到第几层栈的信息
 
 ##### GDB编辑和搜索源码
 
