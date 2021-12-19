@@ -7670,3 +7670,279 @@ http://c.biancheng.net/linux_tutorial/
 ###### traceback模块
 
 - 除了使用 sys.exc_info() 方法获取更多的异常信息之外，还可以使用 traceback 模块，该模块可以用来查看异常的传播轨迹，追踪异常触发的源头。
+
+- 下面示例显示了如何显示异常传播轨迹
+
+  ```
+  class SelfException(Exception):
+      pass
+  def main():
+      firstMethod()
+  def firstMethod():
+      secondMethod()
+  def secondMethod():
+      thirdMethod()
+  def thirdMethod():
+      raise SelfException("自定义异常信息")
+  main()
+  
+  Traceback (most recent call last):
+    File "C:\Users\mengma\Desktop\1.py", line 11, in <module>
+      main()
+    File "C:\Users\mengma\Desktop\1.py", line 4, in main                   <--mian函数
+      firstMethod()
+    File "C:\Users\mengma\Desktop\1.py", line 6, in firstMethod        <--第三个
+      secondMethod()
+    File "C:\Users\mengma\Desktop\1.py", line 8, in secondMethod   <--第二个
+      thirdMethod()
+    File "C:\Users\mengma\Desktop\1.py", line 10, in thirdMethod     <--异常源头
+      raise SelfException("自定义异常信息")
+  SelfException: 自定义异常信息
+  ```
+
+  - 上面程序中 main() 函数调用 firstMethod()，firstMethod() 调用 secondMethod()，secondMethod() 调用 thirdMethod()，thirdMethod() 直接引发一个 SelfException 异常
+  - 从输出结果可以看出，异常从 thirdMethod() 函数开始触发，传到 secondMethod() 函数，再传到 firstMethod() 函数，最后传到 main() 函数，在 main() 函数止，这个过程就是整个异常的传播轨迹。
+
+- 在实际应用程序的开发中，大多数复杂操作都会被分解成一系列函数或方法调用。这是因为，为了具有更好的可重用性，会将每个可重用的代码单元定义成函数或方法，将复杂任务逐渐分解为更易管理的小型子任务。由于一个大的业务功能需要由多个函数或方法来共同实现，在最终编程模型中，很多对象将通过一系列函数或方法调用来实现通信，执行任务。
+
+- 所以，当应用程序运行时，经常会发生一系列函数或方法调用，从而形成“函数调用战”。异常的传播则相反，只要异常没有被完全捕获（包括异常没有被捕获，或者异常被处理后重新引发了新异常），异常就从发生异常的函数或方法逐渐向外传播，首先传给该函数或方法的调用者，该函数或方法的调用者再传给其调用者，直至最后传到 [Python](http://c.biancheng.net/python/) 解释器，此时 Python 解释器会中止该程序，并打印异常的传播轨迹信息。
+
+- 很多初学者一看到输出结果所示的异常提示信息，就会惊慌失措，他们以为程序出现了很多严重的错误，其实只有一个错误，系统提示那么多行信息，只不过是显示异常依次触发的轨迹。
+
+- 使用 traceback 模块查看异常传播轨迹，首先需要将 traceback 模块引入，该模块提供了如下两个常用方法：
+
+  - traceback.print_exc()：将异常传播轨迹信息输出到控制台或指定文件中。
+  - format_exc()：将异常传播轨迹信息转换成字符串。
+
+- 可能有读者好奇，从上面方法看不出它们到底处理哪个异常的传播轨迹信息。实际上我们常用的 print_exc() 是 print_exc([limit[, file]]) 省略了 limit、file 两个参数的形式。而 print_exc([limit[, file]]) 的完整形式是 `print_exception(etype, value, tb[,limit[, file]])`，在完整形式中，前面三个参数用于分别指定异常的如下信息：
+
+  - etype：指定异常类型；
+  - value：指定异常值；
+  - tb：指定异常的traceback 信息；
+
+- 当程序处于 except 块中时，该 except 块所捕获的异常信息可通过 sys 对象来获取，其中 sys.exc_type、sys.exc_value、sys.exc_traceback 就代表当前 except 块内的异常类型、异常值和异常传播轨迹。
+
+- 简单来说， print_exc([limit[, file]]) 相当于如下形式：
+
+  ```
+  print_exception(sys.exc_etype, sys.exc_value, sys.exc_tb[, limit[, file]])
+  ```
+
+  - 也就是说，使用 print_exc([limit[, file]]) 会自动处理当前 except 块所捕获的异常。该方法还涉及两个参数：
+
+    1. limit：用于限制显示异常传播的层数，比如函数 A 调用函数 B，函数 B 发生了异常，如果指定 limit=1，则只显示函数 A 里面发生的异常。如果不设置 limit 参数，则默认全部显示。
+    2. file：指定将异常传播轨迹信息输出到指定文件中。如果不指定该参数，则默认输出到控制台。
+
+    ```
+    # 导入trackback模块
+    import traceback
+    class SelfException(Exception): pass
+    def main():
+        firstMethod()
+    def firstMethod():
+        secondMethod()
+    def secondMethod():
+        thirdMethod()
+    def thirdMethod():
+        raise SelfException("自定义异常信息")
+    try:
+        main()
+    except:
+        # 捕捉异常，并将异常传播信息输出控制台
+        traceback.print_exc()
+        # 捕捉异常，并将异常传播信息输出指定文件中
+        traceback.print_exc(file=open('log.txt', 'a'))
+    ```
+
+###### 自定义一个异常类
+
+- 自定义一个异常类，通常应继承自 Exception 类（直接继承），当然也可以继承自那些本身就是从 Exception 继承而来的类（间接继承 Exception）。
+
+- 虽然所有类同时继承自 BaseException，但它是为系统退出异常而保留的，假如直接继承 BaseException，可能会导致自定义异常不会被捕获，而是直接发送信号退出程序运行，脱离了我们自定义异常类的初衷。
+
+- 系统自带的异常只要触发会自动抛出（比如 NameError、ValueError 等），但用户自定义的异常需要用户自己决定什么时候抛出。也就是说，自定义的异常需要使用 raise 手动抛出。
+
+  ```
+  class InputError(Exception):
+      '''当输出有误时，抛出此异常'''
+      #自定义异常类型的初始化
+      def __init__(self, value):
+          self.value = value
+      # 返回异常类对象的说明信息
+      def __str__(self):
+          return ("{} is invalid input".format(repr(self.value)))
+     
+  try:
+      raise InputError(1) # 抛出 MyInputError 这个异常
+  except InputError as err:
+      print('error: {}'.format(err))
+      
+  error: 1 is invalid input
+  ```
+
+###### logging模块调试程序
+
+- 无论使用哪种编程语言，最常用的调试代码的方式是：使用输出语句（比如 C 语言中使用 printf，Python 中使用 print() 函数）输出程序运行过程中一些关键的变量的值，查看它们的值是否正确，从而找到出错的地方。这种调试方法最大的缺点是，当找到问题所在之后，需要再将用于调试的输出语句删掉。
+
+- 在 Python 中，有一种比频繁使用 print() 调试程序更简便的方法，就是使用 logging 模块，该模块可以很容易地创建自定义的消息记录，这些日志消息将描述程序执行何时到达日志函数调用，并列出指定的任何变量当时的值。
+
+- 启用 logging 模块很简单，直接将下面的代码复制到程序开头：
+
+  ```
+  import logging
+  logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
+  ```
+
+  - 读者不需要关心这两行代码的具体工作原理，但基本上，当 Python 记录一个事件的日志时，它会创建一个 LogRecord 对象，保存关于该事件的信息。
+
+- 假如我们编写了如下一个函数，其设计的初衷是用来计算一个数的阶乘，但该函数有些问题，需要调试：
+
+  ```
+  import logging
+  logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
+  logging.debug('Start of program')
+  def factorial(n):
+      logging.debug('Start of factorial(%s%%)' % (n))
+      total = 1
+      for i in range(n + 1):
+          total *= i
+          logging.debug('i is ' + str(i) + ', total is ' + str(total))
+      logging.debug('End of factorial(%s%%)' % (n))
+      return total
+  print(factorial(5))
+  logging.debug('End of program')
+  
+  2019-09-11 14:14:56,928 - DEBUG - Start of program
+  2019-09-11 14:14:56,945 - DEBUG - Start of factorial(5%)
+  2019-09-11 14:14:56,959 - DEBUG - i is 0, total is 0
+  2019-09-11 14:14:56,967 - DEBUG - i is 1, total is 0
+  2019-09-11 14:14:56,979 - DEBUG - i is 2, total is 0
+  2019-09-11 14:14:56,991 - DEBUG - i is 3, total is 0
+  2019-09-11 14:14:57,000 - DEBUG - i is 4, total is 0
+  2019-09-11 14:14:57,013 - DEBUG - i is 5, total is 0
+  2019-09-11 14:14:57,024 - DEBUG - End of factorial(5%)
+  0
+  2019-09-11 14:14:57,042 - DEBUG - End of program
+  ```
+
+  - 可以看到，通过 logging.debug() 函数可以打印日志信息，这个 debug() 函数将调用 basicConfig() 打印一行信息，这行信息的格式是在 basicConfig() 函数中指定的，并且包括传递给 debug() 的消息。
+
+  - 分析程序的运行结果，factorial(5) 返回 0 作为 5 的阶乘的结果，这显然是不对的。for 循环应该用从 1 到 5 的数，乘以 total 的值，但 logging.debug() 显示的日志信息表明，i 变量从 0 开始，而不是 1。因为 0 乘任何数都是 0，所以接下来的迭代中，total 的值都是错的。日志消息提供了可以追踪的痕迹，帮助我们弄清楚程序运行过程哪里不对。
+
+  - 将代码行 for i in range（n + 1）：改为 for i in range（1，n + 1）：，再次运行程序，输出结果为：
+
+    ```
+    2019-09-11 14:21:18,047 - DEBUG - Start of program
+    2019-09-11 14:21:18,067 - DEBUG - Start of factorial(5%)
+    2019-09-11 14:21:18,072 - DEBUG - i is 1, total is 1
+    2019-09-11 14:21:18,082 - DEBUG - i is 2, total is 2
+    2019-09-11 14:21:18,087 - DEBUG - i is 3, total is 6
+    2019-09-11 14:21:18,093 - DEBUG - i is 4, total is 24
+    2019-09-11 14:21:18,101 - DEBUG - i is 5, total is 120
+    2019-09-11 14:21:18,106 - DEBUG - End of factorial(5%)
+    120
+    2019-09-11 14:21:18,123 - DEBUG - End of program
+    ```
+
+- logging日志级别
+
+  - 日志级别”提供了一种方式，按重要性对日志消息进行分类。5 个日志级别如表 1 所示，从最不重要到最重要。利用不同的日志函数，消息可以按某个级别记入日志。
+
+    | 级别     | 对应的函数         | 描述                                                         |
+    | -------- | ------------------ | ------------------------------------------------------------ |
+    | DEBUG    | logging.debug()    | 最低级别，用于小细节，通常只有在诊断问题时，才会关心这些消息。 |
+    | INFO     | logging.info()     | 用于记录程序中一般事件的信息，或确认一切工作正常。           |
+    | WARNING  | logging.warning()  | 用于表示可能的问题，它不会阻止程序的工作，但将来可能会。     |
+    | ERROR    | logging.error()    | 用于记录错误，它导致程序做某事失败。                         |
+    | CRITICAL | logging.critical() | 最高级别，用于表示致命的错误，它导致或将要导致程序完全停止工作。 |
+
+  - 日志消息将会作为一个字符串，传递给这些函数。另外，日志级别只是一种建议，归根到底还是由程序员自己来决定日志消息属于哪一种类型。
+
+  ```
+  >>>import logging
+  >>> logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s - %(levelname)s - %(message)s')
+  >>> logging.debug('Some debugging details.')
+  2019-09-11 14:32:34,249 - DEBUG - Some debugging details.
+  >>> logging.info('The logging module is working.')
+  2019-09-11 14:32:47,456 - INFO - The logging module is working.
+  >>> logging.warning('An error message is about to be logged.')
+  2019-09-11 14:33:02,391 - WARNING - An error message is about to be logged.
+  >>> logging.error('An error has occurred.')
+  2019-09-11 14:33:14,413 - ERROR - An error has occurred.
+  >>> logging.critical('The program is unable to recover!')
+  2019-09-11 14:33:24,071 - CRITICAL - The program is unable to recover!
+  ```
+
+  - 日志级别的好处在于，我们可以改变想看到的日志消息的优先级。比如说，向 basicConfig() 函数传入 logging.DEBUG 作为 level 关键字参数，这将显示所有级别为 DEBUG 的日志消息。当开发了更多的程序后，我们可能只对错误感兴趣，在这种情况下，可以将 basicConfig() 的 level 参数设置为 logging.ERROR，这将只显示 ERROR 和 CRITICAL 消息，跳过 DEBUG、INFO 和 WARNING 消息。
+
+- logging禁用日志
+
+  - 在调试完程序后，可能并不希望所有这些日志消息出现在屏幕上，这时就可以使用 logging.disable() 函数禁用这些日志消息，从而不必进入到程序中，手工删除所有的日志调用。
+
+  - logging.disable() 函数的用法是，向其传入一个日志级别，它会禁止该级别以及更低级别的所有日志消息。因此，如果想要禁用所有日志，只要在程序中添加 logging.disable(logging.CRITICAL) 即可，例如：
+
+    ```
+    >>> import logging
+    >>> logging.basicConfig(level=logging.INFO, format=' %(asctime)s - %(levelname)s - %(message)s')
+    >>> logging.critical('Critical error! Critical error!')
+    2019-09-11 14:42:14,833 - CRITICAL - Critical error! Critical error!
+    >>> logging.disable(logging.CRITICAL)
+    >>> logging.critical('Critical error! Critical error!')
+    >>> logging.error('Error! Error!')
+    ```
+
+    - 因为 logging.disable() 将禁用它之后的所有消息，所以可以将其添加到程序中更接近 import logging 的位置，这样更容易找到它，方便根据需要注释掉它，或取消注释，从而启用或禁用日志消息。
+
+- 将日志消息输出到文件中
+
+  - 虽然日志消息很有用，但它们可能塞满屏幕，让你很难读到程序的输出。考虑到这种情况，可以将日志信息写入到文件，既能使屏幕保持干净，又能保存信息，一举两得。
+
+  - 将日志消息输出到文件中的实现方法很简单，只需要设置 logging.basicConfig() 函数中的 filename 关键字参数即可，例如：
+
+    ```
+    >>> import logging
+    >>> logging.basicConfig(filename='demo.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+    ```
+
+    - 此程序中，将日志消息存储到了 demo.txt 文件中，该文件就位于运行的程序文件所在的目录。
+
+###### assert调试程序
+
+- assert 语句的完整语法格式为：
+
+  ```
+  assert 条件表达式 [,描述信息]
+  ```
+
+  - assert 语句的作用是：当条件表达式的值为真时，该语句什么也不做，程序正常运行；反之，若条件表达式的值为假，则 assert 会抛出 AssertionError 异常。其中，[,描述信息] 作为可选参数，用于对条件表达式可能产生的异常进行描述。
+
+  ```
+  s_age = input("请输入您的年龄:")
+  age = int(s_age)
+  assert 20 < age < 80 , "年龄不在 20-80 之间"
+  print("您输入的年龄在20和80之间")
+  
+  请输入您的年龄:10
+  Traceback (most recent call last):
+    File "C:\Users\mengma\Desktop\1.py", line 3, in <module>
+      assert 20 < age < 80 , "年龄不在 20-80 之间"
+  AssertionError: 年龄不在 20-80 之间
+  ```
+
+- 通常情况下，assert 可以和 try except 异常处理语句配合使用，以前面代码为例：
+
+  ```
+  try:
+      s_age = input("请输入您的年龄:")
+      age = int(s_age)
+      assert 20 < age < 80 , "年龄不在 20-80 之间"
+      print("您输入的年龄在20和80之间")
+  except AssertionError as e:
+      print("输入年龄不正确",e)
+      
+  请输入您的年龄:10
+  输入年龄不正确 年龄不在 20-80 之间
+  ```
+
+  - 通过在程序的适当位置，使用 assert 语句判断变量或表达式的值，可以起到调试代码的作用。
+  - 当在命令行模式运行 Python 程序时，传入 -O（注意是大写）参数，可以禁用程序中包含的 assert 语句。
