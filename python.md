@@ -790,8 +790,12 @@ c1*c2:  (72.24-13.2j)
 
   - step：表示在切片过程中，隔几个存储位置（包含当前位置）取一次元素，也就是说，如果 step 的值大于 1，则在进行切片去序列元素时，会“跳跃式”的取元素。如果省略设置 step 的值，则最后一个冒号就可以省略。
 
-    ```
-    str="C语言中文网"#取索引区间为[0,2]之间（不包括索引2处的字符）的字符串print(str[:2])#隔 1 个字符取一个字符，区间是整个字符串print(str[::2])#取整个字符串，此时 [] 中只需一个冒号即可print(str[:])
+    ```python
+    str="C语言中文网"
+    #取索引区间为[0,2]之间（不包括索引2处的字符）的字符串
+    print(str[:2])
+    #隔 1 个字符取一个字符，区间是整个字符串print(str[::2])
+    #取整个字符串，此时 [] 中只需一个冒号即可print(str[:])
     ```
 
 ###### 序列相加
@@ -805,7 +809,9 @@ c1*c2:  (72.24-13.2j)
 - 比较特殊的是，列表类型在进行乘法运算时，还可以实现初始化指定长度列表的功能。例如如下的代码，将创建一个长度为 5 的列表，列表中的每个元素都是 None，表示什么都没有。
 
   ```
-  #列表的创建用 []，后续讲解列表时会详细介绍list = [None]*5print(list)[None, None, None, None, None]
+  #列表的创建用 []，后续讲解列表时会详细介绍
+  list = [None]*5
+  print(list)[None, None, None, None, None]
   ```
 
 ###### 检查元素是否包含在序列中
@@ -821,7 +827,9 @@ c1*c2:  (72.24-13.2j)
   - 例如，检查字符‘c’是否包含在字符串“c.biancheng.net”中
 
     ```
-    str="c.biancheng.net"print('c'in str)True
+    str="c.biancheng.net"
+    print('c'in str)
+    True
     ```
 
 - 和 in 关键字用法相同，但功能恰好相反的，还有 not in 关键字，它用来检查某个元素是否不包含在指定的序列中
@@ -865,7 +873,27 @@ c1*c2:  (72.24-13.2j)
 - 使用list()函数创建列表，内置的函数 list()，使用它可以将其它数据类型转换为列表类型
 
   ```python
-  #将字符串转换成列表list1 = list("hello")print(list1)#将元组转换成列表tuple1 = ('Python', 'Java', 'C++', 'JavaScript')list2 = list(tuple1)print(list2)#将字典转换成列表dict1 = {'a':100, 'b':42, 'c':9}list3 = list(dict1)print(list3)#将区间转换成列表range1 = range(1, 6)list4 = list(range1)print(list4)#创建空列表print(list())['h', 'e', 'l', 'l', 'o']['Python', 'Java', 'C++', 'JavaScript']['a', 'b', 'c'][1, 2, 3, 4, 5][]
+  #将字符串转换成列表list1 = list("hello")
+  print(list1)
+  #将元组转换成列表
+  tuple1 = ('Python', 'Java', 'C++', 'JavaScript')
+  list2 = list(tuple1)
+  print(list2)
+  #将字典转换成列表
+  dict1 = {'a':100, 'b':42, 'c':9}
+  list3 = list(dict1)
+  print(list3)
+  #将区间转换成列表
+  range1 = range(1, 6)
+  list4 = list(range1)
+  print(list4)
+  #创建空列表
+  print(list())
+  ['h', 'e', 'l', 'l', 'o']
+  ['Python', 'Java', 'C++', 'JavaScript']
+  ['a', 'b', 'c']
+  [1, 2, 3, 4, 5]
+  []
   ```
 
 - 访问列表元素使用索引或者切片
@@ -884,8 +912,20 @@ c1*c2:  (72.24-13.2j)
 
   - obj 表示到添加到列表末尾的数据，它可以是单个元素，也可以是列表、元组等
 
-    ```
-    l = ['Python', 'C++', 'Java']#追加元素l.append('PHP')print(l)#追加元组，整个元组被当成一个元素t = ('JavaScript', 'C#', 'Go')l.append(t)print(l)#追加列表，整个列表也被当成一个元素l.append(['Ruby', 'SQL'])print(l)['Python', 'C++', 'Java', 'PHP']['Python', 'C++', 'Java', 'PHP', ('JavaScript', 'C#', 'Go')]['Python', 'C++', 'Java', 'PHP', ('JavaScript', 'C#', 'Go'), ['Ruby', 'SQL']]
+    ```python
+    l = ['Python', 'C++', 'Java']
+    #追加元素
+    l.append('PHP')
+    print(l)
+    #追加元组，整个元组被当成一个元素
+    t = ('JavaScript', 'C#', 'Go')
+    l.append(t)print(l)
+    #追加列表，整个列表也被当成一个元素
+    l.append(['Ruby', 'SQL'])
+    print(l)
+    ['Python', 'C++', 'Java', 'PHP']
+    ['Python', 'C++', 'Java', 'PHP', ('JavaScript', 'C#', 'Go')]
+    ['Python', 'C++', 'Java', 'PHP', ('JavaScript', 'C#', 'Go'), ['Ruby', 'SQL']]
     ```
 
   - 当给 append() 方法传递列表或者元组时，此方法会将它们视为一个整体，作为一个元素添加到列表中，从而形成包含列表和元组的新列表
@@ -956,22 +996,50 @@ c1*c2:  (72.24-13.2j)
 
 - 修改单个元素非常简单，直接对元素赋值即可
 
-  ```
-  nums = [40, 36, 89, 2, 36, 100, 7]nums[2] = -26  #使用正数索引nums[-3] = -66.2  #使用负数索引print(nums)[40, 36, -26, 2, -66.2, 100, 7]
+  ```python
+  nums = [40, 36, 89, 2, 36, 100, 7]
+  nums[2] = -26  
+  #使用正数索引
+  nums[-3] = -66.2  
+  #使用负数索引
+  print(nums)
+  [40, 36, -26, 2, -66.2, 100, 7]
   ```
 
   - 使用索引得到列表元素后，通过`=`赋值就改变了元素的值。
 
 - Python 支持通过切片语法给一组元素赋值。在进行这种操作时，如果不指定步长（step 参数），Python 就不要求新赋值的元素个数与原来的元素个数相同；这意味，该操作既可以为列表添加元素，也可以为列表删除元素。
 
-  ```
-  修改一组元素的值nums = [40, 36, 89, 2, 36, 100, 7]#修改第 1~4 个元素的值（不包括第4个元素）nums[1: 4] = [45.25, -77, -52.5]print(nums)[40, 45.25, -77, -52.5, 36, 100, 7]如果对空切片（slice）赋值，就相当于插入一组新的元素：nums = [40, 36, 89, 2, 36, 100, 7]#在4个位置插入元素nums[4: 4] = [-77, -52.5, 999]print(nums)[40, 36, 89, 2, -77, -52.5, 999, 36, 100, 7]使用切片语法赋值时，Python 不支持单个值，例如下面的写法就是错误的：nums[4: 4] = -77但是如果使用字符串赋值，Python 会自动把字符串转换成序列，其中的每个字符都是一个元素s = list("Hello")s[2:4] = "XYZ"print(s)['H', 'e', 'X', 'Y', 'Z', 'o']
+  ```python
+  修改一组元素的值
+  nums = [40, 36, 89, 2, 36, 100, 7]
+  #修改第 1~4 个元素的值（不包括第4个元素）
+  nums[1: 4] = [45.25, -77, -52.5]
+  print(nums)
+  [40, 45.25, -77, -52.5, 36, 100, 7]
+  如果对空切片（slice）赋值，就相当于插入一组新的元素：
+  nums = [40, 36, 89, 2, 36, 100, 7]
+  #在4个位置插入元素
+  nums[4: 4] = [-77, -52.5, 999]
+  print(nums)
+  [40, 36, 89, 2, -77, -52.5, 999, 36, 100, 7]
+  使用切片语法赋值时，Python 不支持单个值，例如下面的写法就是错误的：
+  nums[4: 4] = -77
+  但是如果使用字符串赋值，Python 会自动把字符串转换成序列，其中的每个字符都是一个元素
+  s = list("Hello")
+  s[2:4] = "XYZ"
+  print(s)
+  ['H', 'e', 'X', 'Y', 'Z', 'o']
   ```
 
 - 使用切片语法时也可以指定步长（step 参数），但这个时候就要求所赋值的新元素的个数与原有元素的个数相同
 
-  ```
-  nums = [40, 36, 89, 2, 36, 100, 7]#步长为2，为第1、3、5个元素赋值nums[1: 6: 2] = [0.025, -99, 20.5]print(nums)[40, 0.025, 89, -99, 36, 20.5, 7]
+  ```python
+  nums = [40, 36, 89, 2, 36, 100, 7]
+  #步长为2，为第1、3、5个元素赋值
+  nums[1: 6: 2] = [0.025, -99, 20.5]
+  print(nums)
+  [40, 0.025, 89, -99, 36, 20.5, 7]
   ```
 
 ###### 查找元素
@@ -1004,7 +1072,7 @@ c1*c2:  (72.24-13.2j)
 
 - Python range() 函数能够轻松地生成一系列的数字
 
-  ```
+  ```python
   for value in range(1,5):
       print(value)
       
@@ -1018,7 +1086,7 @@ c1*c2:  (72.24-13.2j)
 
 - 另外需要指明的是，range() 函数的返回值并不直接是列表类型（list）
 
-  ```
+  ```python
   >>> type([1,2,3,4,5])
   <class 'list'>
   >>> type(range(1,6))
@@ -1029,7 +1097,7 @@ c1*c2:  (72.24-13.2j)
 
 - 在使用 range() 函数时，还可以指定步长。例如，下面的代码打印 1~10 内的偶数：
 
-  ```
+  ```python
   even_numbers = list(range(2,11,2))
   print(even_numbers)
   
@@ -1055,8 +1123,10 @@ c1*c2:  (72.24-13.2j)
 
 - 在 Python 中，元组通常都是使用一对小括号将所有元素包围起来的，但小括号不是必须的，只要将各元素用逗号隔开，Python 就会将其视为元组
 
-  ```
-  course = "Python教程", "http://c.biancheng.net/python/"print(course)('Python教程', 'http://c.biancheng.net/python/')
+  ```python
+  course = "Python教程", "http://c.biancheng.net/python/"
+  print(course)
+  ('Python教程', 'http://c.biancheng.net/python/')
   ```
 
 - 需要注意的一点是，当创建的元组中只有一个字符串类型的元素时，该元素后面必须要加一个逗号`,`，否则 Python 解释器会将它视为字符串
@@ -1081,42 +1151,61 @@ c1*c2:  (72.24-13.2j)
 
 - 赋值给多个变量的元组解包，一对一解包
 
-  ```
-  temp = ("hi","yuan","wai") first,second,third = temp等同于temp = ("hi","yuan","wai") first = temp[0] second = temp[1] third = temp[2]
+  ```python
+  temp = ("hi","yuan","wai") 
+  first,second,third = temp
+  等同于temp = ("hi","yuan","wai") 
+  first = temp[0] second = temp[1] third = temp[2]
   ```
 
 - 元组的每个元素作为位置参数的元组解包
 
-  ```
-  temp = (1,2,3) def hello(first,second,third):    print(first)    print(second)    print(third)    hello(*temp)等同于hello(1,2,3)
+  ```python
+  temp = (1,2,3) 
+  def hello(first,second,third):    
+  	print(first)    
+  	print(second)    
+  	print(third)    
+  hello(*temp)
+  等同于hello(1,2,3)
   ```
 
 - 遍历的元素为元组对象时，同时赋值给对应的变量，自动完成元组解包
 
-  ```
-  temp_list = [            ('测试人员', self.tester),            ('开始时间', start_time),            ('合计耗时', duration),            ('测试结果', status + "，通过率= " + self.pass_rate)] for first, second in temp_list:    print(first)    print(second)
+  ```py
+  temp_list = [('测试人员', self.tester),('开始时间', start_time),('合计耗时', duration),('测试结果', status + "，通过率= " + self.pass_rate)] 
+  for first, second in temp_list:   
+  	print(first)    
+  	print(second)
   ```
 
   - temp_list是一个list，每个元素为tuple，遍历temp_list时，将每次的获取到tuple对象，自动解包到2个变量first和second
 
 - *的使用
 
-  ```
-  >>> first, *new, last = [94, 85, 73, 46]>>> new[85, 73]
+  ```python
+  >>> first, *new, last = [94, 85, 73, 46]
+  >>> new[85, 73]
   ```
 
   - *在函数里面表示可变参数，在这里面也表示解包获取多个值，将多个值拼成一个列表返回到new，说明现在new是一个list类型，如果后面是元组，返回的也是list类型
 
 - 压包过程，压包是解包的逆过程，用zip函数实现
 
-  ```
-  >>> a = ['a', 'b', 'c']>>> b = [1, 2, 3]>>> for i in zip(a, b):...     print(i)...('a', 1)('b', 2)('c', 3)
+  ```python
+  >>> a = ['a', 'b', 'c']
+  >>> b = [1, 2, 3]
+  >>> for i in zip(a, b):...     
+  		print(i)...('a', 1)('b', 2)('c', 3)
   ```
 
 - 压包与解包混合
 
-  ```
-  >>> a = [0, 1, 2]>>> b = [1, 2, 3]>>> for i, j in zip(a, b):...     print(i+j)...135
+  ```python
+  >>> a = [0, 1, 2]
+  >>> b = [1, 2, 3]
+  >>> for i, j in zip(a, b):...     
+  		print(i+j)...135
   ```
 
   - 先是`zip`函数将`a b`压包成为一个可迭代对象
@@ -1124,8 +1213,10 @@ c1*c2:  (72.24-13.2j)
   - 此时就可以分别调用`i j`变量进行计算
   - 加入星号如下
 
-  ```
-  >>> l = [('Bob', '1990-1-1', 60),...     ('Mary', '1996-1-4', 50),...     ('Nancy', '1993-3-1', 55),]>>> for name, *args in l:...     print(name, args)...Bob ['1990-1-1', 60]Mary ['1996-1-4', 50]Nancy ['1993-3-1', 55]
+  ```python
+  >>> l = [('Bob', '1990-1-1', 60),...     ('Mary', '1996-1-4', 50),...     ('Nancy', '1993-3-1', 55),]
+  >>> for name, *args in l:...    
+  		print(name, args)...Bob ['1990-1-1', 60]Mary ['1996-1-4', 50]Nancy ['1993-3-1', 55]
   ```
 
   - 解包与压包结合可以实现类似矩阵转置的操作
@@ -1233,8 +1324,11 @@ c1*c2:  (72.24-13.2j)
 
   - list 参数表示字典中所有键的列表（list）；value 参数表示默认值，如果不写，则为空值 None。
 
-    ```
-    knowledge = ['语文', '数学', '英语']scores = dict.fromkeys(knowledge, 60)print(scores){'语文': 60, '英语': 60, '数学': 60}
+    ```python
+    knowledge = ['语文', '数学', '英语']
+    scores = dict.fromkeys(knowledge, 60)
+    print(scores)
+    {'语文': 60, '英语': 60, '数学': 60}
     ```
 
 - 通过dict()映射函数创建字典
@@ -1255,28 +1349,39 @@ c1*c2:  (72.24-13.2j)
 
     - dictname 表示字典变量的名字，key 表示键名。注意，键必须是存在的，否则会抛出异常。
 
+    ```python
+    tup = (['two',26], ['one',88], ['three',100], ['four',-59])
+    dic = dict(tup)
+    print(dic['one'])  
+    #键存在
+    print(dic['five'])  
+    #键不存在
+    88
+    Traceback (most recent call last):    File "C:\Users\mozhiyan\Desktop\demo.py", line 4, in <module>        print(dic['five'])  
+    #键不存在
+    KeyError: 'five'
     ```
-    tup = (['two',26], ['one',88], ['three',100], ['four',-59])dic = dict(tup)print(dic['one'])  #键存在print(dic['five'])  #键不存在88Traceback (most recent call last):    File "C:\Users\mozhiyan\Desktop\demo.py", line 4, in <module>        print(dic['five'])  #键不存在KeyError: 'five'
-    ```
-
+  
   - 除了上面这种方式外，Python 更推荐使用 dict 类型提供的 get() 方法来获取指定键对应的值。当指定的键不存在时，get() 方法不会抛出异常。
-
+  
     ```
     dictname.get(key[,default])
     ```
-
+  
     - key 表示指定的键；default 用于指定要查询的键不存在时，此方法返回的默认值，如果不手动指定，会返回 None。
-
+  
+      ```python
+      a = dict(two=0.65, one=88, three=100, four=-59)
+      print( a.get('one') )
+      88
       ```
-      a = dict(two=0.65, one=88, three=100, four=-59)print( a.get('one') )88
-      ```
-
+  
     - 当键不存在时，get() 返回空值 None，如果想明确地提示用户该键不存在，那么可以手动设置 get() 的第二个参数
-
+  
       ```
       a = dict(two=0.65, one=88, three=100, four=-59)print( a.get('five', '该键不存在') )该键不存在
       ```
-
+  
   - 和删除列表、元组一样，手动删除字典也可以使用 del 关键字
 
 ###### 字典基本操作
@@ -1300,16 +1405,29 @@ c1*c2:  (72.24-13.2j)
 
 - 如果要删除字典中的键值对，还是可以使用 del 语句
 
-  ```
-  # 使用del语句删除键值对a = {'数学': 95, '语文': 89, '英语': 90}del a['语文']del a['数学']print(a){'英语': 90}
+  ```python
+  # 使用del语句删除键值对
+  a = {'数学': 95, '语文': 89, '英语': 90}
+  del a['语文']
+  del a['数学']
+  print(a)
+  {'英语': 90}
   ```
 
 - 如果要判断字典中是否存在指定键值对，首先应判断字典中是否有对应的键。判断字典是否包含指定键值对的键，可以使用 in 或 not in 运算符。对于 dict 而言，in 或 not in 运算符都是基于 key 来判断的。
 
+  ```python
+  a = {'数学': 95, '语文': 89, '英语': 90}
+  # 判断 a 中是否包含名为'数学'的key
+  print('数学' in a) 
+  # True
+  # 判断 a 是否包含名为'物理'的key
+  print('物理' in a) 
+  # False
+  True
+  False
   ```
-  a = {'数学': 95, '语文': 89, '英语': 90}# 判断 a 中是否包含名为'数学'的keyprint('数学' in a) # True# 判断 a 是否包含名为'物理'的keyprint('物理' in a) # FalseTrueFalse
-  ```
-
+  
   - 通过 in（或 not in）运算符，我们可以很轻易地判断出现有字典中是否包含某个键，如果存在，由于通过键可以很轻易的获取对应的值，因此很容易就能判断出字典中是否有指定的键值对。
 
 ###### dict字典方法
@@ -1317,7 +1435,8 @@ c1*c2:  (72.24-13.2j)
 - [Python](http://c.biancheng.net/python/) 字典的数据类型为 dict，我们可使用 `dir(dict)` 来查看该类型包含哪些方法
 
   ```
-  >>> dir(dict)['clear', 'copy', 'fromkeys', 'get', 'items', 'keys', 'pop', 'popitem', 'setdefault', 'update', 'values']
+  >>> dir(dict)
+  ['clear', 'copy', 'fromkeys', 'get', 'items', 'keys', 'pop', 'popitem', 'setdefault', 'update', 'values']
   ```
 
 - keys、values和items方法，将这三个方法放在一起介绍，是因为它们都用来获取字典中的特定数据：
@@ -1328,8 +1447,14 @@ c1*c2:  (72.24-13.2j)
 
   - items() 用于返回字典中所有的键值对（key-value）。
 
-    ```
-    scores = {'数学': 95, '语文': 89, '英语': 90}print(scores.keys())print(scores.values())print(scores.items())dict_keys(['数学', '语文', '英语'])dict_values([95, 89, 90])dict_items([('数学', 95), ('语文', 89), ('英语', 90)])
+    ```python
+    scores = {'数学': 95, '语文': 89, '英语': 90}
+    print(scores.keys())
+    print(scores.values())
+    print(scores.items())
+    dict_keys(['数学', '语文', '英语'])
+    dict_values([95, 89, 90])
+    dict_items([('数学', 95), ('语文', 89), ('英语', 90)])
     ```
 
   - keys()、values() 和 items() 返回值的类型分别为 dict_keys、dict_values 和 dict_items。
@@ -1338,13 +1463,16 @@ c1*c2:  (72.24-13.2j)
 
   - 使用 list() 函数，将它们返回的数据转换成列表
 
-    ```
-    a = {'数学': 95, '语文': 89, '英语': 90}b = list(a.keys())print(b)['数学', '语文', '英语']
+    ```python
+    a = {'数学': 95, '语文': 89, '英语': 90}
+    b = list(a.keys())
+    print(b)
+    ['数学', '语文', '英语']
     ```
 
   - 使用 for in 循环遍历它们的返回值
 
-    ```
+    ```python
     a = {'数学': 95, '语文': 89, '英语': 90}
     for k in a.keys():
         print(k,end=' ')
@@ -1366,7 +1494,7 @@ c1*c2:  (72.24-13.2j)
 
 - copy()方法，copy() 方法返回一个字典的拷贝，也即返回一个具有相同键值对的新字典
 
-  ```
+  ```python
   a = {'one': 1, 'two': 2, 'three': [1,2,3]}
   b = a.copy()
   print(b)
@@ -1424,7 +1552,9 @@ c1*c2:  (72.24-13.2j)
   - 创建 set 集合可以像列表、元素和字典一样，直接将集合赋值给变量，从而实现创建集合的目的
 
     ```
-    a = {1,'c',1,(1,2,3),'c'}print(a){1, 'c', (1, 2, 3)}
+    a = {1,'c',1,(1,2,3),'c'}
+    print(a)
+    {1, 'c', (1, 2, 3)}
     ```
 
   - set() 函数为 Python 的内置函数，其功能是将字符串、列表、元组、range 对象等可迭代对象转换成集合
