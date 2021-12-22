@@ -1610,20 +1610,31 @@ c1*c2:  (72.24-13.2j)
 - 在很多应用场景中，我们需要将字符串和数字拼接在一起，而 Python 不允许直接拼接数字和字符串，所以我们必须先将数字转换成字符串。可以借助 str() 和 repr() 函数将数字转换为字符串
 
   ```
-  str(obj)repr(obj)
+  str(obj)
+  repr(obj)
   ```
-
+  
   - obj 表示要转换的对象，它可以是数字、列表、元组、字典等多种类型的数据。
-
+  
   - str() 和 repr() 函数虽然都可以将数字转换成字符串，但它们之间是有区别的：
-
+  
     - str() 用于将数据转换成适合人类阅读的字符串形式。
     - repr() 用于将数据转换成适合解释器阅读的字符串形式（Python 表达式的形式），适合在开发和调试阶段使用；如果没有等价的语法，则会发生 SyntaxError 异常。
-
+  
     ```
-    s = "http://c.biancheng.net/shell/"s_str = str(s)s_repr = repr(s)print( type(s_str) )print (s_str)print( type(s_repr) )print (s_repr)<class 'str'>http://c.biancheng.net/shell/<class 'str'>'http://c.biancheng.net/shell/'s 本身就是一个字符串，但是我们依然使用 str() 和 repr() 对它进行了转换。从运行结果可以看出，str() 保留了字符串最原始的样子，而 repr() 使用引号将字符串包围起来，这就是 Python 字符串的表达式形式。
+    s = "http://c.biancheng.net/shell/"
+    s_str = str(s)
+    s_repr = repr(s)
+    print( type(s_str) )
+    print (s_str)
+    print( type(s_repr) )
+    print (s_repr)
+    <class 'str'>
+    http://c.biancheng.net/shell/
+    <class 'str'>
+    'http://c.biancheng.net/shell/'s 本身就是一个字符串，但是我们依然使用 str() 和 repr() 对它进行了转换。从运行结果可以看出，str() 保留了字符串最原始的样子，而 repr() 使用引号将字符串包围起来，这就是 Python 字符串的表达式形式。
     ```
-
+    
     - 在 Python 交互式编程环境中输入一个表达式（变量、加减乘除、逻辑运算等）时，Python 会自动使用 repr() 函数处理该表达式。
 
 ###### 截取字符串
