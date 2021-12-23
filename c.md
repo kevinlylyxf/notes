@@ -1826,15 +1826,86 @@
 #### 多线程编程
 
 - 我们知道，一个进程指的是一个正在执行的应用程序。线程对应的英文名称为“thread”，它的功能是执行应用程序中的某个具体任务，比如一段程序、一个函数等。
+
 - 每个进程执行前，操作系统都会为其分配所需的资源，包括要执行的程序代码、数据、内存空间、文件资源等。一个进程至少包含 1 个线程，可以包含多个线程，所有线程共享进程的资源，各个线程也可以拥有属于自己的私有资源。
+
 - 进程仅负责为各个线程提供所需的资源，真正执行任务的是线程，而不是进程。
+
 - 所有线程共享的进程资源有：
   - 代码：即应用程序的代码；
   - 数据：包括全局变量、函数内的静态变量、堆空间的数据等；
   - 进程空间：操作系统分配给进程的内存空间；
   - 打开的文件：各个线程打开的文件资源，也可以为所有线程所共享，例如线程 A 打开的文件允许线程 B 进行读写操作。
+  
 - 各个线程也可以拥有自己的私有资源，包括寄存器中存储的数据、线程执行所需的局部变量（函数参数）等。
+
+- 当进程中仅包含 1 个执行程序指令的线程时，该线程又称“主线程”，这样的进程称为“单线程进程”。
+
 - 类 UNIX 系统有很多种版本，包括 Linux、FreeBSD、OpenBSD 等，它们预留的系统调用接口各不相同。但幸运的是，几乎所有的类 UNIX 系统都兼容 POSIX 标准。POSIX 标准全称“**P**ortable **O**perating **S**ystem **I**nterface”，中文译为可移植操作系统接口，最后的字母 X 代指类 UNIX 操作系统。简单地理解，POSIX 标准发布的初衷就是为了统一所有类 UNIX 操作系统的接口，这意味着，只要我们编写的程序严格按照 POSIX 标准调用系统接口，它就可以在任何兼容 POSIX 标准的类 UNIX 系统上运行。POSIX 标准中规范了与多线程相关的系统接口。我们在 Linux 系统上编写多线程程序，只需在程序中引入`<pthread.h>`头文件，调用该文件中包含的函数即可实现多线程编程。
+
+- 第一个多线程程序
+
+  ```c
+  #include <stdio.h>
+  #include <pthread.h>
+  //定义线程要执行的函数，arg 为接收线程传递过来的数据
+  void *Thread1(void *arg)
+  {
+      printf("http://c.biancheng.net\n");
+      return "Thread1成功执行";
+  }
+  //定义线程要执行的函数，arg 为接收线程传递过来的数据
+  void* Thread2(void* arg)
+  {
+      printf("C语言中文网\n");
+      return "Thread2成功执行";
+  }
+  int main()
+  {
+      int res;
+      pthread_t mythread1, mythread2;
+      void* thread_result;
+      /*创建线程
+      &mythread:要创建的线程
+      NULL：不修改新建线程的任何属性
+      ThreadFun:新建线程要执行的任务
+      NULL：不传递给 ThreadFun() 函数任何参数
+      返回值 res 为 0 表示线程创建成功，反之则创建失败。
+      */
+      res = pthread_create(&mythread1, NULL, Thread1, NULL);
+      if (res != 0) {
+          printf("线程创建失败");
+          return 0;
+      }
+      res = pthread_create(&mythread2, NULL, Thread2, NULL);
+      if (res != 0) {
+          printf("线程创建失败");
+          return 0;
+      }
+      /*
+      等待指定线程执行完毕
+      mtThread:指定等待的线程c
+      &thead_result:接收 ThreadFun() 函数的返回值，或者接收 pthread_exit() 函数指定的值
+      返回值 res 为 0 表示函数执行成功，反之则执行失败。
+      */
+      res = pthread_join(mythread1, &thread_result);
+      //输出线程执行完毕后返回的数据
+      printf("%s\n", (char*)thread_result);
+     
+      res = pthread_join(mythread2, &thread_result);
+      printf("%s\n", (char*)thread_result);
+      printf("主线程执行完毕");
+      return 0;
+  }
+  
+  http://c.biancheng.net
+  C语言中文网
+  Thread1成功执行
+  Thread2成功执行
+  主线程执行完毕
+  ```
+
+  - 程序中调用了两次 pthread_join() 函数，第 47 行 pthread_join() 函数的功能是令主线程等待 mythread1 线程执行完毕后再执行后续的代码，第 51 行处 pthread_join() 函数的功能是令主线程等待 mythread2 线程执行完毕后在执行后续的代码。
 
 ##### 创建线程
 
@@ -1846,17 +1917,65 @@
   ```
 
   - pthread_t *thread：传递一个 pthread_t 类型的指针变量，也可以直接传递某个 pthread_t 类型变量的地址。pthread_t 是一种用于表示线程的数据类型，每一个 pthread_t 类型的变量都可以表示一个线程。
+  
   - const pthread_attr_t *attr：用于手动设置新建线程的属性，例如线程的调用策略、线程所能使用的栈内存的大小等。大部分场景中，我们都不需要手动修改线程的属性，将 attr 参数赋值为 NULL，pthread_create() 函数会采用系统默认的属性值创建线程。
+  
   - void \*(\*start_routine) (void \*)：以函数指针的方式指明新建线程需要执行的函数，该函数的参数最多有 1 个（可以省略不写），形参和返回值的类型都必须为 void* 类型。void* 类型又称空指针类型，表明指针所指数据的类型是未知的。使用此类型指针时，我们通常需要先对其进行强制类型转换，然后才能正常访问指针指向的数据。
     - 这个参数是线程运行函数的起始地址，函数名就代表起始地址，但是函数的返回类型和形参都是void *
     - 此形参是指明线程执行的函数void *ThreadFun(void *arg)，在创建线程时只需要将ThreadFun当做参数传进去就可以。指明线程要执行的函数。
+    
   - void *arg：指定传递给 start_routine 函数的实参，当不需要传递任何数据时，将 arg 赋值为 NULL 即可。
+  
   - 如果成功创建线程，pthread_create() 函数返回数字 0，反之返回非零值。各个非零值都对应着不同的宏，指明创建失败的原因，常见的宏有以下几种：
     - EAGAIN：系统资源不足，无法提供创建线程所需的资源。
     - EINVAL：传递给 pthread_create() 函数的 attr 参数无效。
     - EPERM：传递给 pthread_create() 函数的 attr 参数中，某些属性的设置为非法操作，程序没有相关的设置权限。
     - 以上这些宏都声明在 <errno.h> 头文件中，如果程序中想使用这些宏，需提前引入此头文件。
-
+    
+    ```c
+    #include <stdio.h>
+    #include <unistd.h>   //调用 sleep() 函数
+    #include <pthread.h>  //调用 pthread_create() 函数
+    void *ThreadFun(void *arg)
+    {
+        if (arg == NULL) {
+            printf("arg is NULL\n");
+        }
+        else {
+            printf("%s\n", (char*)arg);
+        }
+        return NULL;
+    }
+    int main()
+    {
+        int res;
+        char * url = "http://www.biancheng.net";
+        //定义两个表示线程的变量（标识符）
+        pthread_t myThread1,myThread2;
+        //创建 myThread1 线程
+        res = pthread_create(&myThread1, NULL, ThreadFun, NULL);
+        if (res != 0) {
+            printf("线程创建失败");
+            return 0;
+        }
+        sleep(5);  //令主线程等到 myThread1 线程执行完成
+        
+        //创建 myThread2 线程
+        res = pthread_create(&myThread2, NULL, ThreadFun,(void*)url);
+        if (res != 0) {
+            printf("线程创建失败");
+            return 0;
+        }
+        sleep(5); // 令主线程等到 mythread2 线程执行完成
+        return 0;
+    }
+    
+    arg is NULL
+    http://www.biancheng.net
+    ```
+    
+    - 程序中共创建了 2 个线程，分别命名为 myThread1 和 myThread2。myThread1 和 myThread2 线程执行的都是 threadFun() 函数，不同之处在于，myThread1 线程没有给 threadFun() 函数传递任何数据，而 myThread2 线程向 threadFun() 函数传递了 "http://www.biancheng.net" 这个字符串。
+  
 - pthread_create() 函数成功创建的线程会自动执行指定的函数，不需要手动开启。此外，为了确保创建的线程能在主线程之前执行完，程序中调用 sleep() 函数延缓了主线程的执行速度。
 
 - 您可以尝试将程序中的 sleep() 函数全部注释掉，然后重新编译、执行此程序。整个进程会随着主线程执行结束而立即终止，由于主线程执行太快，子线程可能尚未执行完就被强制终止。
@@ -1872,57 +1991,129 @@
 
 - `<pthread.h>`头文件中，提供有一个和 return 关键字相同功能的 pthread_exit() 函数。和之前不同，pthread_exit() 函数只适用于线程函数，而不能用于普通函数。
 
-  ```c
+  ```
   void pthread_exit(void *retval);
-  retval 是void*类型的指针，可以指向任何类型的数据，它指向的数据将作为线程退出时的返回值。如果线程不需要返回任何数据，将 retval 参数置为NULL即可。
-  注意，retval 指针不能指向函数内部的局部数据（比如局部变量）。换句话说，pthread_exit() 函数不能返回一个指向局部数据的指针，否则很可能使程序运行结果出错甚至崩溃。
+  ```
+
+  - retval 是`void*`类型的指针，可以指向任何类型的数据，它指向的数据将作为线程退出时的返回值。如果线程不需要返回任何数据，将 retval 参数置为`NULL`即可。
+  - retval 指针不能指向函数内部的局部数据（比如局部变量）。换句话说，pthread_exit() 函数不能返回一个指向局部数据的指针，否则很可能使程序运行结果出错甚至崩溃。
+
+  ```c
+  #include <stdio.h>
+  #include <pthread.h>
+  //线程要执行的函数，arg 用来接收线程传递过来的数据
   void *ThreadFun(void *arg)
   {
       //终止线程的执行，将“http://c.biancheng.net”返回
       pthread_exit("http://c.biancheng.net"); //返回的字符串存储在常量区，并非当前线程的私有资源
       printf("*****************");//此语句不会被线程执行
   }
+  int main()
+  {
+      int res;
+      //创建一个空指针
+      void * thread_result;
+      //定义一个表示线程的变量
+      pthread_t myThread;
+      res = pthread_create(&myThread, NULL, ThreadFun, NULL);
+      if (res != 0) {
+          printf("线程创建失败");
+          return 0;
+      }
+      //等待 myThread 线程执行完成，并用 thread_result 指针接收该线程的返回值
+      res = pthread_join(myThread, &thread_result);
+      if (res != 0) {
+          printf("等待线程失败");
+      }
+      printf("%s", (char*)thread_result);
+      return 0;
+  }
+  
+  http://c.biancheng.net
   ```
 
-- 主线程正常执行结束，myThread 线程并没有输出指定的数据。原因很简单，主线程执行速度很快，主线程最后执行的 return 语句不仅会终止主线程执行，还会终止其它子线程执行。也就是说，myThread 线程还没有执行输出语句就被终止了。
+  - myThread 线程并没有执行 ThreadFun() 函数中最后一个 printf() 语句，从侧面验证了 pthread_exit() 函数的功能。此外，我们通过在主线程（main() 函数）调用 pthread_join() 函数，获取到了 myThread 线程返回的数据。
 
-- pthread_exit() 函数只会终止当前线程，不会影响其它线程的执行。所以在main函数中主线程可以使用这个来退出，而其他的线程正常执行完成后退出
+- 既然 return 关键字也适用于线程函数，<pthread.h> 头文件为什么还提供 pthread_exit() 函数，不是多此一举吗？首先，return 语句和 pthread_exit() 函数的含义不同，return 的含义是返回，它不仅可以用于线程执行的函数，普通函数也可以使用；pthread_exit() 函数的含义是线程退出，它专门用于结束某个线程的执行。在主线程（main() 函数）中，return 和 pthread_exit() 函数的区别最明显。举个例子：
+
+  ```
+  #include <stdio.h>
+  #include <pthread.h>
+  void *ThreadFun(void *arg)
+  {
+      sleep(5);//等待一段时间
+      printf("http://c.biancheng.net\n");
+  }
+  int main()
+  {
+      int res;
+      pthread_t myThread;
+      
+      res = pthread_create(&myThread, NULL, ThreadFun, NULL);
+      if (res != 0) {
+          printf("线程创建失败");
+          return 0;
+      }
+      printf("C语言中文网\n");
+      return 0;
+  }
+  
+  C语言中文网
+  ```
+
+  - 主线程正常执行结束，myThread 线程并没有输出指定的数据。原因很简单，主线程执行速度很快，主线程最后执行的 return 语句不仅会终止主线程执行，还会终止其它子线程执行。也就是说，myThread 线程还没有执行输出语句就被终止了。
+
+  - 将上面程序中，main() 函数中的`return 0;`用如下语句替换：
+
+    ```
+    pthread_exit(NULL);
+    
+    C语言中文网
+    http://c.biancheng.net
+    ```
+
+  - pthread_exit() 函数只会终止当前线程，不会影响其它线程的执行。所以在main函数中主线程可以使用这个来退出，而其他的线程正常执行完成后退出
+
+  - 总之，如果实际场景中想终止某个子线程，强烈建议大家使用 pthread_exit() 函数。终止主线程时，return 和 pthread_exit() 函数发挥的功能不同，可以根据需要自行选择。
 
 - 多线程程序中，一个线程还可以向另一个线程发送“终止执行”的信号，这时就需要调用 pthread_cancel() 函数。
 
-  ```c
+  ```
   int pthread_cancel(pthread_t thread);
-  参数 thread 用于接收 Cancel 信号的目标线程。
-  如果 pthread_cancel() 函数成功地发送了 Cancel 信号，返回数字 0，否则返回非零数。对于因“未找到目标线程”导致的信号发送失败，函数返回 ESRCH 宏（定义在<errno.h>头文件中，该宏的值为整数 3）。
-  pthread_cancel() 函数的功能仅仅是向目标线程发送 Cancel 信号，至于目标线程是否接收该信号，何时响应该信号，全由目标线程决定。
+  ```
+  
+  - 如果 pthread_cancel() 函数成功地发送了 Cancel 信号，返回数字 0，否则返回非零数。对于因“未找到目标线程”导致的信号发送失败，函数返回 ESRCH 宏（定义在`<errno.h>`头文件中，该宏的值为整数 3）。
+  - pthread_cancel() 函数的功能仅仅是向目标线程发送 Cancel 信号，至于目标线程是否接收该信号，何时响应该信号，全由目标线程决定
+  
+  ```c
   对于接收 Cancel 信号后结束执行的目标线程，等同于该线程自己执行如下语句：
   pthread_exit(PTHREAD_CANCELED);
   也就是说，当一个线程被强制终止执行时，它会返回PTHREAD_CANCELED这个宏
   ```
-
+  
   - 对于默认属性的线程，当有线程借助 pthread_cancel() 函数向它发送 Cancel 信号时，它并不会立即结束执行，而是选择在一个适当的时机结束执行。
-
+  
   - 所谓适当的时机，POSIX 标准中规定，当线程执行一些特殊的函数时，会响应 Cancel 信号并终止执行，比如常见的 pthread_join()、pthread_testcancel()、sleep()、system() 等，POSIX 标准称此类函数为“cancellation points”（中文可译为“取消点”）。
-
+  
   - <pthread.h> 头文件还提供有 pthread_setcancelstate() 和 pthread_setcanceltype() 这两个函数，我们可以手动修改目标线程处理 Cancel 信号的方式。
-
+  
     - ```
       int pthread_setcancelstate( int state , int * oldstate ); 
       ```
-
+  
       - state 参数有两个可选值，分别是：
-
+  
       - PTHREAD_CANCEL_ENABLE（默认值）：当前线程会处理其它线程发送的 Cancel 信号；
       - PTHREAD_CANCEL_DISABLE：当前线程不理会其它线程发送的 Cancel 信号，直到线程状态重新调整为 PTHREAD_CANCEL_ENABLE 后，才处理接收到的 Cancel 信号。
       - oldtate 参数用于接收线程先前所遵循的 state 值，通常用于对线程进行重置。如果不需要接收此参数的值，置为 NULL 即可。
       - pthread_setcancelstate() 函数执行成功时，返回数字 0，反之返回非零数。
-
+  
     - ```
       int pthread_setcanceltype( int type , int * oldtype );
       ```
-
+  
       - type 参数有两个可选值，分别是：
-
+  
       - PTHREAD_CANCEL_DEFERRED（默认值）：当线程执行到某个可作为取消点的函数时终止执行；
       - PTHREAD_CANCEL_ASYNCHRONOUS：线程接收到 Cancel 信号后立即结束执行。
       - oldtype 参数用于接收线程先前所遵循的 type 值，如果不需要接收该值，置为 NULL 即可。
