@@ -1604,7 +1604,10 @@ c1*c2:  (72.24-13.2j)
 - 在 [Python](http://c.biancheng.net/python/) 中拼接（连接）字符串很简单，可以直接将两个字符串紧挨着写在一起，这种写法只能拼接字符串常量。如果需要使用变量，就得借助`+`运算符来拼接，当然，`+`运算符也能拼接字符串常量。
 
   ```
-  name = "C++教程"url = "http://c.biancheng.net/cplus/"info = name + "的网址是：" + urlprint(info)C++教程的网址是：http://c.biancheng.net/cplus/
+  name = "C++教程"
+  url = "http://c.biancheng.net/cplus/"
+  info = name + "的网址是：" + url
+  print(info)C++教程的网址是：http://c.biancheng.net/cplus/
   ```
 
 - 在很多应用场景中，我们需要将字符串和数字拼接在一起，而 Python 不允许直接拼接数字和字符串，所以我们必须先将数字转换成字符串。可以借助 str() 和 repr() 函数将数字转换为字符串
@@ -1621,7 +1624,7 @@ c1*c2:  (72.24-13.2j)
     - str() 用于将数据转换成适合人类阅读的字符串形式。
     - repr() 用于将数据转换成适合解释器阅读的字符串形式（Python 表达式的形式），适合在开发和调试阶段使用；如果没有等价的语法，则会发生 SyntaxError 异常。
   
-    ```
+    ```python
     s = "http://c.biancheng.net/shell/"
     s_str = str(s)
     s_repr = repr(s)
@@ -1632,7 +1635,8 @@ c1*c2:  (72.24-13.2j)
     <class 'str'>
     http://c.biancheng.net/shell/
     <class 'str'>
-    'http://c.biancheng.net/shell/'s 本身就是一个字符串，但是我们依然使用 str() 和 repr() 对它进行了转换。从运行结果可以看出，str() 保留了字符串最原始的样子，而 repr() 使用引号将字符串包围起来，这就是 Python 字符串的表达式形式。
+    'http://c.biancheng.net/shell/'
+    s 本身就是一个字符串，但是我们依然使用 str() 和 repr() 对它进行了转换。从运行结果可以看出，str() 保留了字符串最原始的样子，而 repr() 使用引号将字符串包围起来，这就是 Python 字符串的表达式形式。
     ```
     
     - 在 Python 交互式编程环境中输入一个表达式（变量、加减乘除、逻辑运算等）时，Python 会自动使用 repr() 函数处理该表达式。
@@ -1668,7 +1672,12 @@ c1*c2:  (72.24-13.2j)
 - 我们可以通过使用 encode() 方法，将字符串进行编码后再获取它的字节数。例如，采用 UTF-8 编码方式，计算“人生苦短，我用Python”的字节数，可以执行如下代码：
 
   ```
-  >>> str1 = "人生苦短，我用Python">>> len(str1.encode())27如果要获取采用 GBK 编码的字符串的长度>>> str1 = "人生苦短，我用Python">>> len(str1.encode('gbk'))20
+  >>> str1 = "人生苦短，我用Python"
+  >>> len(str1.encode())
+  27
+  如果要获取采用 GBK 编码的字符串的长度
+  >>> str1 = "人生苦短，我用Python"
+  >>> len(str1.encode('gbk'))20
   ```
 
 ###### split()分隔字符串
@@ -1703,8 +1712,15 @@ c1*c2:  (72.24-13.2j)
   - str：用于指定合并时的分隔符；
   - iterable：做合并操作的源字符串数据，允许以列表、元组等形式提供。
 
-  ```
-  将列表中的字符串合并成一个字符串。>>> list = ['c','biancheng','net']>>> '.'.join(list)'c.biancheng.net'将元组中的字符串合并成一个字符串。>>> dir = '','usr','bin','env'>>> type(dir)<class 'tuple'>>>> '/'.join(dir)'/usr/bin/env'
+  ```python
+  将列表中的字符串合并成一个字符串。
+  >>> list = ['c','biancheng','net']
+  >>> '.'.join(list)
+  'c.biancheng.net'将元组中的字符串合并成一个字符串。
+  >>> dir = '','usr','bin','env'
+  >>> type(dir)
+  <class 'tuple'
+  >>>> '/'.join(dir)'/usr/bin/env'
   ```
 
 ###### count()统计字符串出现的次数
@@ -1720,8 +1736,19 @@ c1*c2:  (72.24-13.2j)
   - start：指定检索的起始位置，也就是从什么位置开始检测。如果不指定，默认从头开始检索；
   - end：指定检索的终止位置，如果不指定，则表示一直检索到结尾。
 
-  ```
-  检索字符串“c.biancheng.net”中“.”出现的次数。>>> str = "c.biancheng.net">>> str.count('.')2>>> str = "c.biancheng.net">>> str.count('.',1)2>>> str.count('.',2)1字符串中各字符对应的检索值，从 0 开始，因此，本例中检索值 1 对应的是第 2 个字符‘.’，从输出结果可以分析出，从指定索引位置开始检索，其中也包含此索引位置。>>> str = "c.biancheng.net">>> str.count('.',2,-3)1>>> str.count('.',2,-4)0
+  ```python
+  检索字符串“c.biancheng.net”中“.”出现的次数。
+  >>> str = "c.biancheng.net"
+  >>> str.count('.')
+  2
+  >>> str = "c.biancheng.net"
+  >>> str.count('.',1)2
+  >>> str.count('.',2)1字符串中各字符对应的检索值，从 0 开始，因此，本例中检索值 1 对应的是第 2 个字符‘.’，从输出结果可以分析出，从指定索引位置开始检索，其中也包含此索引位置。
+  >>> str = "c.biancheng.net"
+  >>> str.count('.',2,-3)
+  1
+  >>> str.count('.',2,-4)
+  0
   ```
 
 ###### find()
@@ -1769,13 +1796,23 @@ c1*c2:  (72.24-13.2j)
   - fillchar：作为可选参数，用来指定填充字符串时所用的字符，默认情况使用空格。
 
   ```
-  S = 'http://c.biancheng.net/python/'addr = 'http://c.biancheng.net'print(S.ljust(35,'-'))print(addr.ljust(35,'-'))http://c.biancheng.net/python/-----http://c.biancheng.net-------------
+  S = 'http://c.biancheng.net/python/'
+  addr = 'http://c.biancheng.net'
+  print(S.ljust(35,'-'))
+  print(addr.ljust(35,'-'))
+  http://c.biancheng.net/python/
+  -----http://c.biancheng.net-------------
   ```
 
 - rjust() 和 ljust() 方法类似，唯一的不同在于，rjust() 方法是向字符串的左侧填充指定字符，从而达到右对齐文本的目的。
 
   ```
-  S = 'http://c.biancheng.net/python/'addr = 'http://c.biancheng.net'print(S.rjust(35))print(addr.rjust(35))     http://c.biancheng.net/python/             http://c.biancheng.net   
+  S = 'http://c.biancheng.net/python/'
+  addr = 'http://c.biancheng.net'
+  print(S.rjust(35))
+  print(addr.rjust(35))
+  http://c.biancheng.net/python/             
+  http://c.biancheng.net   
   ```
 
   - 每行字符串都占用 35 个字节的位置，实现了整体的右对齐效果
@@ -1795,8 +1832,15 @@ c1*c2:  (72.24-13.2j)
   - start：指定检索开始的起始位置索引，如果不指定，则默认从头开始检索；
   - end：指定检索的结束位置索引，如果不指定，则默认一直检索在结束。
 
-  ```
-  >>> str = "c.biancheng.net">>> str.startswith("c")True>>> str = "c.biancheng.net">>> str.startswith("http")False>>> str = "c.biancheng.net">>> str.startswith("b",2)True
+  ```python
+  >>> str = "c.biancheng.net"
+  >>> str.startswith("c")True
+  >>> str = "c.biancheng.net"
+  >>> str.startswith("http")
+  False
+  >>> str = "c.biancheng.net"
+  >>> str.startswith("b",2)
+  True
   ```
 
 - endswith() 方法用于检索字符串是否以指定字符串结尾，如果是则返回 True；反之则返回 False
@@ -1808,13 +1852,18 @@ c1*c2:  (72.24-13.2j)
 - title() 方法用于将字符串中每个单词的首字母转为大写，其他字母全部转为小写，转换完成后，此方法会返回转换得到的字符串。如果字符串中没有需要被转换的字符，此方法会将字符串原封不动地返回。
 
   ```
-  >>> str = "c.biancheng.net">>> str.title()'C.Biancheng.Net'>>> str = "I LIKE C">>> str.title()'I Like C'
+  >>> str = "c.biancheng.net"
+  >>> str.title()'C.Biancheng.Net'
+  >>> str = "I LIKE C"
+  >>> str.title()
+  'I Like C'
   ```
 
 - lower() 方法用于将字符串中的所有大写字母转换为小写字母，转换完成后，该方法会返回新得到的字符串。如果字符串中原本就都是小写字母，则该方法会返回原字符串。
 
   ```
-  >>> str = "I LIKE C">>> str.lower()'i like c'
+  >>> str = "I LIKE C"
+  >>> str.lower()'i like c'
   ```
 
 - upper() 的功能和 lower() 方法恰好相反，它用于将字符串中的所有小写字母转换为大写字母，和以上两种方法的返回方式相同，即如果转换成功，则返回新字符串；反之，则返回原字符串。
@@ -1840,7 +1889,11 @@ c1*c2:  (72.24-13.2j)
   - str 表示原字符串，[chars] 用来指定要删除的字符，可以同时指定多个，如果不手动指定，则默认会删除空格以及制表符、回车符、换行符等特殊字符。
 
   ```
-  >>> str = "  c.biancheng.net \t\n\r">>> str.strip()'c.biancheng.net'>>> str.strip(" ,\r")'c.biancheng.net \t\n'>>> str'  c.biancheng.net \t\n\r'通过 strip() 确实能够删除字符串左右两侧的空格和特殊字符，但并没有真正改变字符串本身。
+  >>> str = "  c.biancheng.net \t\n\r"
+  >>> str.strip()'c.biancheng.net'
+  >>> str.strip(" ,\r")
+  'c.biancheng.net \t\n'
+  >>> str'  c.biancheng.net \t\n\r'通过 strip() 确实能够删除字符串左右两侧的空格和特殊字符，但并没有真正改变字符串本身。
   ```
 
 - lstrip() 方法用于去掉字符串左侧的空格和特殊字符
@@ -1903,7 +1956,12 @@ c1*c2:  (72.24-13.2j)
     | %          | 显示百分比（默认显示小数点后 6 位）。                 |
 
 ```
-str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c.biancheng.net"))Traceback (most recent call last):  File "C:\Users\mengma\Desktop\1.py", line 2, in    print(str.format("C语言中文网","c.biancheng.net"))ValueError: cannot switch from automatic field numbering to manual field specification在实际开发中，数值类型有多种显示需求，比如货币形式、百分比形式等，使用 format() 方法可以将数值格式化为不同的形式。#以货币形式显示print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学计数法：{:E}".format(1200.12))#以十六进制表示print("100的十六进制：{:#x}".format(100))#输出百分比形式print("0.01的百分比表示：{:.0%}".format(0.01))货币形式：1,000,000科学计数法：1.200120E+03100的十六进制：0x640.01的百分比表示：1%
+str="网站名称：{:>9s}\t网址：{:s}"
+print(str.format("C语言中文网","c.biancheng.net"))
+Traceback (most recent call last):  File "C:\Users\mengma\Desktop\1.py", line 2, in    print(str.format("C语言中文网","c.biancheng.net"))ValueError: cannot switch from automatic field numbering to manual field specification
+在实际开发中，数值类型有多种显示需求，比如货币形式、百分比形式等，使用 format() 方法可以将数值格式化为不同的形式。
+#以货币形式显示
+print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学计数法：{:E}".format(1200.12))#以十六进制表示print("100的十六进制：{:#x}".format(100))#输出百分比形式print("0.01的百分比表示：{:.0%}".format(0.01))货币形式：1,000,000科学计数法：1.200120E+03100的十六进制：0x640.01的百分比表示：1%
 ```
 
 ###### encode() 和 decode()
@@ -1951,9 +2009,11 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 - 在 Python 标准库中，以`__`开头和结尾的方法都是私有的，不能在类的外部调用。
 
   ```
-  使用 help() 查看 str 类型中 lower() 函数的用法：>>> help(str.lower)Help on method_descriptor:lower(self, /)    Return a copy of the string converted to lowercase.
+  使用 help() 查看 str 类型中 lower() 函数的用法：
+  >>> help(str.lower)
+  Help on method_descriptor:lower(self, /)    Return a copy of the string converted to lowercase.
   ```
-
+  
   - 使用 help() 查看某个函数的用法时，函数名后边不能带括号，例如将上面的命令写作`help(str.lower())`就是错误的。
 
 #### 流程控制
@@ -1973,15 +2033,25 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 - 在实际开发中，有时候我们会先搭建起程序的整体逻辑结构，但是暂时不去实现某些细节，而是在这些地方加一些注释，方面以后再添加代码
 
   ```
-  age = int( input("请输入你的年龄：") )if age < 12 :    print("婴幼儿")elif age >= 12 and age < 18:    print("青少年")elif age >= 18 and age < 30:    print("成年人")elif age >= 30 and age < 50:    #TODO: 成年人else:    print("老年人")
+  age = int( input("请输入你的年龄：") )
+  if age < 12 :
+  	print("婴幼儿")
+  elif age >= 12 and age < 18:
+  	print("青少年")
+  elif age >= 18 and age < 30:
+  	print("成年人")
+  elif age >= 30 and age < 50:
+  	#TODO: 成年人
+  else:    
+  	print("老年人")
   ```
-
+  
   - 当年龄大于等于 30 并且小于 50 时，我们没有使用 print() 语句，而是使用了一个注释，希望以后再处理成年人的情况。当 [Python](http://c.biancheng.net/python/) 执行到该 elif 分支时，会跳过注释，什么都不执行。
-
+  
   - 但是 Python 提供了一种更加专业的做法，就是空语句 pass。**pass** 是 Python 中的关键字，用来让解释器跳过此处，什么都不做。
-
+  
   - 就像上面的情况，有时候程序需要占一个位置，或者放一条语句，但又不希望这条语句做任何事情，此时就可以通过 pass 语句来实现。使用 pass 语句比使用注释更加优雅。
-
+  
     ```
     age = int( input("请输入你的年龄：") )if age < 12 :    print("婴幼儿")elif age >= 12 and age < 18:    print("青少年")elif age >= 18 and age < 30:    print("成年人")elif age >= 30 and age < 50:    passelse:    print("老年人")
     ```
@@ -1991,14 +2061,23 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 - [Python](http://c.biancheng.net/python/) assert 语句，又称断言语句，可以看做是功能缩小版的 if 语句，它用于判断某个表达式的值，如果值为真，则程序可以继续往下执行；反之，Python 解释器会报 AssertionError 错误。
 
   ```
-  assert 表达式assert 语句的执行流程可以用 if 判断语句表示if 表达式==True:    程序继续执行else:    程序报 AssertionError 错误
+  assert 表达式
+  assert 语句的执行流程可以用 if 判断语句表示
+  if 表达式==True:    程序继续执行else:    程序报 AssertionError 错误
   ```
 
   - 有读者可能会问，明明 assert 会令程序崩溃，为什么还要使用它呢？这是因为，与其让程序在晚些时候崩溃，不如在错误条件出现时，就直接让程序崩溃，这有利于我们对程序排错，提高程序的健壮性。
   - 因此，assert 语句通常用于检查用户的输入是否符合规定，还经常用作程序初期测试和调试过程中的辅助工具。
 
   ```
-  mathmark = int(input())#断言数学考试分数是否位于正常范围内assert 0 <= mathmark <= 100#只有当 mathmark 位于 [0,100]范围内，程序才会继续执行print("数学考试分数为：",mathmark)90数学考试分数为： 90再次运行159Traceback (most recent call last):  File "C:\Users\mengma\Desktop\file.py", line 3, in <module>    assert 0 <= mathmark <= 100AssertionError
+  mathmark = int(input())#断言数学考试分数是否位于正常范围内
+  assert 0 <= mathmark <= 100#只有当 mathmark 位于 [0,100]范围内，程序才会继续执行
+  print("数学考试分数为：",mathmark)
+  90
+  数学考试分数为： 90
+  再次运行
+  159
+  Traceback (most recent call last):  File "C:\Users\mengma\Desktop\file.py", line 3, in <module>    assert 0 <= mathmark <= 100AssertionError
   ```
 
   - 当 assert 语句后的表达式值为真时，程序继续执行；反之，程序停止执行，并报 AssertionError 错误。
@@ -2006,7 +2085,8 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 - 另外，在实际工作中，assert 还有一些很常见的用法
 
   ```
-  def func(input):    assert isinstance(input, list), '输入内容必须是列表'    # 下面的操作都是基于前提：input 必须是 list    if len(input) == 1:        ...    elif len(input) == 2:        ...    else:        ...
+  def func(input):
+  	assert isinstance(input, list), '输入内容必须是列表'    # 下面的操作都是基于前提：input 必须是 list    if len(input) == 1:        ...    elif len(input) == 2:        ...    else:        ...
   ```
 
   - 上面代码中，func() 函数中的所有操作都基于输入必须是列表这个前提。所以很有必要在开头加一句 assert 的检查，防止程序出错。
@@ -2066,19 +2146,36 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 - 当用 for 循环遍历 list 列表或者 tuple 元组时，其迭代变量会先后被赋值为列表或元组中的每个元素并执行一次循环体。
 
   ```
-  my_list = [1,2,3,4,5]for ele in my_list:    print('ele =', ele)    ele = 1ele = 2ele = 3ele = 4ele = 5
+  my_list = [1,2,3,4,5]
+  for ele in my_list:
+  	print('ele =', ele)    
+  ele = 1
+  ele = 2
+  ele = 3
+  ele = 4
+  ele = 5
   ```
 
 - 在使用 for 循环遍历字典时，经常会用到和字典相关的 3 个方法，即 items()、keys() 以及 values()，它们各自的用法已经在前面章节中讲过，这里不再赘述。当然，如果使用 for 循环直接遍历字典，则迭代变量会被先后赋值为每个键值对中的键。
 
   ```
-  my_dic = {'python教程':"http://c.biancheng.net/python/",\          'shell教程':"http://c.biancheng.net/shell/",\          'java教程':"http://c.biancheng.net/java/"}for ele in my_dic.items():    print('ele =', ele)    ele = ('python教程', 'http://c.biancheng.net/python/')ele = ('shell教程', 'http://c.biancheng.net/shell/')ele = ('java教程', 'http://c.biancheng.net/java/')
+  my_dic = {'python教程':"http://c.biancheng.net/python/",\          'shell教程':"http://c.biancheng.net/shell/",\          'java教程':"http://c.biancheng.net/java/"}
+  for ele in my_dic.items():
+  	print('ele =', ele)    
+  ele = ('python教程', 'http://c.biancheng.net/python/')
+  ele = ('shell教程', 'http://c.biancheng.net/shell/')
+  ele = ('java教程', 'http://c.biancheng.net/java/')
   ```
 
 - 使用 for 循环实现用冒泡排序算法对 [5,8,4,1] 进行排序：
 
   ```
-  data = [5,8,4,1]#实现冒泡排序for i in range(len(data)-1):    for j in range(len(data)-i-1):        if(data[j]>data[j+1]):            data[j],data[j+1] = data[j+1],data[j]print("排序后：",data)
+  data = [5,8,4,1]#实现冒泡排序
+  for i in range(len(data)-1):
+  	for j in range(len(data)-i-1):
+      	if(data[j]>data[j+1]): 
+          	data[j],data[j+1] = data[j+1],data[j]
+  print("排序后：",data)
   ```
 
 ###### 推导式快速初始化各种序列
@@ -2102,7 +2199,9 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
   - 初学者可以这样认为，它只是对 for 循环语句的格式做了一下简单的变形，并用 [] 括起来而已，只不过最大的不同之处在于，列表推导式最终会将循环过程中，计算表达式得到的一系列值组成一个列表。
 
     ```
-    a_range = range(10)# 对a_range执行for表达式a_list = [x * x for x in a_range]# a_list集合包含10个元素print(a_list)[0 , 1 , 4 , 9 , 16 , 25 , 36 , 49 , 64, 81]我们还可以在列表推导式中添加 if 条件语句，这样列表推导式将只迭代那些符合条件的元素b_list = [x * x for x in a_range if x % 2 == 0]# a_list集合包含5个元素print(b_list)[0 ,4 , 16, 36, 64]
+    a_range = range(10)
+    # 对a_range执行for表达式
+    a_list = [x * x for x in a_range]# a_list集合包含10个元素print(a_list)[0 , 1 , 4 , 9 , 16 , 25 , 36 , 49 , 64, 81]我们还可以在列表推导式中添加 if 条件语句，这样列表推导式将只迭代那些符合条件的元素b_list = [x * x for x in a_range if x % 2 == 0]# a_list集合包含5个元素print(b_list)[0 ,4 , 16, 36, 64]
     ```
 
   - 以上所看到的列表推导式都只有一个循环，实际上它可使用多个循环，就像嵌套循环一样。
@@ -2175,13 +2274,24 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
   - 其中 iterable,... 表示多个列表、元组、字典、集合、字符串，甚至还可以为 range() 区间。
 
     ```
-    my_list = [11,12,13]my_tuple = (21,22,23)print([x for x in zip(my_list,my_tuple)])my_dic = {31:2,32:4,33:5}my_set = {41,42,43,44}print([x for x in zip(my_dic)])my_pychar = "python"my_shechar = "shell"print([x for x in zip(my_pychar,my_shechar)])[(11, 21), (12, 22), (13, 23)][(31,), (32,), (33,)][('p', 's'), ('y', 'h'), ('t', 'e'), ('h', 'l'), ('o', 'l')]
+    my_list = [11,12,13]
+    my_tuple = (21,22,23)
+    print([x for x in zip(my_list,my_tuple)])
+    my_dic = {31:2,32:4,33:5}
+    my_set = {41,42,43,44}
+    print([x for x in zip(my_dic)])
+    my_pychar = "python"
+    my_shechar = "shell"
+    print([x for x in zip(my_pychar,my_shechar)])
+    [(11, 21), (12, 22), (13, 23)]
+    [(31,), (32,), (33,)]
+    [('p', 's'), ('y', 'h'), ('t', 'e'), ('h', 'l'), ('o', 'l')]
     ```
-
+  
     - 读者分析以上的程序和相应的输出结果不难发现，在使用 zip() 函数“压缩”多个序列时，它会分别取各序列中第 1 个元素、第 2 个元素、... 第 n 个元素，各自组成新的元组。需要注意的是，当多个序列中元素个数不一致时，会以最短的序列为准进行压缩。
-
+  
   - 对于 zip() 函数返回的 zip 对象，既可以像上面程序那样，通过遍历提取其存储的元组，也可以向下面程序这样，通过调用 list() 函数将 zip() 对象强制转换成列表：
-
+  
     ```
     my_list = [11,12,13]my_tuple = (21,22,23)print(list(zip(my_list,my_tuple)))
     ```
@@ -2236,13 +2346,18 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 
 - 在创建函数时，即使函数不需要参数，也必须保留一对空的“()”，否则 Python 解释器将提示“invaild syntax”错误。另外，如果想定义一个没有任何功能的空函数，可以使用 pass 语句作为占位符。
 
-- 通过调用 Python 的 help() 内置函数或者 __doc__ 属性，我们可以查看某个函数的使用说明文档。事实上，无论是 Python 提供给我们的函数，还是自定义的函数，其说明文档都需要设计该函数的程序员自己编写。其实，函数的说明文档，本质就是一段字符串，只不过作为说明文档，字符串的放置位置是有讲究的，函数的说明文档通常位于函数内部、所有代码的最前面。
+- 通过调用 Python 的 help() 内置函数或者 `__doc__` 属性，我们可以查看某个函数的使用说明文档。事实上，无论是 Python 提供给我们的函数，还是自定义的函数，其说明文档都需要设计该函数的程序员自己编写。其实，函数的说明文档，本质就是一段字符串，只不过作为说明文档，字符串的放置位置是有讲究的，函数的说明文档通常位于函数内部、所有代码的最前面。
 
   ```
-  #定义一个比较字符串大小的函数def str_max(str1,str2):    '''    比较 2 个字符串的大小    '''    str = str1 if str1 > str2 else str2    return strhelp(str_max)#print(str_max.__doc__)Help on function str_max in module __main__:str_max(str1, str2)    比较 2 个字符串的大小
+  #定义一个比较字符串大小的函数
+  def str_max(str1,str2):
+  	'''    比较 2 个字符串的大小    '''    
+  	str = str1 if str1 > str2 else str2    return strhelp(str_max)
+  #print(str_max.__doc__)
+  Help on function str_max in module __main__:str_max(str1, str2)    比较 2 个字符串的大小
   ```
 
-  - 上面程序中，还可以使用 __doc__ 属性来获取 str_max() 函数的说明文档，即使用最后一行的输出语句，其输出结果为
+  - 上面程序中，还可以使用 `__doc__` 属性来获取 str_max() 函数的说明文档，即使用最后一行的输出语句，其输出结果为
 
     ```
       比较 2 个字符串的大小
@@ -2259,11 +2374,17 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 - 关键字参数，关键字参数是指使用形式参数的名字来确定输入的参数值。通过此方式指定函数实参时，不再需要与形参的位置完全一致，只要将参数名写正确即可。因此，[Python](http://c.biancheng.net/python/) 函数的参数名应该具有更好的语义，这样程序可以立刻明确传入函数的每个参数的含义。
 
   ```
-  def dis_str(str1,str2):    print("str1:",str1)    print("str2:",str2)#位置参数dis_str("http://c.biancheng.net/python/","http://c.biancheng.net/shell/")#关键字参数dis_str("http://c.biancheng.net/python/",str2="http://c.biancheng.net/shell/")dis_str(str2="http://c.biancheng.net/python/",str1="http://c.biancheng.net/shell/")
+  def dis_str(str1,str2):
+  	print("str1:",str1)
+      print("str2:",str2)
+  #位置参数
+  dis_str("http://c.biancheng.net/python/","http://c.biancheng.net/shell/")
+  #关键字参数dis_str("http://c.biancheng.net/python/",str2="http://c.biancheng.net/shell/")
+  dis_str(str2="http://c.biancheng.net/python/",str1="http://c.biancheng.net/shell/")
   ```
 
   - 在调用有参函数时，既可以根据位置参数来调用，也可以使用关键字参数（程序中第 8 行）来调用。在使用关键字参数调用时，可以任意调换参数传参的位置。
-  - 使用位置参数和关键字参数混合传参的方式。但需要注意，混合传参时关键字参数必须位于所有的位置参数之后。也就是说
+  - 使用位置参数和关键字参数混合传参的方式。但需要注意，混合传参时关键字参数必须位于所有的位置参数之后。
 
 - 默认参数
 
@@ -2286,27 +2407,55 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
     - args 表示创建一个名为 args 的空元组，该元组可接受任意多个外界传入的非关键字实参。
 
     ```
-    # 定义了支持参数收集的函数def dis_str(home, *str) :    print(home)    # 输出str元组中的元素    print("str=",str)    for s in str :        print(s)#可传入任何多个参数dis_str("http://c.biancheng.net","http://c.biancheng.net/python/","http://c.biancheng.net/shell/")dis_str() 函数的最后一个参数就是 str 元组，这样在调用该函数时，除了前面位置参数接收对应位置的实参外，其它非关键字参数都会由 str 元组接收。
+    # 定义了支持参数收集的函数
+    def dis_str(home, *str) :
+    	print(home)    
+    	# 输出str元组中的元素    
+    	print("str=",str)    
+    	for s in str :
+        	print(s)#可传入任何多个参数dis_str("http://c.biancheng.net","http://c.biancheng.net/python/","http://c.biancheng.net/shell/")
+    dis_str() 函数的最后一个参数就是 str 元组，这样在调用该函数时，除了前面位置参数接收对应位置的实参外，其它非关键字参数都会由 str 元组接收。
     ```
-
+  
     - 可变参数并不一定必须为最后一个函数参数，例如修改 dis_str() 函数为：
-
+  
     ```
-    # 定义了支持参数收集的函数def dis_str(*str,home) :    print(home)    # 输出str元组中的元素    print("str=",str)    for s in str :        print(s)dis_str("http://c.biancheng.net","http://c.biancheng.net/python/",home="http://c.biancheng.net/shell/")str 可变参数作为 dis_str() 函数的第一个参数。但需要注意的是，在调用该函数时，必须以关键字参数的形式给普通参数传值，否则 Python 解释器会把所有参数都优先传给可变参数，如果普通参数没有默认值，就会报错。
+    # 定义了支持参数收集的函数
+    def dis_str(*str,home) :
+    	print(home)    
+    	# 输出str元组中的元素
+        print("str=",str)
+        for s in str :
+        print(s)
+        dis_str("http://c.biancheng.net","http://c.biancheng.net/python/",home="http://c.biancheng.net/shell/")str 可变参数作为 dis_str() 函数的第一个参数。但需要注意的是，在调用该函数时，必须以关键字参数的形式给普通参数传值，否则 Python 解释器会把所有参数都优先传给可变参数，如果普通参数没有默认值，就会报错。
     ```
-
+  
   - 形参前面加两个*
-
+  
     ```
     **kwargs
     ```
-
+  
     - **kwargs 表示创建一个名为 kwargs 的空字典，该字典可以接收任意多个以关键字参数赋值的实际参数。
-
+  
     ```
-    # 定义了支持参数收集的函数def dis_str(home,*str,**course) :    print(home)    print(str)    print(course)#调用函数dis_str("C语言中文网",\        "http://c.biancheng.net",\        "http://c.biancheng.net/python/",\        shell教程="http://c.biancheng.net/shell/",\        go教程="http://c.biancheng.net/golang/",\        java教程="http://c.biancheng.net/java/")        C语言中文网('http://c.biancheng.net', 'http://c.biancheng.net/python/'){'shell教程': 'http://c.biancheng.net/shell/', 'go教程': 'http://c.biancheng.net/golang/', 'java教程': 'http://c.biancheng.net/java/'}
+    # 定义了支持参数收集的函数
+    def dis_str(home,*str,**course) :
+    	print(home)
+        print(str)
+        print(course)
+        #调用函数
+        
+    dis_str("C语言中文网",\
+    	"http://c.biancheng.net",\
+        "http://c.biancheng.net/python/",\
+        shell教程="http://c.biancheng.net/shell/",\
+        go教程="http://c.biancheng.net/golang/",\
+        java教程="http://c.biancheng.net/java/")
+    
+    C语言中文网('http://c.biancheng.net', 'http://c.biancheng.net/python/'){'shell教程': 'http://c.biancheng.net/shell/', 'go教程': 'http://c.biancheng.net/golang/', 'java教程': 'http://c.biancheng.net/java/'}
     ```
-
+    
     - 第 1 个参数传递给 home 参数，第 2、3 个非关键字参数传递给 str 元组，最后 2 个关键字参数将由 course 字典接收。
     - *args 可变参数的值默认是空元组，**kwargs 可变参数的值默认是空字典。因此，在调用具有可变参数的函数时，不一定非要给它们传值
 
@@ -2367,17 +2516,21 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
   - None 有自己的数据类型，我们可以在 IDLE 中使用 type() 函数查看它的类型
 
     ```
-    >>> type(None)<class 'NoneType'>
+    >>> type(None)
+    <class 'NoneType'>
     ```
-
+  
   - None 是 NoneType 数据类型的唯一值（其他编程语言可能称这个值为 null、nil 或 undefined），也就是说，我们不能再创建其它 NoneType 类型的变量，但是可以将 None 赋值给任何变量。如果希望变量中存储的东西不与任何其它值混淆，就可以使用 None。
-
+  
   - 除此之外，None 常用于 assert、判断以及函数无返回值的情况。举个例子，在前面章节中我们一直使用 print() 函数输出数据，其实该函数的返回值就是 None。因为它的功能是在屏幕上显示文本，根本不需要返回任何值，所以 print() 就返回 None。
-
+  
     ```
-    >>> spam = print('Hello!')Hello!>>> None == spamTrue
+    >>> spam = print('Hello!')
+    Hello!
+    >>> None == spam
+    True
     ```
-
+  
   - 对于所有没有 return 语句的函数定义，Python 都会在末尾加上 return None，使用不带值的 return 语句（也就是只有 return 关键字本身），那么就返回 None。
 
 ###### 函数返回多个值
@@ -2389,12 +2542,36 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
   1. 在函数中，提前将要返回的多个值存储到一个列表或元组中，然后函数返回该列表或元组；
   2. 函数直接返回多个值，之间用逗号（ , ）分隔，Python 会自动将多个值封装到一个元组中，其返回值仍是一个元组。
 
+  ```python
+  def retu_list() :
+  	add = ["http://c.biancheng.net/python/",\
+      "http://c.biancheng.net/shell/",\
+      "http://c.biancheng.net/golang/"]
+      return add
+  def retu_tuple() :    
+      return "http://c.biancheng.net/python/",\
+      "http://c.biancheng.net/golang/",\
+      "http://c.biancheng.net/golang/"
+  print("retu_list = ",retu_list())
+  print("retu_tuple = ",retu_tuple())
+  retu_list =  ['http://c.biancheng.net/python/', 'http://c.biancheng.net/shell/', 'http://c.biancheng.net/golang/']
+  retu_tuple =  ('http://c.biancheng.net/python/', 'http://c.biancheng.net/golang/', 'http://c.biancheng.net/golang/')
   ```
-  def retu_list() :    add = ["http://c.biancheng.net/python/",\            "http://c.biancheng.net/shell/",\            "http://c.biancheng.net/golang/"]    return adddef retu_tuple() :    return "http://c.biancheng.net/python/",\           "http://c.biancheng.net/golang/",\           "http://c.biancheng.net/golang/"print("retu_list = ",retu_list())print("retu_tuple = ",retu_tuple())retu_list =  ['http://c.biancheng.net/python/', 'http://c.biancheng.net/shell/', 'http://c.biancheng.net/golang/']retu_tuple =  ('http://c.biancheng.net/python/', 'http://c.biancheng.net/golang/', 'http://c.biancheng.net/golang/')
+  
   ```
-
-  ```
-  在此基础上，我们可以利用 Python 提供的序列解包功能，之间使用对应数量的变量，直接接收函数返回列表或元组中的多个值。这里以 retu_list() 为例：def retu_list() :    add = ["http://c.biancheng.net/python/",\            "http://c.biancheng.net/shell/",\            "http://c.biancheng.net/golang/"]    return addpythonadd,shelladd,golangadd = retu_list()print("pythonadd=",pythonadd)print("shelladd=",shelladd)print("golangadd=",golangadd)pythonadd= http://c.biancheng.net/python/shelladd= http://c.biancheng.net/shell/golangadd= http://c.biancheng.net/golang/
+  在此基础上，我们可以利用 Python 提供的序列解包功能，之间使用对应数量的变量，直接接收函数返回列表或元组中的多个值。这里以 retu_list() 为例：
+  def retu_list() :
+  	add = ["http://c.biancheng.net/python/",\
+      "http://c.biancheng.net/shell/",\
+      "http://c.biancheng.net/golang/"]
+      return add
+  pythonadd,shelladd,golangadd =retu_list()
+  print("pythonadd=",pythonadd)
+  print("shelladd=",shelladd)
+  print("golangadd=",golangadd)
+  pythonadd= http://c.biancheng.net/python/
+  shelladd= http://c.biancheng.net/shell/
+  golangadd= http://c.biancheng.net/golang/
   ```
 
 ###### partial偏函数
@@ -2410,7 +2587,13 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
   - func 指的是要封装的原函数，*args 和 **kwargs 分别用于接收无关键字实参和关键字实参。
 
   ```
-  from functools import partial#定义个原函数def display(name,age):    print("name:",name,"age:",age)#定义偏函数，其封装了 display() 函数，并为 name 参数设置了默认参数GaryFun = partial(display,name = 'Gary')#由于 name 参数已经有默认值，因此调用偏函数时，可以不指定GaryFun(age = 13)name: Gary age: 13
+  from functools import partial
+  #定义个原函数
+  def display(name,age):
+  	print("name:",name,"age:",age)
+  #定义偏函数，其封装了 display() 函数，并为 name 参数设置了默认参数
+  GaryFun = partial(display,name = 'Gary')#由于 name 参数已经有默认值，因此调用偏函数时，可以不指定
+  GaryFun(age = 13)name: Gary age: 13
   ```
 
   - 此程序的第 8 行代码中，必须采用关键字参数的形式给 age 形参传参，因为如果以无关键字参数的方式，该实参将试图传递给 name 形参，Python解释器会报 TypeError 错误。
@@ -2609,13 +2792,31 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 - 和局部变量一样，默认情况下局部函数只能在其所在函数的作用域内使用
 
   ```
-  #全局函数def outdef ():    #局部函数    def indef():        print("http://c.biancheng.net/python/")    #调用局部函数    indef()#调用全局函数outdef()http://c.biancheng.net/python/
+  #全局函数
+  def outdef ():
+  	#局部函数    
+  	def indef():
+      	print("http://c.biancheng.net/python/")    
+      	#调用局部函数    
+      indef()#调用全局函数
+  outdef()
+  http://c.biancheng.net/python/
   ```
 
 - 就如同全局函数返回其局部变量，就可以扩大该变量的作用域一样，通过将局部函数作为所在函数的返回值，也可以扩大局部函数的使用范围。
 
   ```
-  #全局函数def outdef ():    #局部函数    def indef():        print("调用局部函数")    #调用局部函数    return indef#调用全局函数new_indef = outdef()调用全局函数中的局部函数new_indef()调用局部函数
+  #全局函数
+  def outdef ():
+  	#局部函数    
+  	def indef():
+  		print("调用局部函数")
+  	#调用局部函数 
+  	return indef
+  #调用全局函数
+  new_indef = outdef()
+  调用全局函数中的局部函数
+  new_indef()调用局部函数
   ```
 
   - 以上面程序中的 outdef() 和 indef() 为例，如果 outdef() 不将 indef 作为返回值，则 indef() 只能在 outdef() 函数内部使用；反之，则 indef() 函数既可以在 outdef() 函数内部使用，也可以在 outdef() 函数的作用域，也就是全局范围内使用。
@@ -2760,9 +2961,9 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 
   - 和缩减嵌套函数的优点类似，函数开头需要做一些额外工作，当需要多次调用该函数时，如果将那些额外工作的代码放在外部函数，就可以减少多次调用导致的不必要开销，提高程序的运行效率。
 
-- 闭包比普通的函数多了一个 __closure__ 属性，该属性记录着自由变量的地址。当闭包被调用时，系统就会根据该地址找到对应的自由变量，完成整体的函数调用。
+- 闭包比普通的函数多了一个 `__closure__` 属性，该属性记录着自由变量的地址。当闭包被调用时，系统就会根据该地址找到对应的自由变量，完成整体的函数调用。
 
-  - 以 nth_power() 为例，当其被调用时，可以通过 __closure__ 属性获取自由变量（也就是程序中的 exponent 参数）存储的地址，
+  - 以 nth_power() 为例，当其被调用时，可以通过 `__closure__` 属性获取自由变量（也就是程序中的 exponent 参数）存储的地址，
 
     ```
     def nth_power(exponent):
@@ -2776,7 +2977,7 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
     (<cell at 0x0000014454DFA948: int object at 0x00000000513CC6D0>,)
     ```
 
-    - 可以看到，显示的内容是一个 int 整数类型，这就是 square 中自由变量 exponent 的初始值。还可以看到，__closure__ 属性的类型是一个元组，这表明闭包可以支持多个自由变量的形式。
+    - 可以看到，显示的内容是一个 int 整数类型，这就是 square 中自由变量 exponent 的初始值。还可以看到，`__closure__` 属性的类型是一个元组，这表明闭包可以支持多个自由变量的形式。
 
 ###### lambda函数
 
@@ -2821,9 +3022,9 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
   - 二者的语法格式除了函数名，其他都相同，其中各个参数的具体含义如下：
 
     - expression：这个参数是一个字符串，代表要执行的语句 。该语句受后面两个字典类型参数 globals 和 locals 的限制，只有在 globals 字典和 locals 字典作用域内的函数和变量才能被执行。
-    - globals：这个参数管控的是一个全局的命名空间，即 expression 可以使用全局命名空间中的函数。如果只是提供了 globals 参数，而没有提供自定义的 __builtins__，则系统会将当前环境中的 __builtins__ 复制到自己提供的 globals 中，然后才会进行计算；如果连 globals 这个参数都没有被提供，则使用 Python 的全局命名空间。
+    - globals：这个参数管控的是一个全局的命名空间，即 expression 可以使用全局命名空间中的函数。如果只是提供了 globals 参数，而没有提供自定义的 `__builtins__`，则系统会将当前环境中的 `__builtins__` 复制到自己提供的 globals 中，然后才会进行计算；如果连 globals 这个参数都没有被提供，则使用 Python 的全局命名空间。
     - locals：这个参数管控的是一个局部的命名空间，和 globals 类似，当它和 globals 中有重复或冲突时，以 locals 的为准。如果 locals 没有被提供，则默认为 globals。
-    - __builtins__ 是 Python 的内建模块，平时使用的 int、str、abs 都在这个模块中。通过 print(dic["__builtins__"]) 语句可以查看 __builtins__ 所对应的 value。
+    - `__builtins__` 是 Python 的内建模块，平时使用的 int、str、abs 都在这个模块中。通过 print(dic["`__builtins__`"]) 语句可以查看 `__builtins__` 所对应的 value。
 
     ```
     通过如下的例子来演示参数 globals 作用域的作用，注意观察它是何时将 __builtins__ 复制 globals 字典中去的
@@ -2837,7 +3038,7 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
     dict_keys(['b', '__builtins__', 'a'])
     ```
 
-    - 上面的代码是在作用域 dic 下执行了一句 a = 4 的代码。可以看出，exec() 之前 dic 中的 key 只有一个 b。执行完 exec() 之后，系统在 dic 中生成了两个新的 key，分别是 a 和 __builtins__。其中，a 为执行语句生成的变量，系统将其放到指定的作用域字典里；__builtins__ 是系统加入的内置 key。
+    - 上面的代码是在作用域 dic 下执行了一句 a = 4 的代码。可以看出，exec() 之前 dic 中的 key 只有一个 b。执行完 exec() 之后，系统在 dic 中生成了两个新的 key，分别是 a 和 `__builtins__`。其中，a 为执行语句生成的变量，系统将其放到指定的作用域字典里；`__builtins__` 是系统加入的内置 key。
 
     - locals参数的用法就很简单了
 
@@ -3142,7 +3343,7 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 
 ###### \__init__()类构造方法
 
-- 在创建类时，我们可以手动添加一个 __init__() 方法，该方法是一个特殊的类实例方法，称为构造方法（或构造函数）。
+- 在创建类时，我们可以手动添加一个 `__init__()` 方法，该方法是一个特殊的类实例方法，称为构造方法（或构造函数）。
 
 - 构造方法用于创建对象时使用，每当创建一个类的实例对象时，[Python](http://c.biancheng.net/python/) 解释器都会自动调用它。[Python](http://c.biancheng.net/python/) 类中，手动添加构造方法的语法格式如下：
 
@@ -3155,7 +3356,7 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 
 - \__init__() 方法可以包含多个参数，但必须包含一个名为 self 的参数，且必须作为第一个参数。也就是说，类的构造方法最少也要有一个 self 参数。例如，仍以 TheFirstDemo 类为例，添加构造方法的代码如下所示
 
-  ```
+  ```python
   class TheFirstDemo:
       '''这是一个学习Python定义的第一个类'''
       #构造方法
@@ -3173,7 +3374,7 @@ str="网站名称：{:>9s}\t网址：{:s}"print(str.format("C语言中文网","c
 
 - 在 \__init__() 构造方法中，除了 self 参数外，还可以自定义一些参数，参数之间使用逗号“,”进行分割
 
-  ```
+  ```python
   class CLanguage:
       '''这是一个学习Python定义的一个类'''
       def __init__(self,name,add):
