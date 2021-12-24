@@ -2083,41 +2083,207 @@
   ```
   
   - 如果 pthread_cancel() 函数成功地发送了 Cancel 信号，返回数字 0，否则返回非零数。对于因“未找到目标线程”导致的信号发送失败，函数返回 ESRCH 宏（定义在`<errno.h>`头文件中，该宏的值为整数 3）。
+  
   - pthread_cancel() 函数的功能仅仅是向目标线程发送 Cancel 信号，至于目标线程是否接收该信号，何时响应该信号，全由目标线程决定
   
+  - 对于接收 Cancel 信号后结束执行的目标线程，等同于该线程自己执行如下语句：
+  
+    ```
+    pthread_exit(PTHREAD_CANCELED);
+    ```
+  
+    - 也就是说，当一个线程被强制终止执行时，它会返回PTHREAD_CANCELED这个宏
+  
+- 接下来通过一个样例，给大家演示 pthread_cancel() 函数的用法：
+
   ```c
-  对于接收 Cancel 信号后结束执行的目标线程，等同于该线程自己执行如下语句：
-  pthread_exit(PTHREAD_CANCELED);
-  也就是说，当一个线程被强制终止执行时，它会返回PTHREAD_CANCELED这个宏
+  #include <stdio.h>
+  #include <pthread.h>
+  #include <stdlib.h>     // sleep() 函数
+  //线程执行的函数
+  void * thread_Fun(void * arg) {
+      printf("新建线程开始执行\n");
+      sleep(10);
+  }
+  int main()
+  {
+      pthread_t myThread;
+      void * mess;
+      int value;
+      int res;
+      //创建 myThread 线程
+      res = pthread_create(&myThread, NULL, thread_Fun, NULL);
+      if (res != 0) {
+          printf("线程创建失败\n");
+          return 0;
+      }
+      sleep(1);
+      //向 myThread 线程发送 Cancel 信号
+      res = pthread_cancel(myThread);
+      if (res != 0) {
+          printf("终止 myThread 线程失败\n");
+          return 0;
+      }
+      //获取已终止线程的返回值
+      res = pthread_join(myThread, &mess);
+      if (res != 0) {
+          printf("等待线程失败\n");
+          return 0;
+      }
+      //如果线程被强制终止，其返回值为 PTHREAD_CANCELED
+      if (mess == PTHREAD_CANCELED) {
+          printf("myThread 线程被强制终止\n");
+      }
+      else {
+          printf("error\n");
+      }
+      return 0;
+  }
+  
+  新建线程开始执行
+  myThread 线程被强制终止
   ```
+
+- 实际使用 pthread_cancel() 函数时，很多读者会发现“Cancel 信号成功发送，但目标线程并未立即终止执行”等类似的问题举个例子，在 Linux 环境中执行如下程序：
+
+  ```
+  #include <stdio.h>
+  #include <pthread.h>
+  #include <stdlib.h>
+  void * thread_Fun(void * arg) {
+      printf("新建线程开始执行\n");
+      //插入无限循环的代码，测试 pthread_cancel()函数的有效性
+      while(1);
+  }
+  int main()
+  {
+      pthread_t myThread;
+      void * mess;
+      int value;
+      int res;
+      res = pthread_create(&myThread, NULL, thread_Fun, NULL);
+      if (res != 0) {
+          printf("线程创建失败\n");
+          return 0;
+      }
+      sleep(1);
+      //令 myThread 线程终止执行
+      res = pthread_cancel(myThread);
+      if (res != 0) {
+          printf("终止 myThread 线程失败\n");
+          return 0;
+      }
+      printf("等待 myThread 线程执行结束：\n");
+      res = pthread_join(myThread, &mess);
+      if (res != 0) {
+          printf("等待线程失败\n");
+          return 0;
+      }
+      if (mess == PTHREAD_CANCELED) {
+          printf("myThread 线程被强制终止\n");
+      }
+      else {
+          printf("error\n");
+      }
+      return 0;
+  }
   
+  新建线程开始执行
+  等待 myThread 线程执行结束：
+  ```
+
+  - 程序中，主线程（ main() 函数）试图调用 pthread_cancel() 函数终止 myThread 线程执行。从运行结果不难发现，pthread_cancel() 函数成功发送了 Cancel 信号，但目标线程仍在执行。
+  - 也就是说，接收到 Cancel 信号的目标线程并没有立即处理该信号，或者说目标线程根本没有理会此信号。解决类似的问题，我们就需要搞清楚目标线程对 Cancel 信号的处理机制。
+
+- 线程对cancel信号的处理
+
   - 对于默认属性的线程，当有线程借助 pthread_cancel() 函数向它发送 Cancel 信号时，它并不会立即结束执行，而是选择在一个适当的时机结束执行。
-  
+
   - 所谓适当的时机，POSIX 标准中规定，当线程执行一些特殊的函数时，会响应 Cancel 信号并终止执行，比如常见的 pthread_join()、pthread_testcancel()、sleep()、system() 等，POSIX 标准称此类函数为“cancellation points”（中文可译为“取消点”）。
-  
+
   - <pthread.h> 头文件还提供有 pthread_setcancelstate() 和 pthread_setcanceltype() 这两个函数，我们可以手动修改目标线程处理 Cancel 信号的方式。
-  
+
     - ```
       int pthread_setcancelstate( int state , int * oldstate ); 
       ```
-  
+
       - state 参数有两个可选值，分别是：
-  
+
       - PTHREAD_CANCEL_ENABLE（默认值）：当前线程会处理其它线程发送的 Cancel 信号；
       - PTHREAD_CANCEL_DISABLE：当前线程不理会其它线程发送的 Cancel 信号，直到线程状态重新调整为 PTHREAD_CANCEL_ENABLE 后，才处理接收到的 Cancel 信号。
       - oldtate 参数用于接收线程先前所遵循的 state 值，通常用于对线程进行重置。如果不需要接收此参数的值，置为 NULL 即可。
       - pthread_setcancelstate() 函数执行成功时，返回数字 0，反之返回非零数。
-  
+
     - ```
       int pthread_setcanceltype( int type , int * oldtype );
       ```
-  
+
       - type 参数有两个可选值，分别是：
-  
       - PTHREAD_CANCEL_DEFERRED（默认值）：当线程执行到某个可作为取消点的函数时终止执行；
       - PTHREAD_CANCEL_ASYNCHRONOUS：线程接收到 Cancel 信号后立即结束执行。
       - oldtype 参数用于接收线程先前所遵循的 type 值，如果不需要接收该值，置为 NULL 即可。
       - pthread_setcanceltype() 函数执行成功时，返回数字 0，反之返回非零数。
+
+  ```
+  #include <stdio.h>
+  #include <pthread.h>
+  #include <stdlib.h>
+  void * thread_Fun(void * arg) {
+      printf("新建线程开始执行\n");
+      int res;
+      //设置线程为可取消状态
+      res = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+      if (res != 0) {
+          printf("修改线程可取消状态失败\n");
+          return  NULL;
+      }
+      //设置线程接收到 Cancel 信号后立即结束执行
+      res = pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+      if (res != 0) {
+          printf("修改线程响应 Cancel 信号的方式失败\n");
+          return  NULL;
+      }
+      while (1);
+      return NULL;
+  }
+  int main()
+  {
+      pthread_t myThread;
+      void * mess;
+      int value;
+      int res;
+      res = pthread_create(&myThread, NULL, thread_Fun, NULL);
+      if (res != 0) {
+          printf("线程创建失败\n");
+          return 0;
+      }
+      sleep(1);
+      //向 myThread 线程发送 Cancel 信号
+      res = pthread_cancel(myThread);
+      if (res != 0) {
+          printf("终止 myThread 线程失败\n");
+          return 0;
+      }
+      //等待 myThread 线程执行结束，获取返回值
+      res = pthread_join(myThread, &mess);
+      if (res != 0) {
+          printf("等待线程失败\n");
+          return 0;
+      }
+      if (mess == PTHREAD_CANCELED) {
+          printf("myThread 线程被强制终止\n");
+      }
+      else {
+          printf("error\n");
+      }
+      return 0;
+  }
+  
+  新建线程开始执行
+  myThread 线程被强制终止
+  ```
+
+  
 
 ##### 获取线程函数返回值
 
@@ -2136,11 +2302,151 @@
 
 - 对于一个默认属性的线程 A 来说，线程占用的资源并不会因为执行结束而得到释放。而通过在其它线程中执行`pthread_join(A,NULL);`语句，可以轻松实现“及时释放线程 A 所占资源”的目的。 
 
+  ```
+  #include <stdio.h>
+  #include <errno.h>   //使用宏 ESRCH
+  #include <pthread.h>
+  //线程执行的函数
+  void *ThreadFun(void *arg)
+  {
+      pthread_exit("http://c.biancheng.net");
+  }
+  int main()
+  {
+      int res;
+      void * thread_result;
+      pthread_t myThread;
+      //创建 myThread 线程
+      res = pthread_create(&myThread, NULL, ThreadFun, NULL);
+      if (res != 0) {
+          printf("线程创建失败");
+          return 0;
+      }
+      //阻塞主线程，等待 myThread 线程执行结束
+      res = pthread_join(myThread, &thread_result);
+      if (res != 0) {
+          printf("1：等待线程失败");
+      }
+      //输出获取到的 myThread 线程的返回值
+      printf("%s\n", (char*)thread_result);
+      //尝试再次获取 myThread 线程的返回值
+      res = pthread_join(myThread, &thread_result);
+      if (res == ESRCH) {
+          printf("2：等待线程失败，线程不存在");
+      }
+      return 0;
+  }
+  
+  http://c.biancheng.net
+  2：等待线程失败，线程不存在
+  ```
+
+  - 在程序的在主线程（main() 函数）中，我们尝试两次调用 pthread_join() 函数获取 myThread 线程执行结束的返回值。通过执行结果可以看到，第一个 pthread_join() 函数成功执行，而第二个 Pthread_join() 函数执行失败。原因很简单，第一个成功执行的 pthread_join() 函数会使 myThread 线程释放自己占用的资源，myThread 线程也就不复存在，所以第二个 pthread_join() 函数会返回 ESRCH。
+
 ##### pthread_detach()
 
 - linux线程执行和windows不同，pthread有两种状态joinable状态和unjoinable状态，如果线程是joinable状态，当线程函数自己返回退出时或pthread_exit时都不会释放线程所占用堆栈和线程描述符（总计8K多）。只有当你调用了pthread_join之后这些资源才会被释放。若是unjoinable状态的线程，这些资源在线程函数退出时或pthread_exit时自动会被释放。
 - unjoinable属性可以在pthread_create时指定，或在线程创建后在线程中pthread_detach自己, 如pthread_detach(pthread_self())，将状态改为unjoinable状态，确保资源的释放。或者将线程置为 joinable,然后适时调用pthread_join.
 - 其实简单的说就是在线程函数头加上 pthread_detach(pthread_self())的话，线程状态改变，在函数尾部直接 pthread_exit线程就会自动退出。省去了给线程擦屁股的麻烦。
+
+##### 线程同步机制
+
+- 多线程程序中各个线程除了可以使用自己的私有资源（局部变量、函数形参等）外，还可以共享全局变量、静态变量、堆内存、打开的文件等资源。
+
+- 举个例子，编写一个多线程程序模拟“4个售票员共同卖 20 张票”的过程
+
+  ```
+  #include<stdio.h>
+  #include<stdlib.h>
+  #include<pthread.h>
+  //全局变量，模拟总的票数
+  int ticket_sum = 10;
+  //模拟4个售票员一起售卖票的过程
+  void *sell_ticket(void *arg){
+      int i;
+      //4个售票员负责将 10 张票全部卖出
+      for (i = 0; i < 10; i++)
+      {
+          //直至所有票全部卖出，4 个售票员才算完成任务
+          if (ticket_sum > 0)
+          {
+              sleep(1);
+              //每个线程代表一个售票员
+              printf("%u 卖第 %d 张票\n", pthread_self(), 10 - ticket_sum + 1);
+              ticket_sum--;
+          }
+      }
+      return 0;
+  }
+  int main(){
+      int flag;
+      int i;
+      void *ans;
+      //创建 4 个线程，代表 4 个售票员
+      pthread_t tids[4];
+      for (i = 0; i < 4; i++)
+      {
+          flag = pthread_create(&tids[i], NULL, &sell_ticket, NULL);
+          if (flag != 0) {
+              printf("线程创建失败!");
+              return 0;
+          }
+      }
+      sleep(10); // 阻塞主线程，等待所有子线程执行结束
+      for (i = 0; i < 4; i++)
+      {
+          flag = pthread_join(tids[i], &ans);
+          if (flag != 0) {
+              printf("tid=%d 等待失败！", tids[i]);
+              return 0;
+          }
+      }
+      return 0;
+  }
+  
+  
+  3296569088 卖第 1 张票
+  3265099520 卖第 2 张票
+  3286079232 卖第 3 张票
+  3275589376 卖第 4 张票
+  3286079232 卖第 5 张票
+  3265099520 卖第 6 张票
+  3296569088 卖第 7 张票
+  3275589376 卖第 8 张票
+  3286079232 卖第 9 张票
+  3265099520 卖第 10 张票
+  3275589376 卖第 11 张票
+  3296569088 卖第 12 张票
+  3286079232 卖第 13 张票
+  
+  程序的执行结果并不唯一，还可能输出如下类似的信息：
+  1492682496 卖第 1 张票
+  1503172352 卖第 1 张票
+  1482192640 卖第 1 张票
+  1471702784 卖第 1 张票
+  1503172352 卖第 5 张票
+  1482192640 卖第 6 张票
+  1492682496 卖第 6 张票
+  1471702784 卖第 6 张票
+  1503172352 卖第 9 张票
+  1492682496 卖第 9 张票
+  1471702784 卖第 9 张票
+  1482192640 卖第 12 张票
+  1503172352 卖第 13 张票
+  ```
+
+  - 程序中新建了 4 个子线程，每个线程都可以访问 ticket_sum 全局变量，它们共同执行 sell_ticket() 函数，模拟“4个售票员共同售卖 10 张票”的过程。
+  - 程序执行过程中，出现了“多个售票员卖出同一张票”以及“4个售票员多卖出 3 张票”的异常情况。造成此类问题的根本原因在于，进程中公有资源的访问权限是完全开放的，各个线程可以随时访问这些资源，程序运行过程中很容易出现“多个线程同时访问某公共资源”的情况。
+  - 例如，之所以会出现“多个售票员卖出同一张票”的情况，因为这些线程几乎同一时间访问 ticket_sum 变量，得到的是相同的值。出现“4 个售票员多卖出 3 张票”的原因是：4 个线程访问 ticket_sum 变量得到的都是一个大于 0 的数，每个线程都可以继续执行 if 语句内的代码。由于各个线程先后执行的顺序不同，有的线程先执行`ticket_sum--`操作，导致其它线程计算`10-ticket_sum+1`表达式时，读取到的 ticket_num 变量的值为负数，因此表达式的值会出现大于 10 的情况。
+
+- 所谓线程同步，简单地理解就是：当一个线程访问某公共资源时，其它线程不得访问该资源，它们只能等待此线程访问完成后，再逐个访问该资源。
+
+- Linux 环境中，实现线程同步的常用方法有 4 种，分别称为[互斥锁](http://c.biancheng.net/thread/vip_8615.html)、[信号量](http://c.biancheng.net/thread/vip_8616.html)、[条件变量](http://c.biancheng.net/thread/vip_8617.html)和[读写锁](http://c.biancheng.net/thread/vip_8618.html)。
+
+  - 互斥锁（Mutex）又称互斥量或者互斥体，是最简单也最有效地一种线程同步机制。互斥锁的用法和实际生活中的锁非常类似，当一个线程访问公共资源时，会及时地“锁上”该资源，阻止其它线程访问；访问结束后再进行“解锁”操作，将该资源让给其它线程访问。
+  - 信号量又称“信号灯”，主要用于控制同时访问公共资源的线程数量，当线程数量控制在 ≤1 时，该信号量又称二元信号量，功能和互斥锁非常类似；当线程数量控制在 N（≥2）个时，该信号量又称多元信号量，指的是同一时刻最多只能有 N 个线程访问该资源。
+  - 条件变量的功能类似于实际生活中的门，门有“打开”和“关闭”两种状态，分别对应条件变量的“成立”状态和“不成立”状态。当条件变量“不成立”时，任何线程都无法访问资源，只能等待条件变量成立；一旦条件变量成立，所有等待的线程都会恢复执行，访问目标资源。为了防止各个线程竞争资源，条件变量总是和互斥锁搭配使用。
+  - 多线程程序中，如果大多数线程都是对公共资源执行读取操作，仅有少量的线程对公共资源进行修改，这种情况下可以使用读写锁解决线程同步问题。
 
 ##### 互斥锁实现线程同步
 
@@ -2148,9 +2454,14 @@
 
 - 互斥锁实现多线程同步的核心思想是：有线程访问进程空间中的公共资源时，该线程执行“加锁”操作（将资源“锁”起来），阻止其它线程访问。访问完成后，该线程负责完成“解锁”操作，将资源让给其它线程。当有多个线程想访问资源时，谁最先完成“加锁”操作，谁就最先访问资源。
 
-- 加锁是将进程空间中的公共资源全部锁起来，不只是锁一部分。
-
 - 当有多个线程想访问“加锁”状态下的公共资源时，它们只能等待资源“解锁”，所有线程会排成一个等待（阻塞）队列。资源解锁后，操作系统会唤醒等待队列中的所有线程，第一个访问资源的线程会率先将资源“锁”起来，其它线程则继续等待。
+
+- 本质上，互斥锁就是一个全局变量，它只有 "lock" 和 "unlock" 两个值，含义分别是：
+
+  - "unlock" 表示当前资源可以访问，第一个访问资源的线程负责将互斥锁的值改为 "lock"，访问完成后再重置为“unlock”；
+  - "lock" 表示有线程正在访问资源，其它线程需等待互斥锁的值为 "unlock" 后才能开始访问。
+
+- 加锁是将进程空间中的公共资源全部锁起来，不只是锁一部分。
 
 - 对资源进行“加锁”和“解锁”操作的必须是同一个线程。换句话说，哪个线程对资源执行了“加锁”操作，那么“解锁”操作也必须由该线程负责。
 
@@ -2189,8 +2500,8 @@
   int pthread_mutex_trylock(pthread_mutex_t* mutex);  //实现加锁
   int pthread_mutex_unlock(pthread_mutex_t* mutex);   //实现解锁
   	参数 mutex 表示我们要操控的互斥锁。函数执行成功时返回数字 0，否则返回非零数。
-  	pthread_mutex_unlock() 函数用于对指定互斥锁进行“解锁”操作
-      pthread_mutex_lock() 和 pthread_mutex_trylock() 函数都用于实现“加锁”操作，不同之处在于当互斥锁已经处于“加锁”状态时：
+  pthread_mutex_unlock() 函数用于对指定互斥锁进行“解锁”操作
+  pthread_mutex_lock() 和 pthread_mutex_trylock() 函数都用于实现“加锁”操作，不同之处在于当互斥锁已经处于“加锁”状态时：
   	执行 pthread_mutex_lock() 函数会使线程进入等待（阻塞）状态，直至互斥锁得到释放；
   	执行 pthread_mutex_trylock() 函数不会阻塞线程，直接返回非零数（表示加锁失败）。
   ```
@@ -2212,6 +2523,84 @@
 
 - 注意，对于用 PTHREAD_MUTEX_INITIALIZER 或者 pthread_mutex_init() 函数直接初始化的互斥锁，无需调用 pthread_mutex_destory() 函数手动销毁。
 
+  ```
+  #include<stdio.h>
+  #include<stdlib.h>
+  #include<pthread.h>
+  #include<unistd.h>
+  int ticket_sum = 10;
+  //创建互斥锁
+  pthread_mutex_t myMutex = PTHREAD_MUTEX_INITIALIZER;
+  //模拟售票员卖票
+  void *sell_ticket(void *arg) {
+      //输出当前执行函数的线程 ID
+      printf("当前线程ID：%u\n", pthread_self());
+      int i;
+      int islock = 0;
+      for (i = 0; i < 10; i++)
+      {
+          //当前线程“加锁”
+          islock = pthread_mutex_lock(&myMutex);
+          //如果“加锁”成功，执行如下代码
+          if (islock == 0) {
+              //如果票数 >0 ,开始卖票
+              if (ticket_sum > 0)
+              {
+                  sleep(1);
+                  printf("%u 卖第 %d 张票\n", pthread_self(), 10 - ticket_sum + 1);
+                  ticket_sum--;
+              }
+              //当前线程模拟完卖票过程，执行“解锁”操作
+              pthread_mutex_unlock(&myMutex);
+          }
+      }
+      return 0;
+  }
+  int main() {
+      int flag;
+      int i;
+      void *ans;
+      //创建 4 个线程，模拟 4 个售票员
+      pthread_t tids[4];
+      for (i = 0; i < 4; i++)
+      {
+          flag = pthread_create(&tids[i], NULL, &sell_ticket, NULL);
+          if (flag != 0) {
+              printf("线程创建失败!");
+              return 0;
+          }
+      }
+      sleep(10);   //等待 4 个线程执行完成
+      for (i = 0; i < 4; i++)
+      {
+          //阻塞主线程，确认 4 个线程执行完成
+          flag = pthread_join(tids[i], &ans);
+          if (flag != 0) {
+              printf("tid=%d 等待失败！", tids[i]);
+              return 0;
+          }
+      }
+      return 0;
+  }
+  
+  当前线程ID：149493504
+  当前线程ID：170473216
+  当前线程ID：159983360
+  当前线程ID：139003648
+  149493504 卖第 1 张票
+  149493504 卖第 2 张票
+  149493504 卖第 3 张票
+  139003648 卖第 4 张票
+  139003648 卖第 5 张票
+  139003648 卖第 6 张票
+  139003648 卖第 7 张票
+  139003648 卖第 8 张票
+  159983360 卖第 9 张票
+  159983360 卖第 10 张票
+  ```
+
+  
+
 ##### 信号量实现线程同步
 
 - 和互斥锁类似，信号量本质也是一个全局变量。不同之处在于，互斥锁的值只有 2 个（加锁 "lock" 和解锁 "unlock"），而信号量的值可以根据实际场景的需要自行设置（取值范围为 ≥0）。更重要的是，信号量还支持做“加 1”或者 “减 1”运算，且修改值的过程以“原子操作”的方式实现。
@@ -2232,7 +2621,8 @@
 - POSIX 标准中，信号量用 sem_t 类型的变量表示，该类型定义在`<semaphore.h>`头文件中。例如，下面代码定义了名为 mySem 的信号量：
 
   ```c
-  #include <semaphore.h>sem_t mySem;
+  #include <semaphore.h>
+  sem_t mySem;
   ```
 
 - sem_init() 函数专门用来初始化信号量，语法格式如下：
@@ -2261,14 +2651,187 @@
     - sem_trywait() 函数的功能和 sem_wait() 函数类似，唯一的不同在于，当信号量的值为 0 时，sem_trywait() 函数并不会阻塞当前线程，而是立即返回 -1；
     - sem_destory() 函数用于手动销毁信号量。
     - 以上函数执行成功时，返回值均为 0 ；如果执行失败，返回值均为 -1。
+  
+- 二进制信号量常用于代替互斥锁解决线程同步问题，接下来我们使用二进制信号量模拟“4 个售票员卖 10 张票”的过程：
+
+  ```
+  #include<stdio.h>
+  #include<stdlib.h>
+  #include<pthread.h>
+  #include<semaphore.h>
+  #include<unistd.h>
+  //创建信号量
+  sem_t mySem;
+  //设置总票数
+  int ticket_sum = 10;
+  //模拟买票过程
+  void *sell_ticket(void *arg) {
+      printf("当前线程ID：%u\n", pthread_self());
+      int i;
+      int flag;
+      for (i = 0; i < 10; i++)
+      {
+          //完成信号量"减 1"操作，否则暂停执行
+          flag = sem_wait(&mySem);
+          if (flag == 0) {
+              if (ticket_sum > 0)
+              {
+                  sleep(1);
+                  printf("%u 卖第 %d 张票\n", pthread_self(), 10 - ticket_sum + 1);
+                  ticket_sum--;
+              }
+              //执行“加1”操作
+              sem_post(&mySem);
+              sleep(1);
+          }
+      }
+      return 0;
+  }
+  int main() {
+      int flag;
+      int i;
+      void *ans;
+      //创建 4 个线程
+      pthread_t tids[4];
+      //初始化信号量
+      flag = sem_init(&mySem, 0, 1);
+      if (flag != 0) {
+          printf("初始化信号量失败\n");
+      }
+      for (i = 0; i < 4; i++)
+      {
+          flag = pthread_create(&tids[i], NULL, &sell_ticket, NULL);
+          if (flag != 0) {
+              printf("线程创建失败!");
+              return 0;
+          }
+      }
+      sleep(10);
+      for (i = 0; i < 4; i++)
+      {
+          flag = pthread_join(tids[i], &ans);
+          if (flag != 0) {
+              printf("tid=%d 等待失败！", tids[i]);
+              return 0;
+          }
+      }
+      //执行结束前，销毁信号量
+      sem_destroy(&mySem);
+      return 0;
+  }
+  
+  当前线程ID：1199965952
+  当前线程ID：1189476096
+  当前线程ID：1168496384
+  当前线程ID：1178986240
+  1199965952 卖第 1 张票
+  1189476096 卖第 2 张票
+  1199965952 卖第 3 张票
+  1178986240 卖第 4 张票
+  1168496384 卖第 5 张票
+  1189476096 卖第 6 张票
+  1199965952 卖第 7 张票
+  1178986240 卖第 8 张票
+  1168496384 卖第 9 张票
+  1189476096 卖第 10 张票
+  ```
+
+  - 程序中信号量的初始值为 1，当有多个线程想执行 19~25 行代码时，第一个执行 sem_wait() 函数的线程可以继续执行，同时信号量的值会由 1 变为 0，其它线程只能等待信号量的值由 0 变为 1 后，才能继续执行。
+
+- 假设某银行只开设了 2 个窗口，但有 5 个人需要办理业务。如果我们使用多线程程序模拟办理业务的过程，可以借助计数信号量实现。
+
+  ```
+  #include <stdio.h>
+  #include<pthread.h>
+  #include<stdlib.h>
+  #include<semaphore.h>
+  //设置办理业务的人数
+  int num = 5;
+  //创建信号量
+  sem_t sem;
+  //模拟办理业务的过程
+  void *get_service(void *arg)
+  {
+      int id = *((int*)arg);
+      //信号量成功“减 1”后才能继续执行
+      if (sem_wait(&sem) == 0)
+      {
+          printf("---customer%d 正在办理业务\n", id);
+          sleep(2);
+          printf("---customer%d 已办完业务\n", id);
+          //信号量“加 1”
+          sem_post(&sem);
+      }
+      return 0;
+  }
+  int main()
+  {
+      int flag,i,j;
+      //创建 5 个线程代表 5 个人
+      pthread_t customer[5];
+      //初始化信号量
+      sem_init(&sem, 0, 2);
+      for (i = 0; i < num; i++)
+      {
+          flag = pthread_create(&customer[i], NULL, get_service, &i);
+          if (flag != 0)
+          {
+              printf("线程创建失败!\n");
+              return 0;
+          }
+          else {
+              printf("customer%d 来办理业务\n",i);
+          }
+          sleep(1);
+      }
+      for (j = 0; j < num; j++)
+      {
+          flag = pthread_join(customer[j], NULL);
+          if (flag != 0) {
+              printf("tid=%d 等待失败！", customer[i]);
+              return 0;
+          }
+      }
+      sem_destroy(&sem);
+      return 0;
+  }
+  
+  customer0 来办理业务
+  ---customer0 正在办理业务
+  customer1 来办理业务
+  ---customer1 正在办理业务
+  ---customer0 已办完业务
+  customer2 来办理业务
+  ---customer2 正在办理业务
+  ---customer1 已办完业务
+  customer3 来办理业务
+  ---customer3 正在办理业务
+  ---customer2 已办完业务
+  customer4 来办理业务
+  ---customer4 正在办理业务
+  ---customer3 已办完业务
+  ---customer4 已办完业务
+  ```
+
+  - 程序中，sem 信号量的初始化为 2，因此该信号量属于计数信号量。借助 sem 信号量，第 14~21 行的代码段最多只能有 2 个线程同时访问。
 
 ##### 条件变量实现线程同步
 
-- 假设一个进程中包含多个线程，这些线程共享变量 x，我们希望某个（或某些）线程等待 "x==10' 条件成立后再执行后续的代码
-
 - 和互斥锁、信号量类似，条件变量本质也是一个全局变量，它的功能是阻塞线程，直至接收到“条件成立”的信号后，被阻塞的线程才能继续执行。
 
-- 直观上看，while 循环确实能够阻塞线程，但这种方法存在严重的效率问题。当线程因条件不成立进入等待状态时，如果此时恰好有另一个线程将 x 的值改为 10，该线程必须等待 5 秒后才能继续执行。如果我们将等待时间缩短（或者直接将 sleep(5) 注释掉），线程将反复判断 x 的值是否等于 10，它可能会一直霸占着 CPU 资源，导致其它线程无法执行，x 变量的值会出现“长时间不改变”的情况。
+- 假设一个进程中包含多个线程，这些线程共享变量 x，我们希望某个（或某些）线程等待 "x==10' 条件成立后再执行后续的代码
+
+  ```
+  void* threadFun(void * args){
+      while(x != 10){
+          sleep(5);
+      }
+      // 待条件成立后，执行后续的代码
+  }
+  ```
+
+  - 直观上看，while 循环确实能够阻塞线程，但这种方法存在严重的效率问题。当线程因条件不成立进入等待状态时，如果此时恰好有另一个线程将 x 的值改为 10，该线程必须等待 5 秒后才能继续执行。如果我们将等待时间缩短（或者直接将 sleep(5) 注释掉），线程将反复判断 x 的值是否等于 10，它可能会一直霸占着 CPU 资源，导致其它线程无法执行，x 变量的值会出现“长时间不改变”的情况。
+  - 针对类似的场景，我们推荐您用条件变量来实现。和互斥锁、信号量类似，条件变量本质也是一个全局变量，它的功能是阻塞线程，直至接收到“条件成立”的信号后，被阻塞的线程才能继续执行。
 
 - 一个条件变量可以阻塞多个线程，这些线程会组成一个等待队列。当条件成立时，条件变量可以解除线程的“被阻塞状态”。也就是说，条件变量可以完成以下两项操作：
 
@@ -2324,8 +2887,7 @@
   cond 参数表示初始化好的条件变量。当函数成功解除线程的“被阻塞”状态时，返回数字 0，反之返回非零数。
   ```
 
-- 两个函数都能解除线程的“被阻塞”状态，区别在于：
-
+  - 两个函数都能解除线程的“被阻塞”状态，区别在于：
   - pthread_cond_signal() 函数至少解除一个线程的“被阻塞”状态，如果等待队列中包含多个线程，优先解除哪个线程将由操作系统的线程调度程序决定；
   - pthread_cond_broadcast() 函数可以解除等待队列中所有线程的“被阻塞”状态。
   - 由于互斥锁的存在，解除阻塞后的线程也不一定能立即执行。当互斥锁处于“加锁”状态时，解除阻塞状态的所有线程会组成等待互斥锁资源的队列，等待互斥锁“解锁”。
@@ -2384,6 +2946,46 @@
       }
       return NULL;
   }
+  int main() {
+      int res;
+      pthread_t mythread1, mythread2;
+      res = pthread_create(&mythread1, NULL, waitForTrue, NULL);
+      if (res != 0) {
+          printf("mythread1线程创建失败\n");
+          return 0;
+      }
+      res = pthread_create(&mythread2, NULL, doneForTrue, NULL);
+      if (res != 0) {
+          printf("mythread2线程创建失败\n");
+          return 0;
+      }
+      //等待 mythread1 线程执行完成
+      res = pthread_join(mythread1, NULL);
+      if (res != 0) {
+          printf("1：等待线程失败\n");
+      }
+      //等待 mythread2 线程执行完成
+      res = pthread_join(mythread2, NULL);
+      if (res != 0) {
+          printf("2：等待线程失败\n");
+      }
+      //销毁条件变量
+      pthread_cond_destroy(&myCond);
+      return 0;
+  }
+  
+  ------等待 x 的值为 10
+  doneForTrue：x = 1
+  doneForTrue：x = 2
+  doneForTrue：x = 3
+  doneForTrue：x = 4
+  doneForTrue：x = 5
+  doneForTrue：x = 6
+  doneForTrue：x = 7
+  doneForTrue：x = 8
+  doneForTrue：x = 9
+  doneForTrue：x = 10
+  x = 10
   
   基本思想就是在一个线程函数里面阻塞着等着另一个线程发来的信号，另一个线程里面执行程序，当结果达到时发送信号。
   ```
@@ -2536,19 +3138,205 @@
       pthread_rwlock_destroy(&myrwlock);
       return 0;
   }
+  
+  ------1134741248 read_thread ready
+  ------1113761536 read_thread ready
+  ------1103271680 write_thread ready!
+  ------1124251392 read_thread ready
+  read_thread: 1124251392,x=0
+  read_thread: 1113761536,x=0
+  read_thread: 1134741248,x=0
+  write_thread: 1103271680,x=1
+  read_thread: 1134741248,x=1
+  read_thread: 1124251392,x=1
+  read_thread: 1113761536,x=1
+  write_thread: 1103271680,x=2
+  read_thread: 1124251392,x=2
+  read_thread: 1113761536,x=2
+  read_thread: 1134741248,x=2
   ```
+  
+  - 过执行结果不难看到，3 个读取 x 变量的线程总是能够同时获取到 x 变量的值，因为它们能够同时获得“读锁”并同时执行。
 
 ##### 线程死锁
 
-- 线程死锁指的是线程需要使用的公共资源一直被其它线程占用，导致该线程一直处于“阻塞”状态，无法继续执行
-- 当进程空间中的某公共资源不允许多个线程同时访问时，某线程访问公共资源后不及时释放资源，就很可能产生线程死锁。
+- 线程死锁指的是线程需要使用的公共资源一直被其它线程占用，导致该线程一直处于“阻塞”状态，无法继续执行。举个例子，用互斥锁实现线程同步的过程中，初学者经常忘记为“加锁”的线程及时“解锁”，这种情况下就会发生死锁（实例一）：
+
+  ```
+  #include<stdio.h>
+  #include<pthread.h>
+  //创建并初始化互斥锁
+  pthread_mutex_t myMutex = PTHREAD_MUTEX_INITIALIZER;
+  void *thread_func(void *arg) {
+      int islock;
+      //为线程加锁   
+      islock = pthread_mutex_lock(&myMutex);
+      if (islock == 0) {
+          printf("线程 %u 已加锁\n", pthread_self());
+      }
+      return 0;
+  }
+  int main() {
+      int flag;
+      int i;
+      //创建 4 个线程
+      pthread_t tids[4];
+      for (i = 0; i < 4; i++)
+      {
+          flag = pthread_create(&tids[i], NULL, thread_func, NULL);
+          if (flag == 0) {
+              printf("线程 %u 创建完成\n",tids[i]);
+          }
+      }
+      for(i = 0; i<4;i++){
+          pthread_join(tids[i], NULL);
+          printf("线程 %u 执行完成\n",tids[i]);
+      }
+      return 0;
+  }
+  
+  线程 3135751936 创建完成
+  线程 3125262080 创建完成
+  线程 3114772224 创建完成
+  线程 3135751936 已加锁
+  线程 3104282368 创建完成
+  线程 3135751936 执行完成
+                                             <-- 其它 3 个线程发生了死锁
+  ```
+
+- 再举一个例子（实例二）：
+
+  ```
+  #include <stdio.h>
+  #include <pthread.h>
+  #include <unistd.h>
+  pthread_mutex_t mutex;
+  pthread_mutex_t mutex2;
+  void *func1(void *args)
+  {
+      pthread_mutex_lock(&mutex);
+      printf("t1 成功申请 mytex 锁\n");
+      sleep(2);
+      pthread_mutex_lock(&mutex2);
+      printf("t1 成功申请 mytex2 锁\n");
+      printf("%u is running\n",pthread_self());
+      pthread_mutex_unlock(&mutex);
+      printf("------%u done\n",pthread_self());      
+  }
+  void *func2(void *args)
+  { 
+      pthread_mutex_lock(&mutex2);
+      printf("t2 成功申请 mytex2 锁\n");
+      sleep(2);
+      pthread_mutex_lock(&mutex);
+      printf("t2 成功申请 mytex 锁\n");
+      printf("%u is running\n",pthread_self()); 
+      pthread_mutex_unlock(&mutex);
+      printf("------%u done\n",pthread_self());
+  }
+  int main()
+  {
+      int ret;
+      pthread_t t1;
+      pthread_t t2;
+      pthread_mutex_init(&mutex,NULL);
+      pthread_mutex_init(&mutex2,NULL);
+      ret = pthread_create(&t1, NULL, func1, NULL);
+      if(ret != 0){
+             printf("create t1 fail\n");
+      }
+      ret = pthread_create(&t2, NULL, func2, NULL);
+      if(ret != 0){
+             printf("create t2 fail\n");
+      }
+    
+      pthread_join(t1,NULL);
+      pthread_join(t2,NULL);
+      pthread_mutex_destroy(&mutex);
+      pthread_mutex_destroy(&mutex2);
+      return 0;
+  }
+  
+  t1 成功申请 mytex 锁
+  t2 成功申请 mytex2 锁
+                                            <-- t1 和 t2 都发生了死锁
+  ```
+
+  - 程序中创建了 mutex 和 mutex2 两个互斥锁，线程 t1 和 t2 同时执行。从执行结果可以看到，t1 成功申请了 mutex 锁，t2 成功申请了 mutex2 锁，t1 一直等待 t2 释放 mutex2 锁，而 t2 一直等待 t1 释放 mutex 锁，两个线程都因等待对方释放资源产生了死锁。
+  - 总的来说，当进程空间中的某公共资源不允许多个线程同时访问时，某线程访问公共资源后不及时释放资源，就很可能产生线程死锁。
+
 - 使用互斥锁、信号量、条件变量和读写锁实现线程同步时，要注意以下几点：
   - 占用互斥锁的线程，执行完成前必须及时解锁；
   - 通过 sem_wait() 函数占用信号量资源的线程，执行完成前必须调用 sem_post() 函数及时释放；
   - 当线程因 pthread_cond_wait() 函数被阻塞时，一定要保证有其它线程唤醒此线程；
   - 无论线程占用的是读锁还是写锁，都必须及时解锁。
+  - 注意，函数中可以设置多种结束执行的路径，但无论线程选择哪个路径结束执行，都要保证能够将占用的资源释放掉。
+  
 - POSIX 标准中，很多阻塞线程执行的函数都提供有 tryxxx() 和 timexxx() 两个版本，例如 pthread_mutex_lock() 和 pthread_mutex_trylock()、sem_wait() 和 sem_trywait()、pthread_cond_wait() 和 pthread_cond_timedwait() 等，它们可以完成同样的功能，但 tryxxx() 版本的函数不会阻塞线程，timexxx() 版本的函数不会一直阻塞线程。实际开发中，建议您优先选择 tryxxx() 或者 timexxx() 版本的函数，可以大大降低线程产生死锁的概率。
+
 - 多线程程序中，多个线程请求资源的顺序最好保持一致。实例二中，线程 t1 先请求 mutex 锁然后再请求 mutex2 锁，而 t2 则是先请求 mutex2 锁然后再请求 mutex 锁，这就是典型的因“请求资源顺序不一致”导致发生了线程死锁的情况。
+
+##### 自定义线程属性
+
+- POSIX 标准中，线程的属性用 pthread_attr_t 类型的变量表示
+
+  ```
+  #include <pthread.h>
+  pthread_attr_t myAttr;
+  ```
+
+  - 用此变量前，必须调用 pthread_attr_init() 函数进行初始化
+
+    ```
+    int pthread_attr_init(pthread_attr_t * attr);
+    
+    函数执行成功时，返回数字 0，反之返回非零数。
+    ```
+
+    - 通过调用 pthread_attr_init() 函数，myAttr 变量就拥有了系统默认的线程属性。在此基础上，我们可以根据需要对 myAttr 变量的属性值进行修改。
+
+- pthread_attr_t 是一种结构体类型，内部包含多种线程属性：
+
+  ```
+  typedef struct
+  {
+         int __detachstate;
+         int __schedpolicy;
+         struct sched_param __schedparam;
+         int __inheritsched;
+         int __scope;
+         size_t __guardsize;
+         int __stackaddr_set;
+         void* __stackaddr;
+         size_t __stacksize;
+  } pthread_attr_t;
+  ```
+
+  - \__detachstate
+
+    - 我们知道，默认属性的线程在执行完目标函数后，占用的私有资源并不会立即释放，要么执行完 pthread_join() 函数后释放，要么整个进程执行结束后释放。某些场景中，我们并不需要接收线程执行结束后的返回值，如果想让线程执行完后立即释放占用的私有资源，就可以通过修改 __detachstate 属性值来实现。
+
+    - __detachstate 属性值用于指定线程终止执行的时机，该属性的值有两个，分别是：
+
+      - PTHREAD_CREATE_JOINABLE（默认值）：线程执行完函数后不会自行释放资源；
+      - PTHREAD_CREATE_DETACHED：线程执行完函数后，会自行终止并释放占用的资源。
+
+    - 关于 __detachstate 属性，<pthread.h> 头文件中提供了 2 个与它相关的函数，分别是：
+
+      ```
+      int pthread_attr_getdetachstate(const pthread_attr_t * attr,int * detachstate);
+      int pthread_attr_setdetachstate(pthread_attr_t *sttr，int detachstate);
+      ```
+
+      - pthread_attr_getdetachstate() 函数用于获取 \__detachstate 属性的值，detachstate 指针用于接收`__detachstate` 属性的值；pthread_attr_setdetachstate() 函数用于修改 `__detachstate` 属性的值，detachstate 整形变量即为新的 __detachstate 属性值。两个函数执行成功时返回数字 0，反之返回非零数。
+
+    - 此外，<pthread.h> 头文件还提供有 pthread_detach() 函数，可以直接将目标线程的 __detachstate 属性改为 PTHREAD_CREATE_DETACHED，语法格式如下：
+
+      ```
+      int pthread_detach(pthread_t thread);
+      ```
+
+  - 后面还有很多，包括修改栈的大小，设置线程的优先级
 
 #### 网络编程
 
