@@ -1825,6 +1825,8 @@
 
 #### 多线程编程
 
+- 注意理解在锁解锁的时候会有一个在内核态唤醒其他线程的过程，这个是内核做的事情，因为试图获取被锁锁定的资源的时候，内核就会把线程加入到一个队列中，如果这个锁被释放，就通知这些队列中的线程，这是内核态的设计及实现
+
 - 我们知道，一个进程指的是一个正在执行的应用程序。线程对应的英文名称为“thread”，它的功能是执行应用程序中的某个具体任务，比如一段程序、一个函数等。
 
 - 每个进程执行前，操作系统都会为其分配所需的资源，包括要执行的程序代码、数据、内存空间、文件资源等。一个进程至少包含 1 个线程，可以包含多个线程，所有线程共享进程的资源，各个线程也可以拥有属于自己的私有资源。
@@ -2652,6 +2654,14 @@
     - sem_destory() 函数用于手动销毁信号量。
     - 以上函数执行成功时，返回值均为 0 ；如果执行失败，返回值均为 -1。
   
+  ```
+  int sem_getvalue(sem_t* sem, int* val)
+  ```
+  
+  - 函数功能：获取当前信号量的值，通过val输出参数返回，如果当前信号量已经上锁（即同步对象不可用），那么返回值为0，或为负数，其绝对值就是等待该信号量解锁的线程数。信号量上锁意味着当前的信号量为0，如果不为0就可以将这个信号量的值返回到val中
+  - 返回值：若成功则返回0，出错则返回-1
+  - 就是简单
+  
 - 二进制信号量常用于代替互斥锁解决线程同步问题，接下来我们使用二进制信号量模拟“4 个售票员卖 10 张票”的过程：
 
   ```
@@ -3206,7 +3216,7 @@
 
 - 再举一个例子（实例二）：
 
-  ```
+  ```c
   #include <stdio.h>
   #include <pthread.h>
   #include <unistd.h>
@@ -3275,6 +3285,197 @@
 - POSIX 标准中，很多阻塞线程执行的函数都提供有 tryxxx() 和 timexxx() 两个版本，例如 pthread_mutex_lock() 和 pthread_mutex_trylock()、sem_wait() 和 sem_trywait()、pthread_cond_wait() 和 pthread_cond_timedwait() 等，它们可以完成同样的功能，但 tryxxx() 版本的函数不会阻塞线程，timexxx() 版本的函数不会一直阻塞线程。实际开发中，建议您优先选择 tryxxx() 或者 timexxx() 版本的函数，可以大大降低线程产生死锁的概率。
 
 - 多线程程序中，多个线程请求资源的顺序最好保持一致。实例二中，线程 t1 先请求 mutex 锁然后再请求 mutex2 锁，而 t2 则是先请求 mutex2 锁然后再请求 mutex 锁，这就是典型的因“请求资源顺序不一致”导致发生了线程死锁的情况。
+
+##### 全局锁与局部锁
+
+- 声明一个全局互斥锁就是保护全局的一些东西，声明一个局部互斥锁就是保护一些局部的东西，互斥锁的本质就是当程序执行的时候，如果保护的是全局的东西就看一下这把全局锁有没有被锁住，如果保护的是局部的东西就看一下这把局部锁有没有被锁住。在全局锁里面的表现是线程里面一直在加锁，所以锁定的是一些全局的东西。在局部锁里面表现是函数里面在加锁，所以锁住的是一些局部的东西。最主要的就是要理解，不管什么情况下，当程序运行的时候，如果我们有一把锁锁住了一些东西，不管是全局的还是局部的，在访问的时候就看一下这把锁有没有锁住，如果锁住了就不往下执行了，如果没有锁住就执行。
+
+- 有线程访问进程空间中的公共资源时，该线程执行“加锁”操作（将资源“锁”起来），阻止其它线程访问。访问完成后，该线程负责完成“解锁”操作，将资源让给其它线程。当有多个线程想访问资源时，谁最先完成“加锁”操作，谁就最先访问资源。
+
+- 当有多个线程想访问“加锁”状态下的公共资源时，它们只能等待资源“解锁”，所有线程会排成一个等待（阻塞）队列。资源解锁后，操作系统会唤醒等待队列中的所有线程，第一个访问资源的线程会率先将资源“锁”起来，其它线程则继续等待。
+
+- 以上的说法表示如果不访问被锁的资源时，其线程就不会被阻塞，线程会一直执行，如果访问的东西有被锁的资源时，当前线程就会阻塞。这个用在局部是同样的道理，如果局部的变量被锁住，当有函数访问的时候，函数就会阻塞，等着解锁，如果访问的东西不是锁管理的，就不会阻塞。
+
+  ```
+  class XBusMessage
+  {
+  protected:
+  	HTOPIC m_dbTopic;
+  	XMutex m_dbTopicLock;
+  public:
+  	XBusMessage();
+  	virtual ~XBusMessage();
+  	
+  	// -- msgbus_free_buffer free resp
+  	int sendBusDb(char *sendJson, char ** resp);
+  };
+  
+  int XBusMessage::sendBusDb(char *sendJson, char ** resp)
+  {
+  	int retval = -1;
+  	int error;
+  	int flag;
+  	m_dbTopicLock.Lock();
+  	if(!m_dbTopic){
+  		HBUS bus;
+  		bus = XPolicySystem::system().getBusHandle();
+  		if(!bus){
+  			printf("XBusMessage getBusHandle error...\n");
+  			goto DONE;
+  		}
+  		m_dbTopic = msgbus_open_topic(bus, __TOPIC_NAME_DATABASE, &error);
+  		if(!m_dbTopic){
+  			printf("failed to open topic <%s>:%s\n", __TOPIC_NAME_DATABASE, msgbus_get_error_string(error));
+  			goto DONE;
+  		}
+  	}
+  	
+  	flag = msgbus_topic_send_timeout(m_dbTopic, sendJson, 10, resp);
+  	if(0 != flag){
+  		printf("failed to send message to topic <%s>(%d):%s\n", __TOPIC_NAME_DATABASE, flag, msgbus_get_error_string(flag));
+  	}
+  	if(__is_broken_error(flag)){
+  		if(m_dbTopic){
+  			msgbus_close_topic(m_dbTopic);
+  			m_dbTopic = NULL;
+  		}
+  		goto DONE;
+  	}
+  	
+  	retval = 0;
+  DONE:
+  	m_dbTopicLock.Unlock();
+  	return retval;
+  }
+  ```
+
+  ```
+  class XMutex
+  {
+  protected:
+  	#ifdef WIN32
+  		HANDLE m_mutex;
+  	#else	
+  		pthread_mutex_t m_mutex;
+  	#endif	
+  public:
+  	XMutex();
+  	virtual ~XMutex();
+  	void Lock() const;
+  	void Unlock() const;
+  };
+  
+  class XJsonDataProcess
+  {
+  protected:
+  	XBusMessage m_busMessage;
+  	XDbDataProcess m_dbData;
+  public:
+  	char * jsonDataProcess(const char * json);
+  	
+  	char * riskCommandProcess(cJSON * request);
+  
+  
+  char * XJsonDataProcess::queryRiskCommand(cJSON * request){
+  	char * sql_data = NULL, * data = NULL, * json_resp = NULL;
+  	::std::stringstream stm;
+  	cJSON * infoItem = NULL, * command_keyword = NULL;
+  	infoItem = cJSON_GetObjectItem(request, "info");
+  	if(!infoItem){
+  		printf("json data error\n");
+  		goto DONE;
+  	}
+  	command_keyword = cJSON_GetObjectItem(infoItem, "command_keyword");
+  	if(!command_keyword){
+  		printf("json info data error\n");
+  		goto DONE;
+  	}
+  	stm << "select guid, command, level, stop_type, desc from mg_risk_command where command like '%" << command_keyword->valuestring << "%'";
+  	sql_data = createSqlJson(2, stm.str().c_str());
+  	if(sql_data){
+  		if(0 != m_busMessage.sendBusDb(sql_data, &json_resp)){
+  			printf("sendBusDb failed...\n");
+  			goto DONE;
+  		}else{
+  			printf("json_resp:%s\n", json_resp);
+  		}
+  	}else {
+  		goto DONE;
+  	}
+  	if(json_resp){
+  		data = m_dbData.riskCommandQuery(json_resp);
+  	}
+  DONE:
+  	if(json_resp){
+  		msgbus_free_buffer(json_resp);
+  	}
+  
+  	if(sql_data){
+  		free(sql_data);
+  	}
+  	return data;
+  }
+  ```
+
+  - Xmutex是一个互斥锁类，里面声明了一个互斥锁，由于这个互斥锁在类里面，而且是XMutex m_dbTopicLock;在类里面声明的，表示是一个局部互斥锁，其锁定的东西是和其在同一个作用域的变量HTOPIC m_dbTopic;当类里面的函数sendBusDb想使用m_dbTopic时会看一看这把锁，如果没有被锁住，其就执行，如果被锁住，当前函数就会阻塞，等着解锁。
+  - XJsonDataProcess类里面声明了一个XBusMessage类实例，我们想要访问里面的函数时，因为里面有一个局部互斥锁，我们就会看看这把锁，这样就避免了如果一个会话运行到m_dbTopic = msgbus_open_topic(bus, __TOPIC_NAME_DATABASE, &error)之前，里一个会话也进来，其看到if(!m_dbTopic)，m_dbTopic还是空的，其会接着进来打开topic，这样两个会话打开了这个topic，都会往里面写东西，最后其他的挂在总线上的微服务收到的就会出错。如果我们加一把局部锁，锁住m_dbTopic，如果第一个会话进来给这把锁加锁，第二个会话进来，看到这把锁锁住了，就会停止执行后面的代码。这样就保证了互斥性
+  - 只有上面的那种情况会出错，如果m_dbTopic被赋值后，就不会进入那部分了，直接msgbus_topic_send_timeout，每一个send都会创建resp二级指针，这样接收回来的就不会出错。上面的这种想法是错误的，虽然每一次send都会创建二级指针内存，但是如果好几个会话都给一个topic发东西，很快的话，微服务收到的就会出错，不知道解析到哪里，这样返回来的也会出错，所以锁住m_dbTopic最好，这样收到的和返回的都不会出错。一个会话进这个函数加锁，执行完解锁，其他的会话在这期间是进不来的
+
+##### 自旋锁
+
+- 互斥锁简介
+
+  - 互斥锁属于sleep-waiting类型锁。Linux Kernel 2.6.x稳定版开始，Linux的互斥锁都是futex (Fast Usermode Mutex)锁。
+  - Futex是一个在Linux上实现锁定和构建高级抽象锁如信号量和POSIX互斥的基本工具。
+  - Futex是由用户空间的一个对齐的整型变量和附在其上的内核空间等待队列构成。多进程或多线程绝大多数情况下对位于用户空间的futex的整型变量进行操作(汇编语言调用CPU提供的原子操作指令来增加或减少)，而其它情况下则需要通过代价较大的系统调用来对位于内核空间的等待队列进行操作(如唤醒等待的进程/线程或将当前进程/线程放入等待队列)。除了多个线程同时竞争锁的少数情况外，基于futex的lock操作是不需要进行代价昂贵的系统调用操作的。
+  - Futex核心思想是通过将大多数情况下非同时竞争lock的操作放到在用户空间执行，而不是代价昂贵的内核系统调用方式来执行，从而提高了效率。
+  - 互斥锁禁止多个线程同时进入受保护的代码临界区（critical section）。在任意时刻，只有一个线程被允许进入代码保护区。互斥锁实际上是count=1情况下的semaphore。
+
+- 互斥锁缺点
+
+  - 等待互斥锁会消耗时间，等待延迟会损害系统的可伸缩性
+  - 优先级倒置。低优先级的线程可以获得互斥锁，因此会阻碍需要同一互斥锁的高优先级线程
+  - 锁护送（lock convoying）。如果持有互斥锁的线程分配的时间片结束，线程被取消调度，则等待同一互斥锁的其它线程需要等待更长时间。
+
+- 自旋锁简介
+
+  - 自旋锁（spin lock）属于busy-waiting类型锁。在多处理器环境中，自旋锁最多只能被一个可执行线程持有。如果一个可执行线程试图获得一个被其它线程持有的自旋锁，那么线程就会一直进行忙等待，自旋（空转），等待自旋锁重新可用。如果自旋锁未被争用，请求锁的执行线程便立刻得到自旋锁，继续执行。
+  - 多处理器操作系统中某些资源是有限的，不同线程需要互斥访问，因此需要引入锁概念，只有获取锁的线程才能够对资源进行访问。多线程的核心是CPU的时间分片，同一时刻只能有一个线程获取到锁。对于没有获取到锁的线程通常有两种处理方式：自旋锁，没有获取到锁的线程会一直循环等待判断资源是否已经释放锁，不用将线程阻塞起来；互斥锁，把未获取到锁的线程阻塞起来，等待重新调度请求。
+  - 自旋锁（spin lock）是指当一个线程在获取锁的时候，如果锁已经被其它线程获取，那么线程将循环等待，然后不断的判断锁是否能够被成功获取，直到获取到锁才会退出循环。
+  - 获取锁的线程一直处于活跃状态，但并没有执行任何有效的任务，使用自旋锁会造成busy-waiting。
+
+- 自旋锁特点
+
+  - 自旋锁不会使线程状态发生切换，一直处于用户态，即线程一直都是active的；不会使线程进入阻塞状态，减少了不必要的上下文切换，执行速度快
+  - 非自旋锁在获取不到锁的时候会进入阻塞状态，从而进入内核态，当获取到锁时需要从内核态恢复，导致线程在用户态与内核态之间来回切换，严重影响锁的性能。
+
+- 自旋锁原理
+
+  - 自旋锁的原理比较简单，如果持有锁的线程能在短时间内释放锁资源，那么等待竞争锁的线程就不需要做内核态和用户态之间的切换进入阻塞状态，只需要等一等(自旋)，等到持有锁的线程释放锁后即可获取，避免用户进程和内核切换的消耗。
+  - 自旋锁避免了操作系统进程调度和线程切换，通常适用在时间极短的情况，因此操作系统的内核经常使用自旋锁。但如果长时间上锁，自旋锁会非常耗费性能。线程持有锁时间越长，则持有锁的线程被 OS调度程序中断的风险越大。如果发生中断情况，那么其它线程将保持旋转状态(反复尝试获取锁)，而持有锁的线程并不打算释放锁，导致结果是无限期推迟，直到持有锁的线程可以完成并释放它为止。
+  - 自旋锁的目的是占着CPU资源不进行释放，等到获取锁立即进行处理。如果自旋执行时间太长，会有大量的线程处于自旋状态占用CPU资源，进而会影响整体系统的性能，因此可以给自旋锁设定一个自旋时间，等时间一到立即释放自旋锁。
+
+- 自旋锁API
+
+  ```
+  #include <pthread.h>
+  
+  int pthread_spin_destroy(pthread_spinlock_t *lock);
+  int pthread_spin_init(pthread_spinlock_t *lock, int pshared);
+  
+  int pthread_spin_lock(pthread_spinlock_t *lock);
+  int pthread_spin_trylock(pthread_spinlock_t *lock);
+  int pthread_spin_unlock(pthread_spinlock_t *lock);
+  ```
+
+- 自旋锁与互斥锁
+
+  - spinlock不会使线程状态发生切换，mutex在获取不到锁的时候会选择sleep。
+  - spinlock优点：没有耗时的系统调用，一直处于用户态，执行速度快。
+  - spinlock缺点：一直占用CPU，而且在执行过程中还会锁bus总线，锁总线时其它处理器不能使用总线。
+  - mutex获取锁分为两阶段，第一阶段在用户态采用spinlock锁总线的方式获取一次锁，如果成功立即返回；否则进入第二阶段，调用系统的futex锁去sleep，当锁可用后被唤醒，继续竞争锁。
+  - mutex优点：不会忙等，得不到锁会sleep。
+  - mutex缺点：sleep时会陷入到内核态，需要昂贵的系统调用。
 
 ##### 自定义线程属性
 
