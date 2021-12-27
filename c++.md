@@ -1838,6 +1838,44 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   - 继承关系中必须有同名的虚函数，并且它们是覆盖关系（函数原型相同）。
   - 存在基类的指针，通过该指针调用虚函数。
 
+##### 多态访问的问题
+
+- 如果父类定义了变量，子类定义了自己的变量，如果父类有一个虚函数，子类继承了，但是虚函数在子类里面访问了子类自己定义的变量，这样当我们声明了一个指向父类的指针指向子类时，调用这个虚函数的时候，是可以使用子类的自己定义的变量的。因为我们首先需要声明一个子类的对象，然后让父类指向子类，说明这个子类目前是存在的，其定义的变量是存在的，我们能直接调用虚函数接口来直接使用这个子类自己定义的变量
+
+  ```c++
+  class Person{
+  public:
+      virtual void printa(){
+          printf("a = %d\n", a);
+      }
+      Person(int e, int f):a(e), b(f){}
+  private:
+      int a , b;
+  };
+  class Student{
+  public:
+      virtual void printa(){
+          printf("c = %d\n", c)
+      }
+      Student(int d, int t, int m):Person(t, m), c(d){}
+  private:
+      int c;
+  };
+  
+  int main(){
+      Person * per = new Student(10, 20, 30);
+      per->printa();
+      delete per;
+      return 0;
+  }
+  
+  c = 10
+  
+  此时可以看到，通过父类的指针调用多态的接口，子类的接口能访问子类的自己定义的变量，这样就可以访问子类的变量，这样是通过接口访问的，这样能行
+  ```
+  
+  
+
 ##### 虚析构函数
 
 - 构造函数不能是虚函数，因为派生类不能继承基类的构造函数，将构造函数声明为虚函数没有意义。
