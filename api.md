@@ -651,3 +651,257 @@
 - [Linux信号处理原理与实现](https://mp.weixin.qq.com/s/rcpK-UEYIy628b77IG-obA)
   - signal是异步函数，将回调函数注册到内核态，当进程收到对应的信号时，由内核态来调用对应的信号处理函数。内核态和当前进程在一起，组成当前整个的程序，只是内核态是由系统内核维护的一些函数，内核态也有进程
 
+##### popen
+
+```c++
+FILE *popen(const char *command, const char *type);
+int pclose(FILE *stream);
+```
+
+- 函数说明：popen()会调用fork()产生子进程，然后从子进程中调用/bin/sh -c 来执行参数command 的指令。
+- 参数type 可使用 "r"代表读取，"w"代表写入。依照此type 值，popen()会建立管道连到子进程的标准输出设备或标准输入设备，然后返回一个文件指针。随后进程便可利用此文件指针来读取子进程的输出设备或是写入到子进程的标准输入设备中。
+- 此外，所有使用文件指针(FILE*)操作的函数也都可以使用，除了fclose()以外。
+- 返回值：若成功则返回文件指针, 否则返回NULL, 错误原因存于errno 中.
+
+```c++
+int xshellExecute(const char *cmd, vector<string> &resvec) 
+{
+	#define LINE_SIZE (1024)
+	
+    int retval = -1;
+	FILE * pp = NULL; 
+	char tmp[LINE_SIZE + 1]; // -- 设置一个合适的长度，以存储每一行输出
+	
+	resvec.clear();
+#ifndef WIN32
+	pp = popen(cmd, "r"); // -- 建立管道
+	if (!pp) {
+		perror("[xshellExecute-error]");
+		DbgPrint("[-] xshellExecute cant run \"%s\"\n", cmd);
+        goto DONE;
+    }    
+	// -- while()  
+    while((!feof(pp)) && (fgets(tmp, LINE_SIZE, pp) != NULL)) {
+        tmp[LINE_SIZE] = 0;
+		if (tmp[strlen(tmp) - 1] == '\n') {
+            tmp[strlen(tmp) - 1] = '\0'; // -- 去除换行符
+        }
+        resvec.push_back(tmp);
+    }
+	
+    retval = pclose(pp); // -- 关闭管道
+#endif
+DONE:	
+    return retval;
+}
+
+```
+
+
+
+### 设计模式
+
+#### 创建型模式
+
+- 创建型模式关注点是如何创建对象，其核心思想是要把对象的创建和使用相分离，这样使得两者能相对独立地变换。
+- 创建型模式包括：
+  - 工厂方法：Factory Method
+  - 抽象工厂：Abstract Factory
+  - 建造者：Builder
+  - 原型：Prototype
+  - 单例：Singleton
+
+##### 工厂方法
+
+- 定义一个用于创建对象的接口，让子类决定实例化哪一个类。Factory Method使一个类的实例化延迟到其子类。
+- 
+
+##### 观察者模式
+
+- 定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。
+
+- 观察者模式（Observer）又称发布-订阅模式（Publish-Subscribe：Pub/Sub）。它是一种通知机制，让发送通知的一方（被观察方）和接收通知的一方（观察者）能彼此分离，互不影响。
+
+  ```c++
+  /**
+   * Observer Design Pattern
+   *
+   * Intent: Lets you define a subscription mechanism to notify multiple objects
+   * about any events that happen to the object they're observing.
+   *
+   * Note that there's a lot of different terms with similar meaning associated
+   * with this pattern. Just remember that the Subject is also called the
+   * Publisher and the Observer is often called the Subscriber and vice versa.
+   * Also the verbs "observe", "listen" or "track" usually mean the same thing.
+   */
+  
+  #include <iostream>
+  #include <list>
+  #include <string>
+  
+  class IObserver {
+   public:
+    virtual ~IObserver(){};
+    virtual void Update(const std::string &message_from_subject) = 0;
+  };
+  
+  class ISubject {
+   public:
+    virtual ~ISubject(){};
+    virtual void Attach(IObserver *observer) = 0;
+    virtual void Detach(IObserver *observer) = 0;
+    virtual void Notify() = 0;
+  };
+  
+  /**
+   * The Subject owns some important state and notifies observers when the state
+   * changes.
+   */
+  
+  class Subject : public ISubject {
+   public:
+    virtual ~Subject() {
+      std::cout << "Goodbye, I was the Subject.\n";
+    }
+  
+    /**
+     * The subscription management methods.
+     */
+    void Attach(IObserver *observer) override {
+      list_observer_.push_back(observer);
+    }
+    void Detach(IObserver *observer) override {
+      list_observer_.remove(observer);
+    }
+    void Notify() override {
+      std::list<IObserver *>::iterator iterator = list_observer_.begin();
+      HowManyObserver();
+      while (iterator != list_observer_.end()) {
+        (*iterator)->Update(message_);
+        ++iterator;
+      }
+    }
+  
+    void CreateMessage(std::string message = "Empty") {
+      this->message_ = message;
+      Notify();
+    }
+    void HowManyObserver() {
+      std::cout << "There are " << list_observer_.size() << " observers in the list.\n";
+    }
+  
+    /**
+     * Usually, the subscription logic is only a fraction of what a Subject can
+     * really do. Subjects commonly hold some important business logic, that
+     * triggers a notification method whenever something important is about to
+     * happen (or after it).
+     */
+    void SomeBusinessLogic() {
+      this->message_ = "change message message";
+      Notify();
+      std::cout << "I'm about to do some thing important\n";
+    }
+  
+   private:
+    std::list<IObserver *> list_observer_;
+    std::string message_;
+  };
+  
+  class Observer : public IObserver {
+   public:
+    Observer(Subject &subject) : subject_(subject) {
+      this->subject_.Attach(this);
+      std::cout << "Hi, I'm the Observer \"" << ++Observer::static_number_ << "\".\n";
+      this->number_ = Observer::static_number_;
+    }
+    virtual ~Observer() {
+      std::cout << "Goodbye, I was the Observer \"" << this->number_ << "\".\n";
+    }
+  
+    void Update(const std::string &message_from_subject) override {
+      message_from_subject_ = message_from_subject;
+      PrintInfo();
+    }
+    void RemoveMeFromTheList() {
+      subject_.Detach(this);
+      std::cout << "Observer \"" << number_ << "\" removed from the list.\n";
+    }
+    void PrintInfo() {
+      std::cout << "Observer \"" << this->number_ << "\": a new message is available --> " << this->message_from_subject_ << "\n";
+    }
+  
+   private:
+    std::string message_from_subject_;
+    Subject &subject_;
+    static int static_number_;
+    int number_;
+  };
+  
+  int Observer::static_number_ = 0;
+  
+  void ClientCode() {
+    Subject *subject = new Subject;
+    Observer *observer1 = new Observer(*subject);
+    Observer *observer2 = new Observer(*subject);
+    Observer *observer3 = new Observer(*subject);
+    Observer *observer4;
+    Observer *observer5;
+  
+    subject->CreateMessage("Hello World! :D");
+    observer3->RemoveMeFromTheList();
+  
+    subject->CreateMessage("The weather is hot today! :p");
+    observer4 = new Observer(*subject);
+  
+    observer2->RemoveMeFromTheList();
+    observer5 = new Observer(*subject);
+  
+    subject->CreateMessage("My new car is great! ;)");
+    observer5->RemoveMeFromTheList();
+  
+    observer4->RemoveMeFromTheList();
+    observer1->RemoveMeFromTheList();
+  
+    delete observer5;
+    delete observer4;
+    delete observer3;
+    delete observer2;
+    delete observer1;
+    delete subject;
+  }
+  
+  int main() {
+    ClientCode();
+    return 0;
+  }
+  
+  Hi, I'm the Observer "1".
+  Hi, I'm the Observer "2".
+  Hi, I'm the Observer "3".
+  There are 3 observers in the list.
+  Observer "1": a new message is available --> Hello World! :D
+  Observer "2": a new message is available --> Hello World! :D
+  Observer "3": a new message is available --> Hello World! :D
+  Observer "3" removed from the list.
+  There are 2 observers in the list.
+  Observer "1": a new message is available --> The weather is hot today! :p
+  Observer "2": a new message is available --> The weather is hot today! :p
+  Hi, I'm the Observer "4".
+  Observer "2" removed from the list.
+  Hi, I'm the Observer "5".
+  There are 3 observers in the list.
+  Observer "1": a new message is available --> My new car is great! ;)
+  Observer "4": a new message is available --> My new car is great! ;)
+  Observer "5": a new message is available --> My new car is great! ;)
+  Observer "5" removed from the list.
+  Observer "4" removed from the list.
+  Observer "1" removed from the list.
+  Goodbye, I was the Observer "5".
+  Goodbye, I was the Observer "4".
+  Goodbye, I was the Observer "3".
+  Goodbye, I was the Observer "2".
+  Goodbye, I was the Observer "1".
+  Goodbye, I was the Subject.
+  ```
+
+  
