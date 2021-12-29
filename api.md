@@ -28,6 +28,79 @@
   - umask()会将系统umask值设成参数mask&0777后的值, 然后将先前的umask值返回。在使用open()建立新文件时, 该参数mode 并非真正建立文件的权限, 而是(mode&~umask)的权限值。
   - 例如，在建立文件时指定文件权限为0666, 通常umask 值默认为022, 则该文件的真正权限则为0666&～022＝0644, 也就是rw-r--r--返回值此调用不会有错误值返回. 返回值为原先系统的umask 值。
 
+##### stdout,stderr
+
+```
+#include <stdio.h>
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;
+```
+
+- 错误流 stderr 是非缓冲的。输出流 stdout 是行缓冲的，如果它指向一个终端。不完全的行只有在调用 fflush(3) 或 exit(3)，或者打印了新行符之后才会显示。这样可能带来无法预料的结果，尤其是调试输出时。标准流 (或任何其他流) 的缓冲模式可以用函数 setbuf(3) 或 setvbuf(3)来切换。注意当 stdin 与一个终端关联时，也许终端驱动中存在输入缓冲，与 stdio 缓冲完全无关。
+- 对于stdout，信息输出时总是先送入缓冲区（行间缓存），然后再输出到屏幕；而对stderr，信息是不经过缓冲区直接输入到屏幕的。因此，向stdout输出的信息是可以被重定向的，输出到stderr的信息则不能被重定向。
+- 其中的重定向表示的是当执行程序的时候重定向到文件中./a.out > test.txt，对于输出到stdout中的可以重定向，对于输出到stderr中的不可以重定向，虽然重定向了，但是错误依然在屏幕上输出，文件里面没有stderr里面的输出
+
+##### erron
+
+- errno 是记录系统的最后一次错误代码。代码是一个int型的值，在errno.h中定义。查看错误代码errno是调试程序的一个重要方法。当linux C api函数发生异常时,一般会将errno变量(需include errno.h)赋一个整数值,不同的值表示不同的含义,可以通过查看该值推测出错的原因。在实际编程中用这一招解决了不少原本看来莫名其妙的问题。
+
+  ```
+  A common mistake is to do
+  
+  if (somecall() == -1) {
+  	printf("somecall() failed\n");
+  	if (errno == ...) { ... }
+  }
+  
+  where  errno  no longer needs to have the value it had upon return from somecall() (i.e., it may have been changed by the printf(3)).  If the value of errno should be preserved across a library call, it must be saved:
+  
+  if (somecall() == -1) {
+  	int errsv = errno;
+  	printf("somecall() failed\n");
+  	if (errsv == ...) { ... }
+  }
+  ```
+
+##### perror
+
+- 函数perror()用于抛出最近的一次系统错误信息
+
+  ```
+  void perror(char *string);
+  ```
+
+- perror()用来将上一个函数发生错误的原因输出到标准错误(stderr)。参数string所指的字符串会先打印出，后面再加上错误原因字符串，此错误原因依照全局变量errno 的值来决定要输出的字符串。
+
+- 在库函数中有个errno变量，每个errno值对应着以字符串表示的错误类型。当你调用"某些"函数出错时，该函数已经重新设置了errno的值。perror函数只是将你输入的一些信息和现在的errno所对应的错误一起输出。
+
+- errno是一个int类型的值，但是每一个错误类型系统对应着一个错误字符串，当用perror输出时，会直接输出这个错误对应的字符串
+
+  ```
+  【实例】打开一个不存在的文件并输出错误信息。
+  #include <stdio.h>
+  #include <assert.h>
+  #include <stdlib.h>
+  int main( void )
+  {
+      FILE *fp;
+      fp = fopen( "test.txt", "w" );/*打开文件*/
+      assert( fp ); /*断言不为空*/
+      fclose( fp );/*关闭*/
+      fp = fopen( "nulltest.txt", "r" );/*打开一个不存在的文件*/
+      if ( NULL == fp )
+      {
+          /*显示最近一次错误信息*/
+          perror("fopen( \"nulltest.txt\", \"r\" )");
+      }
+      return 0;
+  }
+  运行结果：
+  fopen( "nulltest.txt", "r" ):No such file or directory
+  ```
+
+  - 程序先定义一个文件指针fp，之后创建文件 test.txt，断言文件打开成功，然后关闭该文件，再以只读的方式打开文件nulltest.txt，判断该文件指针是否问空，如果为空则使用 perror() 输出错误信息。perror()用来将上一个函数发生错误的原因 输出到标准设备(stderr)。函数参数string所指的字符串会先打印出， 后面再加上错误原因字符串。此错误原因依照全局变量error的值来决定要输出的字符串。
+
 ### c++
 
 ##### std::function,std::bind
