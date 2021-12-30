@@ -787,13 +787,1666 @@ DONE:
 ##### 工厂方法
 
 - 定义一个用于创建对象的接口，让子类决定实例化哪一个类。Factory Method使一个类的实例化延迟到其子类。
-- 
+- 工厂模式，指的是封装对象的创建过程，并将创建过程和操作过程分离，用户（创建者）无需关心具体过程，就像一个工厂生产产品一样，以便批量管理对象的创建，提高程序的可以维护性和扩展性。
+- 工厂模式根据“产品制造过程”（对象创建）不同，分为简单工厂模式 (Simple Factory) 、工厂方法模式 (Factory Method) 、抽象工厂模式 (Abstract Factory)
+  - 简单工厂模式，由创建对象类根据传入的类型参数确定对象种类实例。简单工厂模式是工厂模式中最简单的模式，但该模式并未能体现出工厂模式的精髓。
+  - 工厂方法模式，声明一个创建对象的抽象方法基类，子类继承基类，由子类创建具体对象类实例。与简单工厂模式不同，工厂方法模式的对象实例化过程由子类实现。
+  - 抽象工厂模式，提供一个创建一系列相关或相互依赖对象的接口，而无需指定它们具体的类。简单工厂和工厂方法只能创建同一类对象，抽象工厂可以创建一系列相关的对象。
+
+- 三种工厂模式特点
+
+  | 工厂模式 | 特点                                                       |
+  | -------- | ---------------------------------------------------------- |
+  | 简单工厂 | 针对一种类型实例对象，违背“开闭原则”                       |
+  | 工厂方法 | 针对一种类型实现对象，但改正了简单工厂违背“开闭原则”的不足 |
+  | 抽象工厂 | 针对多种类型实例对象                                       |
+
+- 优点
+
+  - 对“职责”分离，用户不需关心创建过程
+  - 外界与具体类隔离，降低耦合性
+  - “工厂方法”修正了“简单工厂”不符合“开闭原则”的不足
+  - “抽象工厂”综合了“简单工厂”和“工厂方法”特点，支持相关联的一系列类型对象创建
+
+- 不足
+
+  - 简单工厂
+    - 扩展性差，增加新“产品”时，需要修改工厂内部逻辑
+    - 违背“开放—封闭”原则（OCP）
+    - 采用静态工厂方法，无法被子类继承
+    - 只能创建单一“产品”
+  - 工厂方法
+    - 只能创建单一“产品”
+    - 一定程度增加开放工作量，每增加一个 产品，就需要增加一个子工厂
+  - 抽象工厂
+    - 适合生产已有种类“产品”集合，扩展新种类“产品”比较困难，因为会涉及抽象工厂类和子类的更改
+
+- 用途
+
+  - 解耦，把对象的创建和使用的过程分开
+  - 减少代码重复量
+  - 降低代码维护成本
+  - 对象的实例化前期工作比较繁琐复杂，如需初始化参数、读取配置文件、查询数据库等
+  - 类本身存在多个子类，这些类的创建过程在业务中容易发生改变，或者对类的调用容易发生改变
+
+- 适用场景
+
+  - 简单工厂适用于工厂类负责创建的对象比较少的场合
+  - 工厂方法适用于类不知道它所必须创建对象的类，或一个类期望由子类来创建的对象的场合
+  - 抽象工厂适用于需要创建的对象是一系列相互关联或相互依赖的产品族的场合
+  - 如果存在着多个等级结构（多个抽象类），且各个等级结构中的实现类之间存在着一定的关联或者约束，则考虑使用抽象工厂模式
+  - 各个等级结构中的实现类之间不存在关联或约束，则考虑使用多个独立的工厂（简单工厂/工厂方法）来对产品进行创建
+
+- 简单工厂
+
+  ```c++
+  #include <iostream> 
+  #include <stdlib.h> 
+  
+  using namespace std;
+  
+  typedef enum ProductType
+  {
+  	TypeA,
+  	TypeB,
+  	TypeC
+  }ProductType_t;
+  
+  /* 产品抽象基类 */
+  class Product
+  {
+  public:
+  	virtual void printf() = 0;
+  };
+  class ProductA : public Product
+  {
+  public:
+  	void printf()
+  	{
+  		cout<<"Create productA"<<endl;
+  	}
+  };
+  class ProductB : public Product
+  {
+  public:
+  	void printf()
+  	{
+  		cout<<"Create productB"<<endl;
+  	}
+  
+  };
+  class ProductC : public Product
+  {
+  public:
+  	void printf()
+  	{
+  		cout<<"Create productC"<<endl;
+  	}
+  
+  };
+  
+  /* 工厂类 */
+  class Factory
+  {
+  public:
+  	Product* CreateProduct(ProductType_t type);
+  };
+  
+  Product* Factory::CreateProduct(ProductType_t type)
+  {
+  	Product *a = NULL;
+  	
+  	switch (type)
+  	{
+  		case TypeA:
+  			a = new ProductA();
+  		break;
+  		case TypeB:
+  			a = new ProductB();
+  		break;
+  		case TypeC:
+  			a = new ProductC();
+  		break;
+  		default:
+  		break;
+  	}
+  	return a;
+  }
+  
+  int main(int argc, char **argv)
+  {
+  	Factory productCreator;
+  	
+  	Product *productA;
+  	Product *productB;
+  	Product *productC; 
+  
+  	productA = productCreator.CreateProduct(TypeA);
+  	productB = productCreator.CreateProduct(TypeB);
+  	productC = productCreator.CreateProduct(TypeC);
+  	if(productA != NULL)
+  	{
+  		productA->printf();
+  		delete productA;
+  		productA=NULL;
+  	}
+  	if(productB != NULL)
+  	{
+  		productB->printf();
+  		delete productB;
+  		productB=NULL;
+  	}
+  	if(productC != NULL)
+  	{
+  		productC->printf();
+  		delete productC;
+  		productC=NULL;
+  	}
+  	return 0;
+  }
+  ```
+
+- 工厂方法
+
+```c++
+
+#include <iostream> 
+#include <stdlib.h> 
+
+using namespace std;
+
+
+/* 产品抽象基类 */
+class Product
+{
+public:
+	virtual void printf() = 0;
+};
+class ProductA : public Product
+{
+public:
+	void printf()
+	{
+		cout<<"Create productA"<<endl;
+	}
+};
+class ProductB : public Product
+{
+public:
+	void printf()
+	{
+		cout<<"Create productB"<<endl;
+	}
+
+};
+class ProductC : public Product
+{
+public:
+	void printf()
+	{
+		cout<<"Create productC"<<endl;
+	}
+
+};
+
+/* 工厂类 */
+class Factory
+{
+public:
+	virtual Product* CreateProduct()=0;
+};
+
+class FactoryA:public Factory
+{
+public:
+	Product *CreateProduct()
+	{
+		return new ProductA();
+	}
+};
+class FactoryB:public Factory
+{
+public:
+	Product *CreateProduct()
+	{
+		return new ProductB();
+	}
+};
+
+class FactoryC:public Factory
+{
+public:
+	Product *CreateProduct()
+	{
+		return new ProductC();
+	}
+};
+
+
+int main(int argc, char **argv)
+{
+	Factory *factoryA;
+	Factory *factoryB;
+	Factory *factoryC;
+	Product *productA;
+	Product *productB;
+	Product *productC; 
+
+	factoryA = new FactoryA(); 
+	if(factoryA != NULL)
+	{
+		productA = factoryA->CreateProduct(); 
+		if (productA != NULL)
+		{
+			productA->printf();
+			delete productA;
+			productA = NULL;
+		}
+		delete factoryA;
+		factoryA = NULL;
+	}
+	
+	factoryB = new FactoryB(); 
+	if(factoryB != NULL)
+	{
+		productB = factoryB->CreateProduct(); 
+		if (productB != NULL)
+		{
+			productB->printf();
+			delete productB;
+			productB = NULL;
+		}
+		delete factoryA;
+		factoryA = NULL;
+	}
+	
+	factoryC = new FactoryC(); 
+	if(factoryC != NULL)
+	{
+		productC = factoryC->CreateProduct(); 
+		if (productC != NULL)
+		{
+			productC->printf();
+			delete productC;
+			productC = NULL;
+		}
+		delete factoryC;
+		factoryC = NULL;
+	}
+	return 0;
+}
+
+Create productA
+Create productB
+Create productC
+```
+
+##### 抽象工厂
+
+- 提供一个创建一系列相关或相互依赖对象的接口，而无需指定它们具体的类。
+- 抽象工厂模式和工厂方法不太一样，它要解决的问题比较复杂，不但工厂是抽象的，产品是抽象的，而且有多个产品需要创建，因此，这个抽象工厂会对应到多个实际工厂，每个实际工厂负责创建多个实际产品：
+
+```c++
+
+#include <iostream> 
+#include <stdlib.h> 
+
+using namespace std;
+
+/* 产品A抽象基类 */
+class ProductA
+{
+public:
+	virtual void printf() = 0;
+};
+
+/* 产品类A0 */
+class ProductA0 : public ProductA
+{
+public:
+	void printf()
+	{
+		cout<<"Create productA0"<<endl;
+	}
+};
+
+/* 产品类A1 */
+class ProductA1 : public ProductA
+{
+public:
+	void printf()
+	{
+		cout<<"Create productA1"<<endl;
+	}
+};
+
+/* 产品B抽象基类 */
+class ProductB
+{
+public:
+	virtual void printf() = 0;
+};
+
+/* 产品类B0 */
+class ProductB0 : public ProductB
+{
+public:
+	void printf()
+	{
+		cout<<"Create productB0"<<endl;
+	}
+};
+
+/* 产品类B1 */
+class ProductB1 : public ProductB
+{
+public:
+	void printf()
+	{
+		cout<<"Create productB1"<<endl;
+	}
+};
+
+/* 工厂类 */
+class Factory
+{
+public:
+	virtual ProductA* CreateProductA()=0;
+	virtual ProductB* CreateProductB()=0;
+};
+
+/* 工厂类0，专门生产0类产品 */
+class Factory0:public Factory
+{
+public:
+	ProductA *CreateProductA()
+	{
+		return new ProductA0();
+	}
+	ProductB *CreateProductB()
+	{
+		return new ProductB0();
+	}
+};
+
+/* 工厂类1，专门生产1类产品 */
+class Factory1:public Factory
+{
+public:
+	ProductA *CreateProductA()
+	{
+		return new ProductA1();
+	}
+	ProductB *CreateProductB()
+	{
+		return new ProductB1();
+	}
+};
+
+int main(int argc, char **argv)
+{
+	Factory *factory0;
+	Factory *factory1;
+	ProductA *productA0;
+	ProductA *productA1;
+	ProductB *productB0; 
+	ProductB *productB1;
+
+	factory0 = new Factory0(); 
+	if(factory0 != NULL)
+	{
+		productA0 = factory0->CreateProductA(); 
+		if (productA0 != NULL)
+		{
+			productA0->printf();
+			delete productA0;
+			productA0 = NULL;
+		}
+
+		productB0 = factory0->CreateProductB(); 
+		if (productB0 != NULL)
+		{
+			productB0->printf();
+			delete productB0;
+			productB0 = NULL;
+		}
+		delete factory0;
+		factory0 = NULL;
+	}
+	
+	factory1 = new Factory1(); 
+	if(factory1 != NULL)
+	{
+		productA1 = factory1->CreateProductA(); 
+		if (productA1 != NULL)
+		{
+			productA1->printf();
+			delete productA1;
+			productA1 = NULL;
+		}
+
+		productB1 = factory1->CreateProductB(); 
+		if (productB1 != NULL)
+		{
+			productB1->printf();
+			delete productB1;
+			productB1 = NULL;
+		}
+		delete factory1;
+		factory1 = NULL;
+	}
+	return 0;
+}
+
+Create productA0
+Create productB0
+Create productA1
+Create productB1
+```
+
+##### 原型
+
+- 原型模式（Prototype Pattern），是一种创建型设计模式，指的是以原型实例指定待创建对象的种类，并通过拷贝（克隆）原型对象来创建新的对象。原型模式的核心和关键字是“对象拷贝”。
+
+- 原型模式由抽象原型（Abstract Prototype ）、具体原型（Concrete Prototype ）、客户（Client）三个要素组成。
+
+  - 抽象原型（Abstract Prototype ）, 声明一个抽象原型父类，定义自身实例拷贝接口
+  - 具体原型（Concrete Prototype ）， 继承Abstract Prototype 类，实现抽象接口，返回拷贝对象
+  - 客户（Client），客户调具体原型对象方法创建一个新的对象，严格来说客户不属于原型模式的一部分
+
+- 原型模式作用
+
+  - 原型模式的功能与拷贝构造函数一样，都是用于创建新对象。但原型模式可以动态获取当前对象运行时的状态。
+
+- 优点
+
+  - 效率高、资源开销小，使用原型模式创建对象比直接new一个对象效率要高，而且资源开销小，因为原型模式拷贝对象是一个本地方法过程，直接操作内存中的二进制流 。
+  - 使用便捷，简化对象创建过程，隐藏拷贝细节，用户无需知道创建细节。
+  - 动态过程，可以动态创建程序运行过程属性发生变化的对象，且创建的对象与运行对象互不干扰。
+
+- 不足
+
+  - 违背开闭原则，原型模式需要为每一个类实现一个拷贝方法，由于拷贝方法在类内部实现，如需对类进行改造时，则需要修改原有代码（框架），违背了开闭原则。
+  - 增加系统复杂度，在实现深拷贝时需要写较复杂的代码；如果对象之间存在多重嵌套引用，那么每一层对象对应的类必须支持深拷贝，才能实现深拷贝。
+  - 避开了构造函数的约束
+
+- 适用
+
+  - 资源优化，待创建对象资源开销大（数据、内存资源），通过原型模式拷贝已有对象，降低资源开销，提高效率。
+  - 待创建对象类型不确定，待创建对象类型没法静态确认，只能在执行期间确定。
+  - 对象副本，程序运行过程，某个状态下需要一个对象副本；而对象属性有可能在运行过程改变，使用new来创建显然不适合。
+  - 简单对象处理，处理一些比较简单的对象，对象直接区别小，只是某些属性不同；使用原型模式来获得对象省去重新new对象的资源开销，提高效率。
+  - 简化复杂的对象创建过程，一个复杂的对象创建，构造函数需对各种参数初始化，用户需理解每一个参数的含义；使用原型模式直接拷贝一个对象，简化对象复杂的创建过程，减少开发者工作量。
+  - 对象被多个对象访问修改，一个对象被其他多个对象访问，而且各个调用者可能都需要修改该对象，考虑使用原型模块拷贝出多个对象提供调用者访问。
+  - 解耦，一个系统应该独立于它的产品创建、构成和表示时
+
+- 大体步骤
+
+  - 抽象原型父类`Prototye`声明对象拷贝（克隆）接口`Clone`，已经提供对象属性修改接口`SetAddr`和属性输出接口`ShowAttr`
+  - 具体原型`ConcretePrototye`实现抽象原型拷贝接口`Clone`
+  - 用户`client`调用具体原型对象拷贝接口`Clone`创建一个对象
+
+- 过程
+
+  - 第一步，声明抽象原型类`Prototye`
+
+    ```c++
+    /* prototye.h */
+    #ifndef _PROTOTYE_H_
+    #define _PROTOTYE_H_
+    
+    #include <stdbool.h>
+    #include <string>
+    
+    using namespace std;
+    
+    class Prototye
+    {
+    public:
+    	Prototye(string str);
+    	void ShowAttr();
+    	void SetAttr(string);
+    	virtual Prototye *Clone()=0;
+    private:
+    	string m_attr;
+    };
+    #endif
+    ```
+
+  - 第二步，抽象原型类`Prototye`方法实现
+
+    ```c++
+    /* prototye.cpp */
+    #include <iostream>
+    #include "prototye.h"
+    
+    using namespace std;
+    
+    Prototye::Prototye(string str)
+    {
+    	m_attr = str;
+    }
+    
+    void Prototye::ShowAttr()
+    {
+    	cout << m_attr << endl;
+    }
+    
+    void Prototye::SetAttr(string str)
+    {
+    	m_attr = str;
+    }
+    
+    ```
+
+  - 第三步，声明具体原型类`ConcretePrototye.h`，继承抽象父类
+
+    ```c++
+    /* concrete_prototye.h */
+    #ifndef _CONCRETE_PROTOTYE_H_
+    #define _CONCRETE_PROTOTYE_H_
+    
+    #include <string>
+    #include "prototye.h"
+    
+    class ConcretePrototye:public Prototye
+    {
+    public:
+    	ConcretePrototye(string attr);
+    	virtual Prototye *Clone();	
+    };
+    #endif
+    
+    ```
+
+  - 第四步，具体原型类`ConcretePrototye`方法实现
+
+    ```c++
+    /* concrete_prototye.cpp */
+    #include "concrete_prototye.h"
+    
+    ConcretePrototye::ConcretePrototye(string attr):Prototye(attr)
+    {	
+    }
+    
+    Prototye *ConcretePrototye::Clone()
+    {
+    	ConcretePrototye *p = new ConcretePrototye("");
+    	*p = *this;
+    	return p;
+    }
+    
+    ```
+
+  - 第五步，客户调用不同子类对象实现指定排序功能
+
+    ```c++
+    /* client.cpp */
+    #include <iostream>
+    #include "concrete_prototye.h"
+    
+    using namespace std;
+    
+    int main(int argc, char **arv)
+    {
+    	/* 创建一个原型对象0 */
+    	ConcretePrototye *pConcretePrototye0 = new ConcretePrototye("Init");
+    
+    	cout << "pConcretePrototye0属性:";
+    	pConcretePrototye0->ShowAttr();
+    	
+    	/* 修改原型属性 */
+    	pConcretePrototye0->SetAttr("Second");	
+    	cout << "pConcretePrototye0属性:";
+    	pConcretePrototye0->ShowAttr();
+    
+    	/* 通过原型对象0拷贝(克隆)一个对象1 */
+    	ConcretePrototye *pConcretePrototye1 = (ConcretePrototye*)pConcretePrototye0->Clone();
+    	cout << "pConcretePrototye1属性:";
+    	pConcretePrototye1->ShowAttr();	/* 对象1和对象0的属性是一样的 */
+    
+    	delete pConcretePrototye0;
+    	delete pConcretePrototye1;
+    }
+    ```
+
+  - 执行结果
+
+    ```
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/prototye$ make
+    g++    -c -o prototye.o prototye.cpp
+    g++    -c -o client.o client.cpp
+    g++    -c -o concrtee_prototye.o concrtee_prototye.cpp
+    g++  prototye.o  client.o  concrtee_prototye.o   -o output/client1.00
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/prototye$ ./output/client1.00 
+    pConcretePrototye0属性:Init
+    pConcretePrototye0属性:Second
+    pConcretePrototye1属性:Second
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/prototye$ 
+    ```
+
+- 原型模式与构造函数
+
+  - 相同点
+    - 功能相同，都是用于对象拷贝，以创建一个对象
+  - 不同点
+    - 原理不同，原型模式通过虚函数多态原理，通过基类指针复制派生类对象。
+    - 功能范围不同，原型模式可以动态获取对象属性；构造函数只能静态创建对象。
+
+##### 单例
+
+- 单例模式（Singleton）的目的是为了保证在一个进程中，某个类有且仅有一个实例。
+
+- 优点
+
+  - 单例模式会阻止其他对象实例化其单例对象的副本，确保唯一实例受控访问
+  - 只有一个实例对象，节约系统内存资源
+  - 单例模式具有一定的伸缩性，类可以灵活更改实例化过程
+  - 允许可变数目的实例
+  - 单一实例对象，无多个实例对象共享资源的占用问题
+
+- 不足
+
+  - 单例模式不存在抽象层，导致单列类不便于功能扩展
+  - 单例类“职责”（功能）综合，一定程度上违背设计模式的“单一职责原则”
+  - 单例模式导致模块之间耦合度提高
+  - 滥用单例将带来一些负面问题，如为了节省资源将数据库连接池对象设计为的单例类，可能会导致共享连接池对象的程序过多而出现连接池溢出；如果实例化的对象长时间不被利用，系统会认为是垃圾而被回收，这将导致对象状态的丢失
+
+- 单例模式一般用于对象实例被其他多个模块访问的公共场合>，典型的应用场合有：
+
+  - 需要频繁实例化、销毁对象的场合
+  - 创建对象时耗时或者消耗资源过多的对象
+  - 存在状态的工具类对象
+  - 频繁访问数据库、文件等耗时操作的对象
+  - 日志模块输出
+  - 应用配置
+  - 线程池操作
+  - 任务管理器
+  - 资源回收器
+  - 单例模式不适用于对象可变化的场景，因为对于随不同场景变化的对象，单例模式不能保存彼此对象间的状态信息，可能引起数据错误。
+
+- 实现
+
+  - 构造函数声明为private，禁止类外部通过new关键字实例化对象
+  - 拷贝构造函数同样声明为private，禁止拷贝构造函数实例化对象
+  - 赋值运算符函数声明成private，禁止通过赋值运算符函数实例化对象
+  - 析构函数声明为private，禁止析构函数释放new关键字建立的堆上对象
+  - 在类内部定义一个唯一实例对象，并声明为static
+  - 定义一个全局访问节点，即定义一个static方法返回唯一的实例对象
+
+- 单例模式实现
+
+  ```
+  class Singleton
+  {
+  public:
+  	static Singleton& GetObject()
+  	{
+  		static Singleton Object;
+  		return Object;
+  	}
+  	void printf()
+  	{
+  		cout<<"to do"<<endl;
+  	}
+  private:
+  	Singleton(){}	/* 禁止构造函数实例化对象 */
+  	Singleton(Singleton const &);/* 禁止拷贝构造函数实例化对象 */
+  	Singleton& operator=(Singleton const &);/* 禁止赋值实例化对象 */
+  };
+  
+  int main(int argc, char **argv)
+  {
+  	Singleton &a = Singleton::GetObject();
+  	a.printf();
+  	return 0;
+  }
+  ```
+
+- 根据类的对象实例化过程的不同，单例模式又分为“懒汉式单例”和”饿汉式单例“。
+
+- 饿汉式单例指的是定义类的时候或者程序初始时执行实例化对象，使用的时候可以直接使用，无需创建。饿汉式单例，需要注意的是，采用new关键字生成的堆上对象，必须声明一个public类型的方法来主动释放对象，因为析构函数声明为private，不会在类外被调用。
+
+  ```
+  #include <iostream> 
+  #include <stdlib.h> 
+  
+  using namespace std;
+  
+  class Singleton
+  {
+  public:
+  	static Singleton* GetObject();
+  	void printf()
+  	{
+  		cout<<"to do"<<endl;
+  	}
+  	void DestoryObject()
+  	{
+  		delete m_Object;
+  		cout<<"exe destory fun"<<endl;
+  	}
+  private:
+  	static Singleton *m_Object;
+  	Singleton()/* 禁止构造函数实例化对象 */
+  	{
+  		cout<<"exe constructor fun"<<endl;
+  	}	
+  	~Singleton()/* 禁止析构函数释放对象 */
+  	{
+  		cout<<"exe destructor fun"<<endl;
+  	}
+  	Singleton(Singleton const &);/* 禁止拷贝构造函数实例化对象 */
+  	Singleton& operator=(Singleton const &);/* 禁止赋值实例化对象 */
+  };
+  
+  Singleton* Singleton::m_Object = new Singleton();
+  Singleton* Singleton::GetObject()
+  {
+  	return m_Object;
+  }
+  
+  不主动调销毁函数：
+  int main(int argc, char **argv)
+  {
+  	Singleton *a = Singleton::GetObject();
+  	a->printf();
+  	return 0;
+  }
+  
+  exe constructor fun
+  to do
+  
+  很明显，程序退出后并未执行析构函数，这就造成内存泄漏。
+  
+  主动调销毁函数：
+  int main(int argc, char **argv)
+  {
+  	Singleton *a = Singleton::GetObject();
+  	a->printf();
+  	a->DestoryObject();
+  	return 0;
+  }
+  
+  exe constructor fun
+  to do
+  exe destructor fun
+  exe destory fun
+  ```
+
+- 懒汉式单例指的是首次需使用类对象时才实例化对象。懒汉式单例是线程不安全的，因此在实例化时应该加锁处理。
+
+- 与饿汉式单例一样，采用new关键字生成的堆上对象，必须声明一个public类型的方法来主动释放对象，因为析构函数声明为private，不会在类外被调用。
+
+  ```
+  class Singleton
+  {
+  public:
+  	static Singleton& GetObject();
+  	void printf()
+  	{
+  		cout<<"to do"<<endl;
+  	}
+  	void DestoryObject()
+  	{
+  		delete m_Object;
+  		cout<<"exe destory fun"<<endl;
+  	}
+  private:
+  	static Singleton *m_Object;
+  	Singleton(){}	/* 禁止构造函数实例化对象 */
+  	~Singleton(){}  /* 禁止析构函数释放对象 */
+  	Singleton(Singleton const &);/* 禁止拷贝构造函数实例化对象 */
+  	Singleton& operator=(Singleton const &);/* 禁止赋值实例化对象 */
+  };
+  
+  Singleton& Singleton::GetObject()
+  {
+  	if (m_Object == NULL)
+  	{
+  		m_Object = new Singleton();
+  	}
+  	return m_Object;
+  }
+  
+  
+  
+  线程安全的懒汉式单例实现：
+  
+  class Singleton
+  {
+  public:
+  	static Singleton& GetObject();
+  	void printf()
+  	{
+  		cout<<"to do"<<endl;
+  	}
+  	void DestoryObject()
+  	{
+  		delete m_Object;
+  		cout<<"exe destory fun"<<endl;
+  	}
+  private:
+  	static Singleton *m_Object;
+  	static pthread_mutex_t m_mutex;
+  	Singleton()/* 禁止构造函数实例化对象 */
+  	{
+  		pthread_mutex_init(&m_mutex);
+  	}	
+  	Singleton(Singleton const &);/* 禁止拷贝构造函数实例化对象 */
+  	~Singleton(){}  /* 禁止析构函数释放对象 */
+  	Singleton& operator=(Singleton const &);/* 禁止赋值实例化对象 */
+  };
+  
+  Singleton& Singleton::GetObject()
+  {
+  	if (m_Object == NULL)
+  	{
+  		pthread_mutex_lock(&m_mutex);
+  		m_Object = new Singleton();
+  		pthread_mutex_lock(&m_mutex);
+  	}
+  	return m_Object;
+  }
+  
+  ```
+
+- 饿汉式单例，适用于访问量大的场景，或者多个线程需要访问实例对象的场景；是一种“空间换时间”的方法
+
+- 懒汉式单例，适用于访问量少的场景；是一种以“时间换空间”的方法
+
+#### 行为型模式
+
+##### 策略
+
+- 定义一系列的算法，把它们一个个封装起来，并且使它们可相互替换。本模式使得算法可独立于使用它的客户而变化。
+
+- 策略模式：Strategy，是指，定义一组算法，并把其封装到一个对象中。然后在运行时，可以灵活的使用其中的一个算法。策略模式的本质是:分离算法，选择实现。
+
+- 策略模式仅仅封装算法并提供接口，并不决定在何时、何地、使用何种算法；客户通过抽象接口访问具体算法
+
+- 策略模式将算法的责任和算法本身进行解耦，将算法的使用权由不同的对象管理，客户不关心算法的具体实现
+
+- 策略模式由环境角色（Context）、抽象策略（Abstract Strategy）、具体策略（Concrete Strategy）、客户（Client）四个要素组成。
+
+  - 环境角色（Context）， 持有一个对Abstract Strategy的引用，最终由客户端调用
+  - 抽象策略（Abstract Strategy）, 声明一个公共抽象接口，由不同算法类实现该接口；通过该接口，Context可以调用不同的算法
+  - 具体策略（Concrete Strategy）， 继承Abstract Strategy类，并实现抽象接口，提供具体算法
+  - 客户（Client），客户通过调用Context调用策略算法，严格来说客户不属于策略模式的一部分
+
+- 策略模式作用
+
+  - 让算法和对象分离，使得算法可以独立于使用它的客户而变化
+  - 客户端可以根据外部条件来选择不同策略来解决不同问题
+  - 替换`“if-else”`或者`“switch-case”`臃肿逻辑代码
+
+- 策略模式优点
+
+  - 灵活性好，提供管理相关算法族的方法，策略类（算法）可自由切换，而不影响客户使用。
+  - 易扩展，新增策略（算法）时，只需要添加一个具体的策略类即可，不需改动原有代码和代码框架，符合“开闭原则“。
+  - 代码结构清晰，可以避免使用多重条件转移语句（`“if-else”`、`“switch-case”`），逻辑性强，可读性和可维护性好。
+
+- 策略模式不足
+
+  - 暴露所有策略类，客户端必须知道所有的策略类，才能根据具体场景选择使用一个策略类。
+  - 导致产生众多策略类和对象，策略模式导致成产生众多策略类和对象，可通过亨元模式弥补该不足。
+
+- 使用场景
+
+  - 一个需要多种算法处理的场景，并需要动态选择其中一个算法
+  - 一个有多种相似类的场景，类之间的区别仅仅是行为不同，可考虑使用策略模式使得对象动态选择一个行为
+  - 需要屏蔽算法规则的场景，不希望将算法相关数据结构、算法实现过程、算法原理等暴露给用户
+  - 重构历史遗留代码，以if-else、switch-case语句实现的，将算法行为和算法实现混合在一起的，或者多种行为混合一起的等维护性差的遗留代码，考虑使用策略模式重构
+
+- 实例情况
+
+  - 抽象策略类Strategy声明具体策略类访问接口AlgorithmInterface
+  - 环境角色Context提供算法访问方法ContextInterface
+  - 具体策略类ConcreteStrategyA、ConcreteStrategyB、ConcreteStrategyB分别实现三个不同行为（算法）具体方法AlgorithmInterface
+  - 用户client调用Context方法选择三个策略类行为（算法）
+
+- 实现过程
+
+  - 第一步，声明抽象策略类`Strategy`
+
+    ```c++
+    /* strategy.h */
+    #ifndef _STRATEGY_H_
+    #define _STRATEGY_H_
+    
+    class Strategy
+    {
+    public:
+         virtual void AlgorithmInterface() = 0;	/* 抽象接口 */
+    };
+    #endif
+    ```
+
+  - 第二步，声明环境角色类
+
+    ```c++
+    /* context.h */
+    #ifndef _CONTEXT_H_
+    #define _CONTEXT_H_
+    
+    #include "strategy.h"
+    
+    class Context
+    {
+    public:
+         Context(Strategy *strategy);
+         void ContextInterface();
+    private:
+         Strategy *m_strategy;
+    };
+    #endif
+    ```
+
+  - 第三步，环境角色方法实现
+
+    ```c++
+    /* context.cpp */
+    #include "context.h"
+    #include <iostream>
+    
+    using namespace std;
+    
+    Context::Context(Strategy *strategy)
+    {
+    	m_strategy = strategy;
+    }
+    
+    void Context::ContextInterface()
+    {
+    	cout << "Call Context::ContextInterface()" << endl;	
+    	m_strategy->AlgorithmInterface();
+    }
+    ```
+
+  - 第四步，声明具体策略类
+
+    ```c++
+    /* concrete_strategy.h */
+    #ifndef _CONCRETE_STRATEGY_H_
+    #define _CONCRETE_STRATEGY_H_
+    
+    #include "strategy.h"
+    
+    class ConcreteStrategyA : public Strategy
+    {
+    public:
+         void AlgorithmInterface();
+    };
+    
+    class ConcreteStrategyB : public Strategy
+    {
+    public:
+         void AlgorithmInterface();
+    };
+    
+    class ConcreteStrategyC : public Strategy
+    {
+    public:
+         void AlgorithmInterface();
+    };
+    #endif
+    ```
+
+  - 第五步，具体策略类方法实现
+
+    ```c++
+    /* concrete_strategy.cpp */
+    #include "concrete_strategy.h"
+    #include <iostream>
+    
+    using namespace std;
+    
+    void ConcreteStrategyA::AlgorithmInterface()
+    {
+    	/* todo */
+        cout<<"Call ConcreteStrategyA::AlgorithmInterface()"<<endl;
+    }
+    
+    void ConcreteStrategyB::AlgorithmInterface()
+    {
+    	/* todo */
+        cout<<"Call ConcreteStrategyB::AlgorithmInterface()"<<endl;
+    }
+    
+    void ConcreteStrategyC::AlgorithmInterface()
+    {
+    	/* todo */
+        cout<<"Call ConcreteStrategyC::AlgorithmInterface()"<<endl;
+    }
+    ```
+
+  - 第六步，客户调用具体策略算法
+
+    ```c++
+    /* client.cpp */
+    #include "strategy.h"
+    #include "context.h"
+    #include "concrete_strategy.h"
+    
+    int main(int argc, char **arv)
+    {
+    	Strategy *strategyA = new ConcreteStrategyA;
+    	Context *contextA = new Context(strategyA);
+    	contextA->ContextInterface();
+    	delete strategyA;
+    	delete contextA;
+    	
+    	Strategy *strategyB = new ConcreteStrategyB;
+    	Context *contextB = new Context(strategyB);
+    	contextB->ContextInterface();
+    	delete strategyB;
+    	delete contextB;
+    	
+    	Strategy *strategyC = new ConcreteStrategyC;
+    	Context *contextC = new Context(strategyC);
+    	contextC->ContextInterface();
+    	delete strategyC;
+    	delete contextC;
+    	return 0;
+    }
+    ```
+
+  - 执行结果
+
+    ```c++
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/strategy$ g++ -o client client.cpp concrete_strategy.cpp context.cpp 
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/strategy$ ./client
+    Call Context::ContextInterface()
+    Call ConcreteStrategyA::AlgorithmInterface()
+    Call Context::ContextInterface()
+    Call ConcreteStrategyB::AlgorithmInterface()
+    Call Context::ContextInterface()
+    Call ConcreteStrategyC::AlgorithmInterface()
+    ```
+
+##### 模板
+
+- 定义一个操作中的算法的骨架，而将一些步骤延迟到子类中，使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。
+
+- 模板方法（Template Method）是一个比较简单的模式。它的主要思想是，定义一个操作的一系列步骤，对于某些暂时确定不下来的步骤，就留给子类去实现好了，这样不同的子类就可以定义出不同的步骤。
+
+- 模板模式由抽象类（Abstract Class）、具体子类（Concrete Class）、客户（Client）三个要素组成。
+
+  - 抽象类（Abstract Class）, 声明一个公共抽象模板父类，不变的算法由父类实现，差异部分由子类实现
+  - 具体子类（Concrete Class）， 继承Abstract Class类，并实现抽象接口和差异部分
+  - 客户（Client），客户通过切换不同的子类实现不同的功能，严格来说客户不属于模板模式的一部分
+
+- 模板模式作用
+
+  - 子类可以不改变一个模板的结构的情况下，可重新定义模板中的内容或者某些特定步骤。
+
+- 模板模式优点
+
+  - 提高代码复用性，模板模式将类共同部分代码抽象出来放在的父类中，由子类只需实现差异部分，减少子类重复代码。
+  - 易扩展，新增功能时，通过子类实现来拓展，不需改动原有代码和代码框架，符合“开闭原则“。
+  - 灵活性好，所有子类实现的是同一套算法模型，在使用模板的地方，通过切换不同的子类实现不同的功能，符合“里氏替换原则”。
+  - 维护性好，模板模式行为由父类控制，子类实现。
+
+- 模板模式不足
+
+  - 降低代码可读性，模板方式与常规程序设计习惯不同，子类执行的结果影响了父类的结果，会增加代码阅读的难度， 不易理解代码逻辑。
+  - 耦合性高，子类无法影响父类公用模块代码。
+  - 增加系统复杂度，新增不同的功能都需要一个新的子类来实现，导致子类的数目增加，增加了系统实现的复杂度。
+
+- 使用场景
+
+  - 多个子类具有共同的方法，逻辑、算法等基本相同的场景，可以把共同部分抽象出来
+  - 复杂算法分解；不变部分或者核心算法由设计为模板方法，相关细节功能、可变行为由子类实现
+  - 需要控制子类扩展场景；模板模式在特定的点调用子类的方法，使得只允许在这些子类上进行扩展。
+  - 重构历史遗留代码；利用模板方法重构代码，把共同的代码抽象出来放在父类中，然后通过构造函数约束其行为。
+
+- 实例
+
+  - 实现一个排序算法，可以对整型、浮点型、字符等各种类型数据进行排序，还可以选择排序类型。
+  - 步骤
+    - 抽象父类`Sort`声明和实现排序算法，这一部分是共同的、不会改变的
+    - 子类`IntSort`、`FlotaSort`分别实现整型数据和单精度浮点型数据排序
+    - 子类还可以决定排序方式（升序排序/降序排序），而不影响父类
+    - 用户`client`调用子类实例选择一种排序算法
+
+- 实现过程
+
+  - 第一步，声明抽象模板类`Sort`
+
+    ```c++
+    /* sort.h */
+    #ifndef _SORT_H_
+    #define _SORT_H_
+    
+    #include <stdbool.h>
+    
+    class Sort
+    {
+    public:
+    	virtual ~Sort();
+    	virtual void Swap(int)=0;	/* 交互数据 */
+    	virtual bool Judge(int)=0;  /* 数据判断方式（排序方式）*/
+    	void SortRun();				/* 排序算法框架 */
+    protected:
+    	Sort();
+        int m_Size;
+    };
+    #endif
+    ```
+
+  - 第二步，抽象类`Sort`方法实现
+
+    ```c++
+    /* sort.cpp */
+    #include "sort.h"
+    
+    Sort::Sort()
+    {
+    	m_Size = 0;
+    }
+    
+    Sort::~Sort()
+    {
+    }
+    
+    void Sort::SortRun()
+    {
+    	int i = 0,j = 0;
+    	for (j=0; j<m_Size-1; j++)
+    	{
+    		for (i=0; i<m_Size-1-j; i++)
+    		{
+    			if (Judge(i))
+    			{
+    				Swap(i);
+    			}
+    		}
+    	}
+    }
+    
+    ```
+
+  - 第三步，声明整型数据排序子类`InstSort`，继承抽象父类
+
+    ```c++
+    /* int_sort.h */
+    #ifndef _INT_SORT_H_
+    #define _INT_SORT_H_
+    
+    #include <stdbool.h>
+    #include "sort.h"
+    
+    class IntSort:public Sort
+    {
+    public:
+    	IntSort();
+    	virtual ~IntSort();
+    
+    	void Swap(int);		/* 重写int型数据交互方法 */
+    	bool Judge(int);	/* 重写int型数据判断方法 */
+    	void SortData(int*, int);
+    private:
+    	int *m_pArray;
+    };
+    #endif
+    
+    ```
+
+  - 第四步，整型数据排序子类`InstSort`方法实现，实现排序数据类型和排序方式
+
+    ```c++
+    /* int_sort.cpp */
+    
+    #include <iostream>
+    #include "int_sort.h"
+    
+    using namespace std;
+    
+    IntSort::IntSort()
+    {
+    }
+    
+    IntSort::~IntSort()
+    {
+    }
+    
+    void IntSort::Swap(int index)
+    {
+    	int temp;
+    	
+    	temp = m_pArray[index];
+        m_pArray[index] = m_pArray[index+1];
+        m_pArray[index+1] = temp;
+    }
+    
+    bool IntSort::Judge(int index)
+    {
+    	return m_pArray[index] > m_pArray[index+1];	/* 从小到大排序 */
+    }
+    
+    void IntSort::SortData(int *array, int size)
+    {
+    	this->m_pArray = array;
+    	this->m_Size = size;
+    	this->SortRun();
+    
+    	cout<<"int型数据从小到大排序: ";
+    	for(int i = 0; i < m_Size; i++)
+    	{
+    		cout << m_pArray[i] << " ";	
+    	}
+    	cout<<endl;
+    }
+    
+    ```
+
+  - 第五步，声明单精度浮点型数据排序子类`FloatSort`，继承抽象父类
+
+    ```c++
+    /* float_insort.h */
+    
+    #ifndef _FLOAT_SORT_H_
+    #define _FLOAT_SORT_H_
+    
+    #include <stdbool.h>
+    #include "sort.h"
+    
+    class FloatSort:public Sort
+    {
+    public:
+    	FloatSort();
+    	virtual ~FloatSort();
+    
+    	void Swap(int);		/* 重写float型数据交互方法 */
+    	bool Judge(int);	/* 重写float型数据判断方法 */
+    	void SortData(float*, int);
+    private:
+    	float *m_pArray;
+    };
+    #endif
+    
+    ```
+
+  - 第六步，单精度浮点型数据排序子类`FloatSort`方法实现，实现排序数据类型和排序方式
+
+    ```c++
+    /* float_sort.cpp */
+    
+    #include <iostream>
+    #include "float_sort.h"
+    
+    using namespace std;
+    
+    FloatSort::FloatSort()
+    {
+    }
+    
+    FloatSort::~FloatSort()
+    {
+    }
+    
+    void FloatSort::Swap(int index)
+    {
+    	float temp;
+    	
+    	temp = m_pArray[index];
+        m_pArray[index] = m_pArray[index+1];
+        m_pArray[index+1] = temp;
+    }
+    
+    bool FloatSort::Judge(int index)
+    {
+    	return m_pArray[index] < m_pArray[index+1];	/* 从大到小排序 */
+    }
+    
+    void FloatSort::SortData(float *array, int size)
+    {
+    	this->m_pArray = array;
+    	this->m_Size = size;
+    	this->SortRun();
+    
+    	cout<<"float型数据从大到小排序: ";
+    	for(int i = 0; i < m_Size; i++)
+    	{
+    		cout << m_pArray[i] << " ";	
+    	}
+    	cout<<endl;
+    }
+    
+    ```
+
+  - 第七步，客户调用不同子类对象实现指定排序功能
+
+    ```c++
+    /* client.cpp */
+    #include "sort.h"
+    #include "int_sort.h"
+    #include "float_sort.h"
+    
+    int main(int argc, char **arv)
+    {
+    	int intArray[] = {1, 0, 3, 2, 5, 4, 7};
+        int size = sizeof intArray / sizeof intArray[0];
+        IntSort *intSort = new IntSort;
+        intSort->SortData(intArray, size);
+    	delete intSort;
+    
+    	float flaotArray[] = {1.0, 0.3, 1.2, 1.1, 5.4, 2.5, 3.3};
+        size = sizeof flaotArray / sizeof flaotArray[0];
+        FloatSort *floatSort = new FloatSort;
+        floatSort->SortData(flaotArray, size);
+    	delete floatSort;
+    }
+    
+    ```
+
+  - 执行结果
+
+    ```
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/template$ make
+    g++    -c -o float_sort.o float_sort.cpp
+    g++    -c -o int_sort.o int_sort.cpp
+    g++    -c -o client.o client.cpp
+    g++    -c -o sort.o sort.cpp
+    g++  float_sort.o  int_sort.o  client.o  sort.o   -o output/client1.00
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/template$ ls
+    client.cpp  float_sort.cpp  float_sort.h  int_sort.cpp  int_sort.h  Makefile  Makefile.bak  output  sort.cpp  sort.h
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/template$ ./output/client1.00 
+    int型数据从小到大排序: 0 1 2 3 4 5 7 
+    float型数据从大到小排序: 5.4 3.3 2.5 1.2 1.1 1 0.3 
+    ```
+
+    
 
 ##### 观察者模式
 
 - 定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。
 
 - 观察者模式（Observer）又称发布-订阅模式（Publish-Subscribe：Pub/Sub）。它是一种通知机制，让发送通知的一方（被观察方）和接收通知的一方（观察者）能彼此分离，互不影响。
+
+- 观察者模式由抽象观察者（Abstract Observer）、具体观察者（Concrete Observer）、抽象主题（Abstract Subject）、具体主题（Concrete Subject） 四个要素组成。
+
+  - **抽象观察者（Abstract Observer）**，声明一个具体观察者需获取主题发生改变时通知信号的统一更新方法接口
+  - **具体观察者（Concrete Observer）**，维护一个指向`Concrete Subject`对象的引用；存储与主题相关的状态，实现抽象观察者中的方法
+  - **抽象主题（Abstract Subject）**, 提供维护观察者对象集合的操作方法接口，如增加、删除观察者操作
+  - **具体主题（Concrete Subject）**， 将有关状态存入具体的观察者对象；具体主题状态改变时，通知所有已注册的观察者；实现抽象主题中的方法
+  
+- 优点
+
+  - 解耦，被观察者和观察者之间建立一个抽象的耦合，被观察者无需知道具体观察者，所有观察者遵循一个共同抽象接口即可；符合“依赖倒转原则”原则。
+  - 消息同步，观察者模式实现了“消息广播”功能。
+
+- 不足
+
+  - 通知消息延迟，被观察者对象如果存在较多的直接或者间接观察者，观察者收到的通知消息将会花费一定的时间。
+  - 不支持循环依赖，如果观察者与被观察者之间存在循环依赖关系，被观察者会触发它们之间进行循环调用，导致系统崩溃。
+  - 多线程调用隐患，如果被观察者的通知消息是通过另一线程异步发送的话，系统必须保证该发送过程是以“自恰”的方式进行。
+    - 自洽，某个理论体系或者数学模型的内在逻辑一致，不含悖论。对于计算机软件，自恰定义为：一个计算机软件，在各个模块，各个函数，各个功能之间对相同问题，没有不同的看法。
+  - 只知道结果不知道过程，观察者只能知道被观察者发生了变化，但观察者模式未提供相应的机制使得观察者知道被观察者的目标对象是怎么发生变化的。
+
+- 适用场景
+
+  - 对象关联场景，一个或者多个对象依赖一个对象，一个对象状态的更新，需要其他对象同步更新，而且其他对象的数量动态可变的
+  - 事件触发场景，一个对象触发其他对象发送变化
+  - 一个对象变化必须通知其它对象，但该对象又不知道这些具体对象，即这些对象是紧密耦合的
+  - 跨系统消息传输
+  - 重构历史遗留代码，将符合上述场景的代码以观察者模式重构
+  - 数据传输，同时支持本地UI显示、网页显示、数据库更新、Debug日志输出等
+
+- 注意
+
+  - 避免观察者与被观察者存在循环依赖关系
+  - 多线程异步通知
+
+- 实例
+
+  - 实现一个“数据传输模型”，数据被分别被GUI对象、数据库存储对象、Debug日志输出对象使用。
+  - 整体步骤
+    - 抽象观察者Observer声明数据更新接口Update
+    - 抽象主题Subject声明观察者操作方法Attach、Detach，及通知接口Notify
+    - 具体主题（被观察者）实现抽象主题方法，并增加一个数据改变方法Change
+    - 分别实现ConcreteObserverGui、ConcreteObserverDb、ConcreteObserverDebug三个观察者及其方法
+    - 用户client调用被观察者对象修改数据，并通知观察者更新数据
+
+- 过程
+
+  - 第一步，声明抽象观察者类`Observe`
+
+    ```c++
+    /* observe.h */
+    #ifndef _OBSERVER_H_
+    #define _OBSERVER_H_
+    
+    #include <stdbool.h>
+    #include <string>
+    
+    class Observer
+    {
+    public:
+    	virtual void Update(std::string &)= 0;
+    };
+    #endif
+    ```
+
+  - 第二步，声明抽象主题类`Subject`
+
+    ```c++
+    /* Subject.h */
+    #ifndef _SUBJECT_H_
+    #define _SUBJECT_H_
+    
+    #include <stdbool.h>
+    
+    class Subject
+    {
+    public:
+    	virtual void Attach(Observer *) = 0;
+    	virtual void Detach(Observer *) = 0;
+    	virtual void Notify() = 0;
+    };
+    #endif
+    ```
+
+  - 第三步，声明具体主题类`ConcreteSubject`，继承抽象主题类
+
+    ```c++
+    /* concrete_subject.h */
+    #ifndef _CONCRETE_SUBJECT_H_
+    #define _CONCRETE_SUBJECT_H_
+    
+    #include <stdbool.h>
+    #include <list>
+    #include "observer.h"
+    #include "subject.h"
+    
+    class ConcreteSubject : public Subject
+    {
+    public:
+         void Attach(Observer *pObserver);
+         void Detach(Observer *pObserver);
+         void Notify();
+     	 void ChangeData(std::string);
+    private:
+         std::list<Observer *> m_ObserverList;
+         std::string m_Data;
+    };
+    #endif
+    
+    ```
+
+  - 第四步，具体主题类`ConcreteSubject`方法实现
+
+    ```c++
+    /* concrete_subject.cpp */
+    #include "concrete_subject.h"
+    #include "concrete_observer.h"
+    
+    void ConcreteSubject::Attach(Observer *pObserver)
+    {
+    	m_ObserverList.push_back(pObserver);
+    }
+    
+    void ConcreteSubject::Detach(Observer *pObserver)
+    {
+    	m_ObserverList.remove(pObserver);
+    }
+    
+    void ConcreteSubject::Notify()
+    {
+    	std::list<Observer *>::iterator it = m_ObserverList.begin();
+    	
+    	for(; it != m_ObserverList.end(); it++)
+    	{
+    		(*it)->Update(m_Data);	/* 更新所有观察者 */
+    	}
+    }
+    
+    void ConcreteSubject::ChangeData(std :: string str)
+    {
+    	m_Data = str;
+    }
+    ```
+
+  - 第五步，声明具体观察者类`ConcreteObserverGui`、`ConcreteObserverDb`、`ConcreteObserverDebug`，继承抽象观察者类
+
+    ```c++
+    /* concrete_observer.h */
+    #ifndef _CONCRETE_OBSERVER_H_
+    #define _CONCRETE_OBSERVER_H_
+    
+    #include <stdbool.h>
+    #include "observer.h"
+    #include "subject.h"
+    
+    class ConcreteObserverGui:public Observer
+    {
+    public:
+    	ConcreteObserverGui(Subject *pSubject);
+    	void Update(std::string &);
+    private:
+    	Subject *m_pSubjectGui;
+    };
+    
+    class ConcreteObserverDb:public Observer
+    {
+    public:
+    	ConcreteObserverDb(Subject *pSubject);
+    	void Update(std::string &);
+    private:
+    	Subject *m_pSubjectDb;
+    };
+    
+    class ConcreteObserverDebug:public Observer
+    {
+    public:
+    	ConcreteObserverDebug(Subject *pSubject);
+    	void Update(std::string &);
+    private:
+    	Subject *m_pSubjectDebug;
+    };
+    #endif
+    
+    ```
+
+  - 第六步，具体观察者类方法实现
+
+    ```c++
+    /* concrete_observer.cpp */
+    
+    #include <iostream>
+    #include "concrete_observer.h"
+    
+    using namespace std;
+    
+    ConcreteObserverGui::ConcreteObserverGui(Subject *pSubject)
+    {
+    	m_pSubjectGui = pSubject;
+    }
+    
+    void ConcreteObserverGui::Update(string &data)
+    {
+    	cout << "GUI更新数据:"<<data<<endl;
+    }
+    
+    ConcreteObserverDb::ConcreteObserverDb(Subject *pSubject)
+    {
+    	m_pSubjectDb = pSubject;
+    }
+    
+    void ConcreteObserverDb::Update(string &data)
+    {
+    	cout << "数据库更新数据:"<<data<<endl;
+    }
+    
+    ConcreteObserverDebug::ConcreteObserverDebug(Subject *pSubject)
+    {
+    	m_pSubjectDebug = pSubject;
+    }
+    
+    void ConcreteObserverDebug::Update(string &data)
+    {
+    	cout << "Debug日志输出数据:"<<data<<endl;
+    }
+    
+    ```
+
+  - 第七步，客户调用被观察者对象更新数据，并通知观察者
+
+    ```c++
+    /* client.cpp */
+    #include <iostream>
+    #include "concrete_subject.h"
+    #include "concrete_observer.h"
+    
+    int main(int argc, char **arv)
+    {
+    	/* 创建被观察者 */
+    	ConcreteSubject *pSubject = new ConcreteSubject();
+    	/* 创建观察者 */
+    	Observer *pObserverGui = new ConcreteObserverGui(pSubject);
+    	Observer *pObserverDb = new ConcreteObserverDb(pSubject);
+    	Observer *pObserverDebug = new ConcreteObserverDebug(pSubject);
+    
+    	/* 添加观察者 */
+    	pSubject->Attach(pObserverGui);
+    	pSubject->Attach(pObserverDb);
+    	pSubject->Attach(pObserverDebug);
+    	pSubject->ChangeData("Hello Word");
+    	pSubject->Notify();
+    
+    	std::cout << "删除Debug观察者"<<std::endl;
+     	pSubject->Detach(pObserverDebug);
+    	std::cout << "再次更新数据"<<std::endl;
+    	pSubject->ChangeData("Hello Acuity");
+     	pSubject->Notify();
+    	delete pObserverGui;
+    	delete pObserverDb;
+    	delete pObserverDebug;
+    	delete pSubject;
+    }
+    
+    ```
+
+  - 执行结果
+
+    ```c
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/observer$ make
+    g++    -c -o concrtee_observer.o concrtee_observer.cpp
+    g++    -c -o client.o client.cpp
+    g++    -c -o concrete_subject.o concrete_subject.cpp
+    g++  concrtee_observer.o  client.o  concrete_subject.o   -o output/client1.00
+    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/observer$ ./output/client1.00 
+    GUI更新数据:Hello Word
+    数据库更新数据:Hello Word
+    Debug日志输出数据:Hello Word
+    删除Debug观察者
+    再次更新数据
+    GUI更新数据:Hello Acuity
+    数据库更新数据:Hello Acuity
+    
+    ```
+
+    
 
   ```c++
   /**
