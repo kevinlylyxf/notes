@@ -2373,7 +2373,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 关键字参数，关键字参数是指使用形式参数的名字来确定输入的参数值。通过此方式指定函数实参时，不再需要与形参的位置完全一致，只要将参数名写正确即可。因此，[Python](http://c.biancheng.net/python/) 函数的参数名应该具有更好的语义，这样程序可以立刻明确传入函数的每个参数的含义。
 
-  ```
+  ```python
   def dis_str(str1,str2):
   	print("str1:",str1)
       print("str2:",str2)
@@ -2406,7 +2406,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
     - args 表示创建一个名为 args 的空元组，该元组可接受任意多个外界传入的非关键字实参。
 
-    ```
+    ```python
     # 定义了支持参数收集的函数
     def dis_str(home, *str) :
     	print(home)    
@@ -2419,7 +2419,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   
     - 可变参数并不一定必须为最后一个函数参数，例如修改 dis_str() 函数为：
   
-    ```
+    ```python
     # 定义了支持参数收集的函数
     def dis_str(*str,home) :
     	print(home)    
@@ -2438,7 +2438,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   
     - **kwargs 表示创建一个名为 kwargs 的空字典，该字典可以接收任意多个以关键字参数赋值的实际参数。
   
-    ```
+    ```python
     # 定义了支持参数收集的函数
     def dis_str(home,*str,**course) :
     	print(home)
@@ -2467,7 +2467,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 在以逆向参数收集的方式向函数参数传值时，Pyhon 语法规定，当传入列表或元组时，其名称前要带一个 * 号，当传入字典时，其名称前要带有 2 个 * 号。
 
-  ```
+  ```python
   def dis_str(name,add) :
       print("name:",name)
       print("add",add)
@@ -2506,7 +2506,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 这里的空值并不代表空对象，即 None 和 []、“” 不同：
 
-    ```
+    ```python
     >>> None is []
     False
     >>> None is ""
@@ -2515,7 +2515,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - None 有自己的数据类型，我们可以在 IDLE 中使用 type() 函数查看它的类型
 
-    ```
+    ```python
     >>> type(None)
     <class 'NoneType'>
     ```
@@ -2524,7 +2524,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   
   - 除此之外，None 常用于 assert、判断以及函数无返回值的情况。举个例子，在前面章节中我们一直使用 print() 函数输出数据，其实该函数的返回值就是 None。因为它的功能是在屏幕上显示文本，根本不需要返回任何值，所以 print() 就返回 None。
   
-    ```
+    ```python
     >>> spam = print('Hello!')
     Hello!
     >>> None == spam
@@ -2558,7 +2558,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   retu_tuple =  ('http://c.biancheng.net/python/', 'http://c.biancheng.net/golang/', 'http://c.biancheng.net/golang/')
   ```
   
-  ```
+  ```python
   在此基础上，我们可以利用 Python 提供的序列解包功能，之间使用对应数量的变量，直接接收函数返回列表或元组中的多个值。这里以 retu_list() 为例：
   def retu_list() :
   	add = ["http://c.biancheng.net/python/",\
@@ -2586,7 +2586,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - func 指的是要封装的原函数，*args 和 **kwargs 分别用于接收无关键字实参和关键字实参。
 
-  ```
+  ```python
   from functools import partial
   #定义个原函数
   def display(name,age):
@@ -2598,7 +2598,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 此程序的第 8 行代码中，必须采用关键字参数的形式给 age 形参传参，因为如果以无关键字参数的方式，该实参将试图传递给 name 形参，Python解释器会报 TypeError 错误。
 
-  ```
+  ```python
   from functools import partial
   def mod( n, m ):
     return n % m
@@ -2646,7 +2646,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 在函数体内定义全局变量。即使用 global 关键字对变量进行修饰后，该变量就会变为全局变量。
 
-    ```
+    ```python
     def text():
         global add
         add= "http://c.biancheng.net/java/"
@@ -2659,7 +2659,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - globals() 函数为 Python 的内置函数，它可以返回一个包含全局范围内所有变量的字典，该字典中的每个键值对，键为变量名，值为该变量的值。
 
-    ```
+    ```python
     #全局变量
     Pyname = "Python教程"
     Pyadd = "http://c.biancheng.net/python/"
@@ -2676,7 +2676,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
     - 通过调用 globals() 函数，我们可以得到一个包含所有全局变量的字典。并且，通过该字典，我们还可以访问指定变量，甚至如果需要，还可以修改它的值。
 
-      ```
+      ```python
       print(globals()['Pyname'])
       globals()['Pyname'] = "Python入门教程"
       print(Pyname)
@@ -2687,7 +2687,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - locals() 函数也是 Python 内置函数之一，通过调用该函数，我们可以得到一个包含当前作用域内所有变量的字典。这里所谓的“当前作用域”指的是，在函数内部调用 locals() 函数，会获得包含所有局部变量的字典；而在全局范文内调用 locals() 函数，其功能和 globals() 函数相同。
 
-    ```
+    ```python
     #全局变量
     Pyname = "Python教程"
     Pyadd = "http://c.biancheng.net/python/"
@@ -2733,7 +2733,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 全局变量可以在程序中任何位置被访问甚至修改，但是，当函数中定义了和全局变量同名的局部变量时，那么在当前函数中，无论是访问还是修改该同名变量，操作的都是局部变量，而不再是全局变量。
 
-  ```
+  ```python
   name = "Python教程"
   def demo ():
       #访问全局变量
@@ -2751,7 +2751,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 直接访问被遮蔽的全局变量。如果希望程序依然能访问 name 全局变量，且在函数中可重新定义 name 局部变量，也就是在函数中可以访问被遮蔽的全局变量，此时可通过 globals() 函数来实现
 
-    ```
+    ```python
     name = "Python教程"
     def demo ():
         #通过 globals() 函数访问甚至修改全局变量
@@ -2768,7 +2768,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 在函数中声明全局变量。为了避免在函数中对全局变量赋值（不是重新定义局部变量），可使用 global 语句来声明全局变量。
 
-    ```
+    ```python
     name = "Python教程"
     def demo ():
         global name
@@ -2791,7 +2791,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 和局部变量一样，默认情况下局部函数只能在其所在函数的作用域内使用
 
-  ```
+  ```python
   #全局函数
   def outdef ():
   	#局部函数    
@@ -2805,7 +2805,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 就如同全局函数返回其局部变量，就可以扩大该变量的作用域一样，通过将局部函数作为所在函数的返回值，也可以扩大局部函数的使用范围。
 
-  ```
+  ```python
   #全局函数
   def outdef ():
   	#局部函数    
@@ -2823,7 +2823,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 如果局部函数中定义有和所在函数中变量同名的变量，也会发生“遮蔽”的问题
 
-  ```
+  ```python
   #全局函数
   def outdef ():
       name = "所在函数中定义的 name 变量"
@@ -2840,7 +2840,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 由于这里的 name 变量也是局部变量，因此前面章节讲解的 globals() 函数或者 globals 关键字，并不适用于解决此问题。这里可以使用 Python 提供的 nonlocal 关键字。
 
-    ```
+    ```python
     #全局函数
     def outdef ():
         name = "所在函数中定义的 name 变量"
@@ -2863,7 +2863,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - Python 允许直接将函数赋值给其它变量，这样做的效果是，程序中也可以用其他变量来调用该函数，更加灵活
 
-  ```
+  ```python
   def my_def ():
       print("正在执行 my_def 函数")
   #将函数赋值给其他变量   
@@ -2876,7 +2876,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - Python 还支持将函数以参数的形式传入其他函数中
 
-  ```
+  ```python
   def add (a,b):
       return a+b
   def multi(a,b):
@@ -2897,7 +2897,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - Python 还支持函数的返回值也为函数。
 
-  ```
+  ```python
   def my_def ():
       #局部函数
       def indef():
@@ -2947,7 +2947,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 上面程序确实可以实现相同的功能，不过使用闭包，可以让程序变得更简洁易读。设想一下，比如需要计算很多个数的平方
 
-    ```
+    ```python
     # 不使用闭包
     res1 = nth_power_rewrite(base1, 2)
     res2 = nth_power_rewrite(base2, 2)
