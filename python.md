@@ -811,7 +811,8 @@ c1*c2:  (72.24-13.2j)
   ```
   #列表的创建用 []，后续讲解列表时会详细介绍
   list = [None]*5
-  print(list)[None, None, None, None, None]
+  print(list)
+  [None, None, None, None, None]
   ```
 
 ###### 检查元素是否包含在序列中
@@ -1592,9 +1593,17 @@ c1*c2:  (72.24-13.2j)
     - 有时候程序要求必须是不可变对象，这个时候也要使用 fronzenset 替代 set。比如，字典（dict）的键（key）就要求是不可变对象。
 
   ```
-  s = {'Python', 'C', 'C++'}fs = frozenset(['Java', 'Shell'])s_sub = {'PHP', 'C#'}#向set集合中添加frozensets.add(fs)print('s =', s)#向为set集合添加子set集合s.add(s_sub)print('s =', s)
+  s = {'Python', 'C', 'C++'}
+  fs = frozenset(['Java', 'Shell'])
+  s_sub = {'PHP', 'C#'}
+  #向set集合中添加
+  frozensets.add(fs)
+  print('s =', s)
+  #向为set集合添加子set集合
+  s.add(s_sub)
+  print('s =', s)
   ```
-
+  
   - set 集合本身的元素必须是不可变的， 所以 set 的元素不能是 set，只能是 frozenset。第 6 行代码向 set 中添加 frozenset 是没问题的，因为 frozenset 是不可变的；但是，第 10 行代码中尝试向 set 中添加子 set，这是不允许的，因为 set 是可变的。
 
 #### 字符串
@@ -1607,7 +1616,8 @@ c1*c2:  (72.24-13.2j)
   name = "C++教程"
   url = "http://c.biancheng.net/cplus/"
   info = name + "的网址是：" + url
-  print(info)C++教程的网址是：http://c.biancheng.net/cplus/
+  print(info)
+  C++教程的网址是：http://c.biancheng.net/cplus/
   ```
 
 - 在很多应用场景中，我们需要将字符串和数字拼接在一起，而 Python 不允许直接拼接数字和字符串，所以我们必须先将数字转换成字符串。可以借助 str() 和 repr() 函数将数字转换为字符串
@@ -2236,7 +2246,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
       a = (x for x in range(1,10))for i in a:    print(i,end=' ')print(tuple(a))1 2 3 4 5 6 7 8 9 ()
       ```
 
-    - 使用 __next__() 方法遍历生成器对象，也可以获得各个元素
+    - 使用 `__next__()` 方法遍历生成器对象，也可以获得各个元素
 
       ```
       a = (x for x in range(3))print(a.__next__())print(a.__next__())print(a.__next__())a = tuple(a)print("转换后的元组：",a)012转换后的元组： ()
@@ -2251,7 +2261,16 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   ```
 
   ```
-  listdemo = ['C语言中文网','c.biancheng.net']#将列表中各字符串值为键，各字符串的长度为值，组成键值对newdict = {key:len(key) for key in listdemo}print(newdict){'C语言中文网': 6, 'c.biancheng.net': 15}交换现有字典中各键值对的键和值。olddict={'C语言中文网': 6, 'c.biancheng.net': 15}newdict = {v: k for k, v in olddict.items()}print(newdict){6: 'C语言中文网', 15: 'c.biancheng.net'}
+  listdemo = ['C语言中文网','c.biancheng.net']
+  #将列表中各字符串值为键，各字符串的长度为值，组成键值对
+  newdict = {key:len(key) for key in listdemo}
+  print(newdict)
+  {'C语言中文网': 6, 'c.biancheng.net': 15}
+  交换现有字典中各键值对的键和值。
+  olddict={'C语言中文网': 6, 'c.biancheng.net': 15}
+  newdict = {v: k for k, v in olddict.items()}
+  print(newdict)
+  {6: 'C语言中文网', 15: 'c.biancheng.net'}
   ```
 
 - 集合推导式
@@ -7346,7 +7365,7 @@ http://c.biancheng.net/linux_tutorial/
 
 ###### 自定义模块
 
-- 当直接运行一个模块时，name 变量的值为 __main__；而将模块被导入其他程序中并运行该程序时，处于模块中的 `__name__` 变量的值就变成了模块名。因此，如果希望测试函数只有在直接运行模块文件时才执行，则可在调用测试函数时增加判断，即只有当 `__name__ =='__main__'` 时才调用测试函数。
+- 当直接运行一个模块时，name 变量的值为 `__main__`；而将模块被导入其他程序中并运行该程序时，处于模块中的 `__name__` 变量的值就变成了模块名。因此，如果希望测试函数只有在直接运行模块文件时才执行，则可在调用测试函数时增加判断，即只有当 `__name__ =='__main__'` 时才调用测试函数。
 
 - 为自定义模块添加说明文档，和函数或类的添加方法相同，即只需在模块开头的位置定义一个字符串即可。例如，为 demo.py 模板文件添加一个说明文档：
 
@@ -7475,7 +7494,7 @@ http://c.biancheng.net/linux_tutorial/
 
 - 事实上，当我们向文件导入某个模块时，导入的是该模块中那些名称不以下划线（单下划线“_”或者双下划线“__”）开头的变量、函数和类。因此，如果我们不想模块文件中的某个成员被引入到其它文件中使用，可以在其名称前添加下划线。
 - 除此之外，还可以借助模块提供的 `__all__` 变量，该变量的值是一个列表，存储的是当前模块中一些成员（变量、函数或者类）的名称。通过在模块文件中设置 `__all__` 变量，当其它文件以“from 模块名 import *”的形式导入该模块时，该文件中只能使用 `__all__` 列表中指定的成员。
-  - 也就是说，只有以“from 模块名 import *”形式导入的模块，当该模块设有 __all__ 变量时，只能导入该变量指定的成员，未指定的成员是无法导入的。
+  - 也就是说，只有以“from 模块名 import *”形式导入的模块，当该模块设有 `__all__` 变量时，只能导入该变量指定的成员，未指定的成员是无法导入的。
   - 再次声明，`__all__` 变量仅限于在其它文件中以“from 模块名 import *”的方式引入。也就是说，如果使用以下 2 种方式引入模块，则 `__all__` 变量的设置是无效的。
     - 以“import 模块名”的形式导入模块。通过该方式导入模块后，总可以通过模块名前缀（如果为模块指定了别名，则可以使用模快的别名作为前缀）来调用模块内的所有成员（除了以下划线开头命名的成员）。
     - 以“from 模块名 import 成员”的形式直接导入指定成员。使用此方式导入的模块，`__all__` 变量即便设置，也形同虚设。

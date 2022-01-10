@@ -747,7 +747,7 @@ std::vector<int> demo{1,2};
 
 - 关联式容器存储的是“键值对”形式的数据
 
-  ```
+  ```c++
   <"C语言教程", "http://c.biancheng.net/c/">
   <"Python教程", "http://c.biancheng.net/python/">
   <"Java教程", "http://c.biancheng.net/java/">
@@ -777,7 +777,7 @@ std::vector<int> demo{1,2};
 
 - pair使用方法
 
-  ```
+  ```c++
   	// 调用构造函数 1，也就是默认构造函数
       pair <string, double> pair1;
       // 调用第 2 种构造函数
@@ -794,7 +794,7 @@ std::vector<int> demo{1,2};
 
   - C++ 11 还允许我们手动为 pair1 对象赋值
 
-    ```
+    ```c++
     pair1.first = "Java教程";
     pair1.second = "http://c.biancheng.net/java/";
     cout << "new pair1: " << pair1.first << " " << pair1.second << endl;
@@ -802,14 +802,14 @@ std::vector<int> demo{1,2};
 
   - 上面程序中 pair4 对象的创建过程，还可以写入如下形式，它们是完全等价的：
 
-    ```
+    ```c++
     pair <string, string> pair4 = make_pair("C++教程", "http://c.biancheng.net/cplus/");
     cout << "pair4: " << pair4.first << " " << pair4.second << endl;
     ```
 
 - `<utility>`头文件中除了提供创建 pair 对象的方法之外，还为 pair 对象重载了 <、<=、>、>=、==、!= 这 6 的运算符，其运算规则是：对于进行比较的 2 个 pair 对象，先比较 pair.first 元素的大小，如果相等则继续比较 pair.second 元素的大小。对于进行比较的 2 个 pair 对象，其对应的键和值的类型比较相同，否则将没有可比性
 
-  ```
+  ```c++
    	pair <string, int> pair1("STL教程", 20);
       pair <string, int> pair2("C++教程", 20);
       pair <string, int> pair3("C++教程", 30);
@@ -962,7 +962,7 @@ std::vector<int> demo{1,2};
 
     - 只有当 map 容器中确实存有包含该指定键的键值对，借助重载的 [ ] 运算符才能成功获取该键对应的值；反之，若当前 map 容器中没有包含该指定键的键值对，则此时使用 [ ] 运算符将不再是访问容器中的元素，而变成了向该 map 容器中增添一个键值对。其中，该键值对的键用 [ ] 运算符中指定的键，其对应的值取决于 map 容器规定键值对中值的数据类型，如果是基本数据类型，则值为 0；如果是 string 类型，其值为 ""，即空字符串（即使用该类型的默认值作为键值对的值）。
 
-      ```
+      ```c++
       //创建空 map 容器
           std::map<std::string, int>myMap;
           int cValue = myMap["C语言教程"];
@@ -976,7 +976,7 @@ std::vector<int> demo{1,2};
 
     - \[ ] 运算符确实有“为 map 容器添加新键值对”的功能，但前提是要保证新添加键值对的键和当前 map 容器中已存储的键值对的键都不一样
 
-      ```
+      ```c++
       //创建空 map 容器
           std::map<string, string>myMap;
           myMap["STL教程"]="http://c.biancheng.net/java/";
@@ -1049,7 +1049,7 @@ std::vector<int> demo{1,2};
       - 如果成功插入 val，则该迭代器指向新插入的 val，bool 值为 true；
       - 如果插入 val 失败，则表明当前 map 容器中存有和 val 的键相同的键值对（用 p 表示），此时返回的迭代器指向 p，bool 值为 false。
 
-      ```
+      ```c++
       //创建一个空 map 容器
           std::map<string, string> mymap;
          
@@ -1081,7 +1081,7 @@ std::vector<int> demo{1,2};
 
       - 另外，在程序中的第 21 行代码，还可以使用如下 2 种方式创建临时的键值对变量，它们是等价的：
 
-        ```
+        ```c++
         //调用 pair 类模板的构造函数
         ret = mymap.insert(pair<string,string>{ "C语言教程","http://c.biancheng.net/c/" });
         //调用 make_pair() 函数
@@ -1090,7 +1090,7 @@ std::vector<int> demo{1,2};
 
   - insert() 方法还支持向 map 容器的指定位置插入新键值对，该方法的语法格式如下
 
-    ```
+    ```c++
     //以普通引用的方式传递 val 参数
     iterator insert (const_iterator position, const value_type& val);
     //以右值引用的方式传递 val 键值对参数
@@ -1104,7 +1104,7 @@ std::vector<int> demo{1,2};
 
       - 如果插入失败，insert() 方法同样会返回一个迭代器，该迭代器指向 map 容器中和 val 具有相同键的那个键值对。
 
-        ```
+        ```c++
         //创建一个空 map 容器
             std::map<string, string> mymap;
            
@@ -1125,8 +1125,8 @@ std::vector<int> demo{1,2};
             
             执行结果：
             STL教程 http://c.biancheng.net/stl/
-        C语言教程 http://c.biancheng.net/c/
-        STL教程 http://c.biancheng.net/stl/
+        	C语言教程 http://c.biancheng.net/c/
+        	STL教程 http://c.biancheng.net/stl/
         ```
 
         - 再次强调，即便指定了新键值对的插入位置，map 容器仍会对存储的键值对进行排序。也可以说，决定新插入键值对位于 map 容器中位置的，不是 insert() 方法中传入的迭代器，而是新键值对中键的值。
@@ -1142,7 +1142,7 @@ std::vector<int> demo{1,2};
 
   - 除了以上一种格式外，insert() 方法还允许一次向 map 容器中插入多个键值对
 
-    ```
+    ```c++
     void insert ({val1, val2, ...});
     std::map<std::string, std::string>mymap;
         //向 mymap 容器中添加 3 个键值对
