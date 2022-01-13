@@ -1908,18 +1908,92 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - 本例中定义了两个类，基类 Base 和派生类 Derived，它们都有自己的构造函数和析构函数。在构造函数中，会分配 100 个 char 类型的内存空间；在析构函数中，会把这些内存释放掉。pb、pd 分别是基类指针和派生类指针，它们都指向派生类对象，最后使用 delete 销毁 pb、pd 所指向的对象。
 
   ```c
-  Base *pb = new Derived();
-  delete pb;
-  cout<<"-------------------"<<endl;
-  Derived *pd = new Derived();
-  delete pd;
-  从运行结果可以看出，语句delete pb;只调用了基类的析构函数，没有调用派生类的析构函数；而语句delete pd;同时调用了派生类和基类的析构函数。
-  不调用派生类的析构函数会导致 name 指向的 100 个 char 类型的内存空间得不到释放；除非程序运行结束由操作系统回收，否则就再也没有机会释放这些内存。这是典型的内存泄露。
+  //基类
+  class Base{
+  public:
+      Base();
+      ~Base();
+  protected:
+      char *str;
+  };
+  Base::Base(){
+      str = new char[100];
+      cout<<"Base constructor"<<endl;
+  }
+  Base::~Base(){
+      delete[] str;
+      cout<<"Base destructor"<<endl;
+  }
+  //派生类
+  class Derived: public Base{
+  public:
+      Derived();
+      ~Derived();
+  private:
+      char *name;
+  };
+  Derived::Derived(){
+      name = new char[100];
+      cout<<"Derived constructor"<<endl;
+  }
+  Derived::~Derived(){
+      delete[] name;
+      cout<<"Derived destructor"<<endl;
+  }
+  int main(){
+     Base *pb = new Derived();
+     delete pb;
+     cout<<"-------------------"<<endl;
+     Derived *pd = new Derived();
+     delete pd;
+     return 0;
+  }
   
+  Base constructor
+  Derived constructor
+  Base destructor
+  -------------------
+  Base constructor
+  Derived constructor
+  Derived destructor
+  Base destructor
   ```
 
+  - 本例中定义了两个类，基类 Base 和派生类 Derived，它们都有自己的构造函数和析构函数。在构造函数中，会分配 100 个 char 类型的内存空间；在析构函数中，会把这些内存释放掉。
+
+  - pb、pd 分别是基类指针和派生类指针，它们都指向派生类对象，最后使用 delete 销毁 pb、pd 所指向的对象。
+
+  - 从运行结果可以看出，语句`delete pb;`只调用了基类的析构函数，没有调用派生类的析构函数；而语句`delete pd;`同时调用了派生类和基类的析构函数。
+
+  - 在本例中，不调用派生类的析构函数会导致 name 指向的 100 个 char 类型的内存空间得不到释放；除非程序运行结束由操作系统回收，否则就再也没有机会释放这些内存。这是典型的内存泄露。
+
   - 为什么`delete pb;`不会调用派生类的析构函数呢？因为这里的析构函数是非虚函数，通过指针访问非虚函数时，编译器会根据指针的类型来确定要调用的函数；也就是说，指针指向哪个类就调用哪个类的函数，这在前面的章节中已经多次强调过。pb 是基类的指针，所以不管它指向基类的对象还是派生类的对象，始终都是调用基类的析构函数。
+
   - 为什么`delete pd;`会同时调用派生类和基类的析构函数呢？pd 是派生类的指针，编译器会根据它的类型匹配到派生类的析构函数，在执行派生类的析构函数的过程中，又会调用基类的析构函数。派生类析构函数始终会调用基类的析构函数，并且这个过程是隐式完成的
+
+  - 更改上面的代码
+
+    ```c++
+    class Base{
+    public:
+        Base();
+        virtual ~Base();
+    protected:
+        char *str;
+    };
+    
+    Base constructor
+    Derived constructor
+    Derived destructor
+    Base destructor
+    -------------------
+    Base constructor
+    Derived constructor
+    Derived destructor
+    Base destructor
+    ```
+
+  - 将基类的析构函数声明为虚函数后，派生类的析构函数也会自动成为虚函数。这个时候编译器会忽略指针的类型，而根据指针的指向来选择函数；也就是说，指针指向哪个类的对象就调用哪个类的函数。pb、pd 都指向了派生类的对象，所以会调用派生类的析构函数，继而再调用基类的析构函数。如此一来也就解决了内存泄露的问题。
 
 - 在实际开发中，一旦我们自己定义了析构函数，就是希望在对象销毁时用它来进行清理工作，比如释放内存、关闭文件等，如果这个类又是一个基类，那么我们就必须将该析构函数声明为虚函数，否则就有内存泄露的风险。也就是说，大部分情况下都应该将基类的析构函数声明为虚函数。析构函数正常写就可以，不用写成一样的名字。每个类的析构函数就是～类名。系统会自动调用子类的析构函数。例如上面示例，此时pd可以声明为Base *pd = new Derived();此时一样会调用子类的构造函数。上面示例中没有用虚析构函数，所以那样写。
 
@@ -2067,7 +2141,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   }成员函数重载+=
   ```
 
-- 在上节的例子中，我们以全局函数的形式重载了 +、-、*、/、==、!=，以成员函数的形式重载了 +=、-=、*=、/=，而没有一股脑都写成全局函数或者成员函数，这样做是有原因的
+- 在上节的例子中，我们以全局函数的形式重载了 +、-、*、/、==、!=，以成员函数的形式重载了 +=、-=、\*=、/=，而没有一股脑都写成全局函数或者成员函数，这样做是有原因的
 
 - 转换构造函数
 
@@ -2116,7 +2190,8 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   istream & operator>>(istream &in, complex &A){
       in >> A.m_real >> A.m_imag;
       return in;
-  }以全局函数的形式重载>>，使它能够读入两个 double 类型的数据，并分别赋值给复数的实部和虚部
+  }
+  以全局函数的形式重载>>，使它能够读入两个 double 类型的数据，并分别赋值给复数的实部和虚部
   istream 表示输入流，cin 是 istream 类的对象，只不过这个对象是在标准库中定义的。之所以返回 istream 类对象的引用，是为了能够连续读取复数
   
   参数列表中istream &in理解：运算符两边是对象，此时只是声明一个对象，因为cin是类istream的对象，所以在运行时将cin绑定上去。istream就是一个类，在这种写法中，跟其他的类一样，最后是要绑定对象的，cin是istream的对象。
