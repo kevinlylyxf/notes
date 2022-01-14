@@ -3730,6 +3730,8 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
       @classmethod
       def info(cls):
           print("正在调用类方法",cls)
+          
+  正在调用类方法 <class '__main__.CLanguage'>
   ```
 
   - 如果没有 ＠classmethod，则 Python 解释器会将 类方法认定为实例方法，而不是类方法。
@@ -3744,7 +3746,65 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
     clang.info()
     ```
 
+  - 网上的例子
+
+    ```
+    class Kls(object):
+        num_inst = 0
+    
+        def __init__(self):
+            Kls.num_inst = Kls.num_inst + 1
+    
+        @classmethod
+        def get_no_of_instance(cls):
+            return cls.num_inst
+    
+    
+    ik1 = Kls()
+    ik2 = Kls()
+    
+    print ik1.get_no_of_instance()
+    print Kls.get_no_of_instance()
+    
+    在上述例子中，我们需要统计类Kls实例的个数，因此定义了一个类变量num_inst来存放实例个数。通过装饰器@classmethod的使用，方法get_no_of_instance被定义成一个类方法。在调用类方法时，Python 会将类（class Kls）传递给cls，这样在get_no_of_instance内部就可以引用类变量num_inst。
+    ```
+
+  - 类方法用于当您需要不特定于任何特定实例，但仍然以某种方式涉及类的方法时。它们最有趣的地方是可以被子类覆盖
+
+  - 如果您有一个类MyClass和一个在MyClass(工厂、依赖注入存根等)上操作的模块级函数，那么将它设置为classmethod。然后它将对子类可用。这样我们就可以选择生成一个具体的对象，相当于类方法
+
+  - 工厂方法(可选构造函数)确实是类方法的一个经典例子。
+
+  - 基本上，只要您希望有一个方法自然地适合于类的名称空间，但又不与类的特定实例关联，那么类方法就非常适合。
+
 - 静态方法其实就是我们学过的函数，和函数唯一的区别是，静态方法定义在类这个空间（类命名空间）中，而函数则定义在程序所在的空间（全局命名空间）中。静态方法没有类似 self、cls 这样的特殊参数，因此 Python 解释器不会对它包含的参数做任何类或对象的绑定。也正因为如此，类的静态方法中无法调用任何类属性和类方法。静态方法需要使用`＠staticmethod`修饰
+
+  - 在开发中，我们常常需要定义一些方法，这些方法跟类有关，但在实现时并不需要引用类或者实例，例如，设置环境变量，修改另一个类的变量，等。这个时候，我们可以使用静态方法。
+
+    ```
+    IND = 'ON'
+    
+    
+    class Kls(object):
+        def __init__(self, data):
+            self.data = data
+    
+        @staticmethod
+        def checkind():
+            return IND == 'ON'
+    
+        def do_reset(self):
+            if self.checkind():
+                print('Reset done for: %s' % self.data)
+    
+        def set_db(self):
+            if self.checkind():
+                print('DB connection made for: %s' % self.data)
+                
+    在代码中，我们定义了一个全局变量IND，由于IND跟类Kls相关，所以我们将方法checkind放置在类Kls中定义。方法checkind只需检查IND的值，而不需要引用类或者实例，因此，我们将方法checkind定义为静态方法。
+    ```
+
+    
 
   ```
   class CLanguage:
@@ -3764,6 +3824,8 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
     ```
 
   - 在实际编程中，几乎不会用到类方法和静态方法，因为我们完全可以使用函数代替它们实现想要的功能，但在一些特殊的场景中（例如工厂模式中），使用类方法和静态方法也是很不错的选择。
+
+- 
 
 ###### 描述符
 
