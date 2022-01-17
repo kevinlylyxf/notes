@@ -331,6 +331,94 @@ extern FILE *stderr;
 
   - 程序先定义一个文件指针fp，之后创建文件 test.txt，断言文件打开成功，然后关闭该文件，再以只读的方式打开文件nulltest.txt，判断该文件指针是否问空，如果为空则使用 perror() 输出错误信息。perror()用来将上一个函数发生错误的原因 输出到标准设备(stderr)。函数参数string所指的字符串会先打印出， 后面再加上错误原因字符串。此错误原因依照全局变量error的值来决定要输出的字符串。
 
+##### assert
+
+- 对于断言，相信大家都不陌生，大多数编程语言也都有断言这一特性。简单地讲，断言就是对某种假设条件进行检查。在 C 语言中，断言被定义为宏的形式（assert(expression)），而不是函数，其原型定义在<assert.h>文件中。其中，assert 将通过检查表达式 expression 的值来决定是否需要终止执行程序。也就是说，如果表达式 expression 的值为假（即为 0），那么它将首先向标准错误流 stderr 打印一条出错信息，然后再通过调用 abort 函数终止程序运行；否则，assert 无任何作用。
+
+- 默认情况下，assert 宏只有在 Debug 版本（内部调试版本）中才能够起作用，而在 Release 版本（发行版本）中将被忽略。当然，也可以通过定义宏或设置编译器参数等形式来在任何时候启用或者禁用断言检查（不建议这么做）。同样，在程序投入运行后，最终用户在遇到问题时也可以重新起用断言。这样可以快速发现并定位软件问题，同时对系统错误进行自动报警。对于在系统中隐藏很深，用其他手段极难发现的问题也可以通过断言进行定位，从而缩短软件问题定位时间，提高系统的可测性。
+
+  ```
+  void *MemCopy(void *dest, const void *src, size_t len)
+  {
+      assert(dest != NULL && src !=NULL);
+      char *tmp_dest = (char *)dest;
+      char *tmp_src = (char *)src;
+      while(len --)
+              *tmp_dest ++ = *tmp_src ++;
+      return dest;
+  }
+  ```
+
+  - 通过“assert(dest !=NULL&&src !=NULL)”语句既完成程序的测试检查功能（即只要在调用该函数的时候为 dest 与 src 参数错误传入 NULL 指针时都会引发 assert），与此同时，对 MemCopy 函数的代码量也进行了大幅度瘦身，不得不说这是一个两全其美的好办法。
+
+- 实际上，在编程中我们经常会出于某种目的（如把 assert 宏定义成当发生错误时不是中止调用程序的执行，而是在发生错误的位置转入调试程序，又或者是允许用户选择让程序继续运行等）需要对 assert 宏进行重新定义。
+
+  - 但值得注意的是，不管断言宏最终是用什么样的方式进行定义，其所定义宏的主要目的都是要使用它来对传递给相应函数的参数进行确认检查。如果违背了这条宏定义原则，那么所定义的宏将会偏离方向，失去宏定义本身的意义。与此同时，为不影响标准 assert 宏的使用，最好使用其他的名字。例如，下面的示例代码就展示了用户如何重定义自己的宏 ASSERT：
+
+    ```
+    /*使用断言测试*/
+    #ifdef DEBUG
+    /*处理函数原型*/
+    void Assert(char * filename, unsigned int lineno);
+    #define ASSERT(condition)\
+    if(condition)\
+        NULL; \
+    else\
+        Assert(__FILE__ , __LINE__)
+    /*不使用断言测试*/
+    #else
+    #define ASSERT(condition) NULL
+    #endif
+    void Assert(char * filename, unsigned int lineno)
+    {
+        fflush(stdout);
+        fprintf(stderr,"\nAssert failed： %s, line %u\n",filename, lineno);
+        fflush(stderr);
+        abort();
+    }
+    ```
+
+    - 如果定义了 DEBUG，ASSERT 将被扩展为一个if语句，否则执行“#define ASSERT(condition) NULL”替换成 NULL。
+    - 这里需要注意的是，因为在编写 C 语言代码时，在每个语句后面加一个分号“；”已经成为一种约定俗成的习惯，因此很有可能会在“Assert（`__FILE__，__LINE__`）”调用语句之后习惯性地加上一个分号。实际上并不需要这个分号，因为用户在调用 ASSERT 宏时，已经给出了一个分号。面对这种问题，我们可以使用“do{}while(0)”结构进行处理，如下面的代码所示：
+
+    ```
+    #define ASSERT(condition)\
+    do{   \
+        if(condition)\
+           NULL; \
+        else\
+           Assert(__FILE__ , __LINE__);\
+    }while(0)
+    现在，将不再为分号“；”而担心了，调用示例如下：
+    void Test(unsigned char *str)
+    {
+        ASSERT(str != NULL);
+        /*函数处理代码*/
+    }
+    int main(void)
+    {
+        Test(NULL);
+        return 0;
+    }
+    ```
+
+    - 很显然，因为调用语句“Test（NULL）”为参数 str 错误传入一个 NULL 指针的原因，所以 ASSERT 宏会自动检测到这个错误，同时根据宏 `__FILE__` 和 `__LINE__` 所提供的文件名和行号参数在标准错误输出设备 stderr 上打印一条错误消息，然后调用 abort 函数中止程序的执行。运行结果如图 1 所示。
+    - 如果这时候将自定义 ASSERT 宏替换成标准 assert 宏结果会是怎样的呢？如下面的示例代码所示：
+
+    ```
+    void Test(unsigned char *str)
+    {
+        assert(str != NULL);
+        /*函数处理代码*/
+    }
+    ```
+
+    - 毋庸置疑，标准 assert 宏同样会自动检测到这个 NULL 指针错误。与此同时，标准 assert 宏除给出以上信息之外，还能够显示出已经失败的测试条件。运行结果如图 2 所示。
+
+      ![](http://c.biancheng.net/uploads/allimg/180906/2-1PZ615193Dc.jpg)
+
+    - 从上面的示例中不难发现，对标准的 assert 宏来说，自定义的 ASSERT 宏将具有更大的灵活性，可以根据自己的需要打印输出不同的信息，同时也可以对不同类型的错误或者警告信息使用不同的断言，这也是在工程代码中经常使用的做法。当然，如果没有什么特殊需求，还是建议使用标准 assert 宏。
+
 ### c++
 
 ##### std::function,std::bind
@@ -507,7 +595,7 @@ extern FILE *stderr;
     ```
 
   - 其中bind类成员函数时，要实例化一个对象，将这个实例化对象也要传进去，否则找不到成员函数的地址，因为成员函数在内存中只保留了一份，而且不能通过类直接访问，必须要通过类的实例化对象来访问，bind的第一个参数&A::fun_3，表示和哪个成员函数绑定，里面怎么实现的暂时不知道，这么写就可以了
-  
+
 - bind绑定成员函数的作用
 
   ```
@@ -571,6 +659,115 @@ extern FILE *stderr;
 
   - 使用这种绑定成员函数，我们可以不通过实例化的类对象来访问成员函数，直接使用bind绑定的function对象来访问和修改成员函数，我们还可以绑定一些参数，这样在访问的时候就不需要输入很多参数，使用更加方便
   - 其次我们要知道使用bind最后就是为了使用回调，将bind之后的函数作为参数传递给另一个函数，实际的问题是，类B实现一个功能，类A采用组合的形式，将类B作为其成员以图获取B的能力，类B提供了注册回调的接口给类A，在类B完成某项功能的时候，可以调用A的接口，完成A自己的处理工作或者需求。简单理解就是类A里面的接口注册到了类B里面，这样类B就可以使用类A的回调函数来完成类A要处理的功能。这里面类A是要实例化的一个对象，这种绑定作为回调函数只能通过bind这种回调函数形式来实现，而不能直接将类A的成员函数直接注册到类B里面。最重要的理解是回调，把A的函数作为回调函数给B，这样B就可以调用A的函数，只是这种实现方法是通过bind成员函数这种方法实现的
+
+##### tuple
+
+- C++11 标准新引入了一种类模板，命名为 tuple（中文可直译为元组）。tuple 最大的特点是：实例化的对象可以存储任意数量、任意类型的数据。
+
+- tuple 的应用场景很广泛，例如当需要存储多个不同类型的元素时，可以使用 tuple；当函数需要返回多个数据时，可以将这些数据存储在 tuple 中，函数只需返回一个 tuple 对象即可。
+
+- tuple对象的创建
+
+  - 类的构造函数
+
+    ```
+    1) 默认构造函数
+    constexpr tuple();
+    2) 拷贝构造函数
+    tuple (const tuple& tpl);
+    3) 移动构造函数
+    tuple (tuple&& tpl);
+    4) 隐式类型转换构造函数
+    template <class... UTypes>
+        tuple (const tuple<UTypes...>& tpl); //左值方式
+    template <class... UTypes>
+        tuple (tuple<UTypes...>&& tpl);      //右值方式
+    5) 支持初始化列表的构造函数
+    explicit tuple (const Types&... elems);  //左值方式
+    template <class... UTypes>
+        explicit tuple (UTypes&&... elems);  //右值方式
+    6) 将pair对象转换为tuple对象
+    template <class U1, class U2>
+        tuple (const pair<U1,U2>& pr);       //左值方式
+    template <class U1, class U2>
+        tuple (pair<U1,U2>&& pr);            //右值方式
+        
+    #include <iostream>     // std::cout
+    #include <tuple>        // std::tuple
+    using std::tuple;
+    int main()
+    {
+        std::tuple<int, char> first;                             // 1)   first{}
+        std::tuple<int, char> second(first);                     // 2)   second{}
+        std::tuple<int, char> third(std::make_tuple(20, 'b'));   // 3)   third{20,'b'}
+        std::tuple<long, char> fourth(third);                    // 4)的左值方式, fourth{20,'b'}
+        std::tuple<int, char> fifth(10, 'a');                    // 5)的右值方式, fifth{10.'a'}
+        std::tuple<int, char> sixth(std::make_pair(30, 'c'));    // 6)的右值方式, sixth{30,''c}
+        return 0;
+    }
+    ```
+
+  - make_tuple()函数
+
+    - make_tuple() 函数，它以模板的形式定义在 <tuple> 头文件中，功能是创建一个 tuple 右值对象（或者临时对象）。
+
+      ```
+      auto first = std::make_tuple (10,'a');   // tuple < int, char >
+      const int a = 0; int b[3];
+      auto second = std::make_tuple (a,b);     // tuple < int, int* >
+      ```
+
+- tuple常用函数
+
+  | 函数或类模板                     | 描 述                                                        |
+  | -------------------------------- | ------------------------------------------------------------ |
+  | tup1.swap(tup2) swap(tup1, tup2) | tup1 和 tup2 表示类型相同的两个 tuple 对象，tuple 模板类中定义有一个 swap() 成员函数，<tuple> 头文件还提供了一个同名的 swap() 全局函数。  swap() 函数的功能是交换两个 tuple 对象存储的内容。 |
+  | get<num>(tup)                    | tup 表示某个 tuple 对象，num 是一个整数，get() 是 <tuple> 头文件提供的全局函数，功能是返回 tup 对象中第 num+1 个元素。 |
+  | tuple_size<type>::value          | tuple_size 是定义在 <tuple> 头文件的类模板，它只有一个成员变量 value，功能是获取某个 tuple 对象中元素的个数，type 为该tuple 对象的类型。 |
+  | tuple_element<I, type>::type     | tuple_element 是定义在 <tuple> 头文件的类模板，它只有一个成员变量 type，功能是获取某个 tuple 对象第 I+1 个元素的类型。 |
+  | forward_as_tuple<args...>        | args... 表示 tuple 对象存储的多个元素，该函数的功能是创建一个 tuple 对象，内部存储的 args... 元素都是右值引用形式的。 |
+  | tie(args...) = tup               | tup 表示某个 tuple 对象，tie() 是 <tuple> 头文件提供的，功能是将 tup 内存储的元素逐一赋值给 args... 指定的左值变量。 |
+  | tuple_cat(args...)               | args... 表示多个 tuple 对象，该函数是 <tuple> 头文件提供的，功能是创建一个 tuple 对象，此对象包含 args... 指定的所有 tuple 对象内的元素。 |
+
+  - tuple 模板类对赋值运算符 = 进行了重载，使得同类型的 tuple 对象可以直接赋值。此外，tuple 模板类还重载了 ==、!=、<、>、>=、<= 这几个比较运算符，同类型的 tuple 对象可以相互比较（逐个比较各个元素）。
+
+  ```
+  #include <iostream>
+  #include <tuple>
+  int main()
+  {
+      int size;
+      //创建一个 tuple 对象存储 10 和 'x'
+      std::tuple<int, char> mytuple(10, 'x');
+      //计算 mytuple 存储元素的个数
+      size = std::tuple_size<decltype(mytuple)>::value;
+      //输出 mytuple 中存储的元素
+      std::cout << std::get<0>(mytuple) << " " << std::get<1>(mytuple) << std::endl;
+      //修改指定的元素
+      std::get<0>(mytuple) = 100;
+      std::cout << std::get<0>(mytuple) << std::endl;
+      //使用 makde_tuple() 创建一个 tuple 对象
+      auto bar = std::make_tuple("test", 3.1, 14);
+      //拆解 bar 对象，分别赋值给 mystr、mydou、myint
+      const char* mystr = nullptr;
+      double mydou;
+      int myint;
+      //使用 tie() 时，如果不想接受某个元素的值，实参可以用 std::ignore 代替
+      std::tie(mystr, mydou, myint) = bar;
+      //std::tie(std::ignore, std::ignore, myint) = bar;  //只接收第 3 个整形值
+      //将 mytuple 和 bar 中的元素整合到 1 个 tuple 对象中
+      auto mycat = std::tuple_cat(mytuple, bar);
+      size = std::tuple_size<decltype(mycat)>::value;
+      std::cout << size << std::endl;
+      return 0;
+  }
+  
+  10 x
+  100
+  5
+  ```
+
+  
 
 ### system
 
