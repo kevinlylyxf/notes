@@ -3734,48 +3734,66 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   正在调用类方法 <class '__main__.CLanguage'>
   ```
 
-  - 如果没有 ＠classmethod，则 Python 解释器会将 类方法认定为实例方法，而不是类方法。
+  如果没有 ＠classmethod，则 Python 解释器会将 类方法认定为实例方法，而不是类方法。
 
-  - 类方法推荐使用类名直接调用，当然也可以使用实例对象来调用（不推荐）
+  类方法推荐使用类名直接调用，当然也可以使用实例对象来调用（不推荐）
 
-    ```
-    #使用类名直接调用类方法
-    CLanguage.info()
-    #使用类对象调用类方法
-    clang = CLanguage()
-    clang.info()
-    ```
+  ```
+  #使用类名直接调用类方法
+  CLanguage.info()
+  #使用类对象调用类方法
+  clang = CLanguage()
+  clang.info()
+  ```
 
-  - 网上的例子
+  网上的例子
 
-    ```
-    class Kls(object):
-        num_inst = 0
-    
-        def __init__(self):
-            Kls.num_inst = Kls.num_inst + 1
-    
-        @classmethod
-        def get_no_of_instance(cls):
-            return cls.num_inst
-    
-    
-    ik1 = Kls()
-    ik2 = Kls()
-    
-    print ik1.get_no_of_instance()
-    print Kls.get_no_of_instance()
-    
-    在上述例子中，我们需要统计类Kls实例的个数，因此定义了一个类变量num_inst来存放实例个数。通过装饰器@classmethod的使用，方法get_no_of_instance被定义成一个类方法。在调用类方法时，Python 会将类（class Kls）传递给cls，这样在get_no_of_instance内部就可以引用类变量num_inst。
-    ```
+  ```
+  class Kls(object):
+      num_inst = 0
+  
+      def __init__(self):
+          Kls.num_inst = Kls.num_inst + 1
+  
+      @classmethod
+      def get_no_of_instance(cls):
+          return cls.num_inst
+  
+  
+  ik1 = Kls()
+  ik2 = Kls()
+  
+  print ik1.get_no_of_instance()
+  print Kls.get_no_of_instance()
+  
+  在上述例子中，我们需要统计类Kls实例的个数，因此定义了一个类变量num_inst来存放实例个数。通过装饰器@classmethod的使用，方法get_no_of_instance被定义成一个类方法。在调用类方法时，Python 会将类（class Kls）传递给cls，这样在get_no_of_instance内部就可以引用类变量num_inst。
+  ```
 
   - 类方法用于当您需要不特定于任何特定实例，但仍然以某种方式涉及类的方法时。它们最有趣的地方是可以被子类覆盖
 
-  - 如果您有一个类MyClass和一个在MyClass(工厂、依赖注入存根等)上操作的模块级函数，那么将它设置为classmethod。然后它将对子类可用。这样我们就可以选择生成一个具体的对象，相当于类方法
+  - 如果您有一个类MyClass和一个在MyClass(工厂、依赖注入存根等)上操作的模块级函数，那么将它设置为classmethod。然后它将对子类可用。
 
   - 工厂方法(可选构造函数)确实是类方法的一个经典例子。
 
   - 基本上，只要您希望有一个方法自然地适合于类的名称空间，但又不与类的特定实例关联，那么类方法就非常适合。
+
+  - 因为类方法传入的参数是类，并不是类的实例，所以我们可以在类方法里面通过这个类声明一个类实例对象然后返回去，相当于这个类方法返回了一个类实例对象。
+
+    ```
+    class Data(object):
+    		def __init__(self, year = 2022, month = 1, day = 14)
+    				self.year = year
+    				self.month = month
+    				self.day = day
+    
+    @staticmethod
+    def as_str(cls, s):
+    		month, day, year = s.split("/")
+    		d1 = cls(year, month, day)
+    		return d1;
+    ```
+
+    
 
 - 静态方法其实就是我们学过的函数，和函数唯一的区别是，静态方法定义在类这个空间（类命名空间）中，而函数则定义在程序所在的空间（全局命名空间）中。静态方法没有类似 self、cls 这样的特殊参数，因此 Python 解释器不会对它包含的参数做任何类或对象的绑定。也正因为如此，类的静态方法中无法调用任何类属性和类方法。静态方法需要使用`＠staticmethod`修饰
 
@@ -3825,7 +3843,6 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 在实际编程中，几乎不会用到类方法和静态方法，因为我们完全可以使用函数代替它们实现想要的功能，但在一些特殊的场景中（例如工厂模式中），使用类方法和静态方法也是很不错的选择。
 
-- 
 
 ###### 描述符
 
@@ -6093,7 +6110,7 @@ __init__()
 
   - 显然，通过 funB() 函数被装饰器 funA() 修饰，funB 就被赋值为 say。这意味着，虽然我们在程序显式调用的是 funB() 函数，但其实执行的是装饰器嵌套的 say() 函数。
 
-  - 但还有一个问题需要解决，即如果当前程序中，有多个（≥ 2）函数被同一个装饰器函数修饰，这些函数带有的参数个数并不相等，怎么办呢？最简单的解决方式是用 *args 和 **kwargs 作为装饰器内部嵌套函数的参数，*args 和 **kwargs 表示接受任意数量和类型的参数。
+  - 但还有一个问题需要解决，即如果当前程序中，有多个（≥ 2）函数被同一个装饰器函数修饰，这些函数带有的参数个数并不相等，怎么办呢？最简单的解决方式是用 \*args 和 \\**kwargs 作为装饰器内部嵌套函数的参数，*args 和 **kwargs 表示接受任意数量和类型的参数。
 
     ```
     def funA(fn):
