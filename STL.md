@@ -1,3 +1,66 @@
+
+
+### STL理解
+
+##### 对于扩容的理解
+
+- STL中都是一些类，vector，list，deque等都是一些模板类，其里面维护着一些空间
+
+  ```c++
+  #include <iostream>
+  #include <stdio.h>
+  #include <vector>
+  using namespace std;
+  int main(){
+  	vector<int> res(2, 0);
+  	cout << res.capacity() << endl;
+  	printf("1 = %p\n", &res);
+  	printf("1.1 = %p\n", &res[1]);
+  	res.push_back(1);
+  	cout << res.capacity() << endl;
+  	printf("2 = %p\n", &res);
+  	printf("2.1 = %p\n", &res[1]);
+  	res.push_back(2);
+  	res.push_back(3);
+  	cout << res.capacity() << endl;
+  	printf("3 = %p\n", &res);
+  	printf("3.1 = %p\n", &res[1]);
+  	return 0;	
+  }
+  
+  
+  2
+  1 = 0x7ffeccc4f150
+  1.1 = 0x140e014
+  4
+  2 = 0x7ffeccc4f150
+  2.1 = 0x140e034
+  8
+  3 = 0x7ffeccc4f150
+  3.1 = 0x140e054
+  ```
+
+  - 上述例子表明，linux下gcc中的vector扩容是2倍空间的扩容，当我们声明了一个类对象时，例如上面的vector，其地址就不会变化了，这个地址会固定下来，说明我们访问的都是一个类对象，在栈上，全局区或者堆上都是这样的，类对象的地址不变，但是如果向里面添加东西之后，容器就会扩容，此时会将原来的数据重新申请一块大内存，然后拷贝过去，我们访问里面的数据，看到里面维护的数据地址是变化的，但是这个访问过程是我们先访问到这个地址不变的类对象，然后通过重载的类对象里面的运算符[]来找到具体的对象地址来访问的，所以我们能正确通过类对象来访问。其中的访问过程是类内部维护的，我们不需要操心。重新申请后的空间是在类里面记录的，也能通过类中的成员函数来找到具体的地址。
+
+- vector不同声明的区别
+
+  ```c++
+  在使用C++ STL的vector时，下面三种写法有什么不同呢？其内存分配是怎么样的呢？
+  
+  std::vector<T> vec;
+  std::vector<T>* Vec = new std::vector<T>();
+  std::vector<T*> vec;
+  
+  首先，说结论吧（假设Ｔ是一个定义好的类）：
+  对于std::vector<T> vec;vec在栈上（stack），而其中的元素T保存在堆上（heap）；
+  对于std::vector<T>* Vec = new std::vector<T>();vec和其中的元素T都保存在堆上；
+  对于std::vector<T*> vec;vec在栈上（stack），而其中的元素T保存在堆上（heap）；和第一种情况类似。
+  
+  std::vector<T>和std::vector<T*>中元素T都是存储在栈上，而且std::vector<T>不用手动管理内存空间，而std::vector<T*>需要手动delete释放栈上的空间。但是push_back的时候std::vector<T>会比std::vector<T*>多一个拷贝构造的过程。
+  ```
+
+  - 申请的类对象只是一个名字，我们通过这个不变的名字来找到具体的数据， 里面的数据都是维护在堆上的，我们不需要管理，这个类对象会进行精确的管理
+
 ### STL基础
 
 - STL，英文全称 s[tan](http://c.biancheng.net/ref/tan.html)dard template library，中文可译为标准模板库或者泛型库，其包含有大量的模板类和模板函数，是 C++ 提供的一个基础模板的集合，用于完成诸如输入/输出、数学计算等功能。
