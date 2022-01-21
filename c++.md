@@ -789,9 +789,9 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     char c = 98；stm << c;
     这样stm放进去的是字符b，并不是整数98
     这样定义的char c，可以用if判断if（c == 98），也可以进行数值运算int a = c + 2;这样打印出来的是100，但是用cout打印的是字符d，因为其定义的是char类型的
+    
+    如果想转换要使用snprintf中%d指明一下就可以将数字放进去
     ```
-    
-    
     
     - 多次数据类型转换，必须使用 clear() 方法清空 stringstream，不使用 clear() 方法或使用 str("") 方法，都不能得到数据类型转换的正确结果，不适用clear结果为 456   4197008，使用str("")结果为456 0
 

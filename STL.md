@@ -445,6 +445,58 @@ std::vector<int> demo{1,2};
 
 - erase() 函数在删除元素时，会将删除位置后续的元素陆续前移，并将容器的大小减 1。
 
+  - erase函数返回指向被删除元素下一个位置元素的迭代器，这个是更新之后的容器迭代器，并不是原来没有删除元素时候的容器迭代器，所以此时迭代器变化，如果删除的正好是最后一个元素，此时it++，如果和c.end()比较就会出错，因为c.end()返回的是删除之后的尾后迭代器，和原来it++指向的并不是同一个迭代器位置，官方手册上的示例：
+
+    ```
+    #include <vector>
+    #include <iostream>
+    void print_container(const std::vector<int>& c) 
+    {
+        for (auto &i : c) {
+            std::cout << i << " ";
+        }
+        std::cout << '\n';
+    }
+    int main( )
+    {
+        std::vector<int> c{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        print_container(c);
+     
+        c.erase(c.begin());
+        print_container(c);
+     
+        c.erase(c.begin()+2, c.begin()+5);
+        print_container(c);
+     
+        // Erase all even numbers (C++11 and later)
+        for (auto it = c.begin(); it != c.end(); ) {
+            if (*it % 2 == 0) {
+                it = c.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        print_container(c);
+    }
+    
+    0 1 2 3 4 5 6 7 8 9
+    1 2 3 4 5 6 7 8 9
+    1 2 6 7 8 9
+    1 7 9
+    ```
+
+    - 注意for循环的写法，这样写是正确的，因为erase删除之后返回值是容器更新之后的下一个元素位置，如果此时it正好是最后一个，it就是更新之后的尾后迭代器，和c.end()比较也是更新之后的尾后迭代器，所以是正确的，下面这种写法是错误的
+
+      ```
+       for (auto it = c.begin(); it != c.end(); it++ ) {
+              if (*it % 2 == 0) {
+                  c.erase(it);
+              } 
+          }
+      ```
+
+    - 这种写法是错误的，因为如果是最后一个，更新之后并没有接受，此时it还是在旧容器的迭代器上++，此时和更新之后的end()，相差一个位置，此时就会再次进入循环，出现段错误。
+
 - 如果不在意容器中元素的排列顺序，可以结合 swap() 和 pop_back() 函数，同样可以实现删除容器中指定位置元素的目的。swap() 函数在头文件 `<algorithm>` 和 `<utility>` 中都有定义，使用时引入其中一个即可。
 
   ```
