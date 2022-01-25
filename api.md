@@ -234,7 +234,7 @@ thread 0xb7df6b90 will exit
 
 - 在linux)系统中，我们创建一个新的文件或者目录的时候，这些新的文件或目录都会有默认的访问权限，umask命令与文件和目录的默认访问权限有关。若用户创建一个文件，则文件的默认访问权限为 -rw-rw-rw- ，创建目录的默认权限 drwxrwxrwx ，而umask值则表明了需要从默认权限中去掉哪些权限来成为最终的默认权限值。
 
-- umask值得含义和使用，在shell中可以查看umask值
+- umask值的含义和使用，在shell中可以查看umask值
 
   ```
   hadoop@sench-pc:~$ umask 
