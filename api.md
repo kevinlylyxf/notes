@@ -419,6 +419,69 @@ extern FILE *stderr;
 
     - 从上面的示例中不难发现，对标准的 assert 宏来说，自定义的 ASSERT 宏将具有更大的灵活性，可以根据自己的需要打印输出不同的信息，同时也可以对不同类型的错误或者警告信息使用不同的断言，这也是在工程代码中经常使用的做法。当然，如果没有什么特殊需求，还是建议使用标准 assert 宏。
 
+##### unlink
+
+```c
+int unlink(const char *pathname);
+
+unlink() deletes a name from the file system.  If that name was the last link to a file and no processes have the file open the file is deleted and the space it was using is made available for reuse.
+unlink() 从文件系统中删除一个名称。 如果该名称是文件的最后一个链接，并且没有进程打开该文件，则该文件将被删除，并且它正在使用的空间可供重用。
+```
+
+- 如果pathname是一个链接文件，则删除这个链接文件。如果是一个文件，则删除这个文件。
+- remove可以删除文件和目录，如果是一个文件的话调用的是unlink函数，如果是一个目录的话调用的是rmdir函数，其是在内部实现的
+
+##### fcntl
+
+```c
+int fcntl(int fd, int cmd, ... /* arg */ );
+```
+
+- [函数介绍](https://blog.csdn.net/u012349696/article/details/50791364)
+
+- [另一种介绍，里面由printf的宏定义打印调试信息的写法](https://blog.csdn.net/rikeyone/article/details/88828154)
+
+- 第三个参数arg是可选的，由第二个参数cmd决定
+
+  ```
+  int fcntl(int fd, int cmd);
+  int fcntl(int fd, int cmd, int arg);
+  int fcntl(int fd, int cmd, struct flock *lock);
+  ```
+
+- fcntl函数的作用
+
+  ```
+  1. 复制一个现有的描述符(cmd=F_DUPFD). 
+  2. 获得／设置文件描述符标记(cmd=F_GETFD或F_SETFD). 
+  3. 获得／设置文件状态标记(cmd=F_GETFL或F_SETFL). 
+  4. 获得／设置异步I/O所有权(cmd=F_GETOWN或F_SETOWN). 
+  5. 获得／设置记录锁(cmd=F_GETLK , F_SETLK或F_SETLKW).
+  ```
+
+- fcntl函数设置文件非阻塞步骤
+
+  ```c++
+  static int make_socket_non_blocking (int sfd)
+  {
+    int flags, s;
+    flags = fcntl (sfd, F_GETFL, 0);
+    if (flags == -1) {
+        perror ("fcntl");
+        return -1;
+    }
+    flags |= O_NONBLOCK;
+    s = fcntl (sfd, F_SETFL, flags);
+    if (s == -1) {
+        perror ("fcntl");
+        return -1;
+    }
+    return 0;
+  }
+  ```
+
+  - 设置为非阻塞是对于文件来说的，对于文件的属性设置是在open函数打开文件时设置的，所以文件的属性例如O_NONBLOCK在open函数中可以看到。而fcntl这样做是改变函数的标志的。
+
 ### c++
 
 ##### std::function,std::bind
@@ -1197,7 +1260,53 @@ DONE:
 
 ```
 
+##### 管道
 
+- [管道的详细介绍](https://zhuanlan.zhihu.com/p/58489873)
+
+- mkfifo
+
+  ```c
+  int mkfifo(const char *pathname, mode_t mode);
+  ```
+
+  - pathname必须不存在，如果存在管道创建不成功。
+  - mkfifo返回的是一个文件描述符，可以使用read，write来操作，fread，fwrite不行
+  - 如果read读取的话，管道里没有数据，是会阻塞的，所以需要进行处理
+
+##### mmap
+
+- [详细介绍，里面有关于page cache即页缓存的说明](https://zhuanlan.zhihu.com/p/67894878)
+
+  ```c
+  void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+  ```
+
+- read函数读取文件时，会将磁盘上的文件缓存到page cache(也是内存中的地址)中，然后在进行系统调用，从page cache拷贝到内核缓冲区中，然后在从内核缓冲区拷贝到用户缓冲区中，这样就会有多次的数据拷贝。read并不是直接读取数据到用户缓冲区的。因为用户空间和内存空间是分开的，我们只能在内核空间中将数据拷贝到内核缓冲区中，并不能直接拷贝到用户缓冲区中，他们两者是隔开的
+
+- mmap()在数据加载到page cache的过程中，会触发大量的page fault和建立页表映射的操作，开销并不小。另一方面，随着硬件性能的发展，内存拷贝消耗的时间已经大大降低了。所以啊，很多情况下，mmap()的性能反倒是比不过read()和write()的。
+
+- 以上说明mmap系统调用是将用户空间中的一部分内存直接进行页表的映射，相当于直接进行修改了，不用通过read函数在进行操作了。
+
+- ```
+  //打开文件
+  	fd = open("testdata",O_RDWR);
+  	//创建mmap
+  	start = (char *)mmap(NULL,128,PROT_READ|PROT_WRITE,MAP_SHARED,fd,0);
+  	//读取文件	
+  	strcpy(buf,start);
+  	printf("%s\n",buf);
+  	//写入文件
+  	strcpy(start,"Write to file!\n");
+   
+  	munmap(start,128);
+  	close(fd);
+  ————————————————
+  版权声明：本文为CSDN博主「fxfreefly」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+  原文链接：https://blog.csdn.net/bhniunan/article/details/104105153
+  ```
+
+  
 
 ### 设计模式
 
