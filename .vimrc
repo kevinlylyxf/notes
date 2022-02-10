@@ -117,25 +117,7 @@ vnoremap Y :w !xclip -i -sel c<CR>
 
 "search
 map <Leader><CR> :nohlsearch<CR>
-noremap i k
-noremap k j
-noremap j h
-noremap h i
-noremap H I
-noremap I 5k
-noremap K 5j
-noremap W 5w
-noremap B 5b
-noremap J 0
-noremap L $
-"inoremap <leader>i <Up>
-"inoremap <leader>k <DOWN>
-"inoremap <leader>j <LEFT>
-"inoremap <leader>l <RIGHT>
-"noremap <C-K> 5<C-y>
-"noremap <C-J> 5<C-e>
-"inoremap <C-K> <Esc>5<C-y>a
-"inoremap <C-J> <Esc>5<C-e>a
+
 map fi :tabe<CR>
 map fj :-tabnext<CR>
 map fl :+tabnext<CR>
@@ -158,10 +140,10 @@ map sh :set nosplitright<CR>:vsplit<CR>:set splitright<CR>
 map sl :set splitright<CR>:vsplit<CR>
 
 " Resize splits with arrow keys,map下的定义不影响插入模式下
-nmap <up> :res -5<CR>
-nmap <down> :res +5<CR>
-nmap <left> :vertical resize-5<CR>
-nmap <right> :vertical resize+5<CR>
+nmap <LEADER><up> :res -5<CR>
+nmap <LEADER><down> :res +5<CR>
+nmap <LEADER><left> :vertical resize-5<CR>
+nmap <LEADER><right> :vertical resize+5<CR>
 
 " Place the two screens up and down
 noremap su <C-w>t<C-w>K
@@ -215,12 +197,8 @@ endfunc
 call plug#begin('~/.vim/plugged')
 Plug 'preservim/nerdtree'
 Plug 'vim-airline/vim-airline'
-Plug 'flazz/vim-colorschemes'
-Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'dense-analysis/ale'
-Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install'  }
-Plug 'dhruvasagar/vim-table-mode'
 Plug 'tpope/vim-surround'
 Plug 'gcmt/wildfire.vim'
 call plug#end()
@@ -242,31 +220,3 @@ function! s:check_back_space() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
-
-"===
-"===markdown
-"===
-let g:mkdp_auto_start = 0
-let g:mkdp_auto_close = 1
-let g:mkdp_refresh_slow = 0
-let g:mkdp_command_for_global = 0
-let g:mkdp_open_to_the_world = 0
-let g:mkdp_open_ip = ''
-let g:mkdp_browser =''
-let g:mkdp_echo_preview_url = 0
-let g:mkdp_path_to_chrome = "/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
-let g:mkdp_browserfunc = ''
-let g:mkdp_path_to_chrome = "open -a Google\\ Chrome"
-let g:mkdp_preview_options = {
-    \ 'mkit': {},
-    \ 'katex': {},
-    \ 'uml': {},
-    \ 'maid': {},
-    \ 'disable_sync_scroll': 0,
-    \ 'sync_scroll_type': 'middle',
-    \ 'hide_yaml_meta': 1
-    \ }
-let g:mkdp_markdown_css = ''
-let g:mkdp_highlight_css = ''
-let g:mkdp_port = ''
-let g:mkdp_page_title = '「${name}」'
