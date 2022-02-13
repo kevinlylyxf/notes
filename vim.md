@@ -1310,7 +1310,7 @@
 
 - 窗口（Window）用来查看[缓冲区](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-13-MultiBuffers.html)（Buffer）的内容。你可以用多个窗口查看同一个缓冲区，也可以用多个窗口查看不同的缓冲区。利用多窗口，我们就能够很方便地对比多个文件，在不同文件之间复制粘贴或者查看同一文件的不同部分。
 
-- Vim主窗口可以容纳多个分割的窗口。也可以创建多个[标签页](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-15-Tabs.html)（tab-page），每个标签页也能容纳多个窗口。
+- Vim主窗口可以容纳多个分割的窗口。也可以创建多个[标签页](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-15-Tabs.html)（tab-page），每个标签页也能容纳多个窗口。窗口的分割是在原来的窗口上分割成多个，而创建标签页是新增加一个窗口
 
 - 在默认情况下，与Vi类似，Vim启动后只打开一个窗口。参数 "-o" 和 "-O" 可以让Vim为参数列表里的每一个文件打开一个窗口。参数 "-o" 水平分割窗口；参数 "-O" 垂直分割窗口。如果 "-o" 和 "-O" 都用了，那么最后一个参数决定分割的方向。例如，下面的例子打开三个水平分割的窗口。
 
@@ -1408,7 +1408,7 @@
   :buffer filename
   ```
 
-- 我们可以用`:sbuffer number`命令，来分割当前窗口开始编辑一个缓冲区。如果指明了数字，那么当前窗口就会显示数字所标记的缓冲区中的内容；如果没有指明数字，那么就会显示当前缓冲区的内容。当然，这个命令也可以用文件名来做为参数：
+- 我们可以用`:sbuffer number`命令，来分割当前窗口开始编辑一个缓冲区。如果指明了数字，那么当前窗口就会显示数字所标记的缓冲区中的内容；如果没有指明数字，那么就会显示当前缓冲区的内容。当然，这个命令也可以用文件名来做为参数：相当于在当前窗口下分割了一个窗口来编辑缓冲区，相当于先增加了一个窗口然后使用e命令增加一个
 
   ```
   sbuffer filename
@@ -1902,3 +1902,2073 @@
 - 其中，[bufspec]参数可以是缓冲区编号，缓冲区名称，或者缓冲区名称的一部分。可以使用`:buffers`命令，来查看包含缓冲区编号和名称的列表。
 
 - 使用`:help copy-diffs`命令，可以查看合并/消除差异的更多帮助信息。
+
+### 自定义系统
+
+##### 设置选项
+
+- Vim是一个高度可定制的编辑器，我们可以使用 :set 命令来设置大量的选项，其大致可分为三种：布尔值选项、数值选项和字符串选项。
+
+- 使用以下命令，可以列示所有选项：
+
+  ```vim
+  :set all
+  ```
+
+- 如果希望查看某个选项的当前值，那么可以使用 :set option? 命令，其返回值将显示在屏幕底部。例如：
+
+  ```vim
+  :set list?
+  ```
+
+- 使用以下命令，可以设置布尔值选项：
+
+  <img src="https://pic1.zhimg.com/80/v2-dc8bcf92d56add33a5457e116cf0a778_1440w.jpg" style="zoom:50%;" />
+  - 如果顺序执行这些命令，那么选项变化如下图所示：
+
+    ![](https://pic3.zhimg.com/80/v2-2a6254a40592ce5770eb6ff7060feb9a_1440w.jpg)
+
+- 使用以下命令，可以设置数值选项：
+
+  <img src="https://pic2.zhimg.com/80/v2-e2f881223f4d95eb2867e659a2262a75_1440w.jpg" style="zoom:50%;" />
+  - 如果顺序执行这些命令，那么选项变化如下图所示：
+
+    ![](https://pic4.zhimg.com/80/v2-047d271e569936b73d58ff16b90894bb_1440w.jpg)
+
+- 使用以下命令，可以设置字符串选项：
+
+  <img src="https://pic3.zhimg.com/80/v2-b0eb2b661ad4ea18d662e8cac68a282a_1440w.jpg" style="zoom:50%;" />
+  - 如果顺序执行这些命令，那么选项变化如下图所示：
+
+    ![](https://pic1.zhimg.com/80/v2-475b24bc7ce148010907b99d220229d8_1440w.jpg)
+
+- 我们可以在一行:set命令中，设置多个选项。例如以下命令，将设置三个不同的选项：
+
+  ```
+  :set list shiftwidth=4 incsearch
+  ```
+
+- 使用以下命令，可以将所有的选项都重置为默认值：
+
+  ```vim
+  :set all&
+  ```
+
+- 使用以下命令，将列示出所有与其默认值不同的选项：
+
+  ```vim
+  :set
+  ```
+
+##### 键盘映射
+
+- 使用:map命令，可以将键盘上的某个按键与Vim的命令绑定起来。例如使用以下命令，可以通过F5键将单词用花括号括起来：
+
+  ```text
+  :map <F5> i{ea}<Esc>
+  ```
+
+  - 其中：i{将插入字符{，然后使用Esc退回到命令状态；接着用e移到单词结尾，a}增加字符}，最后退至命令状态。在执行以上命令之后，光标定位在一个单词上（例如amount），按下F5键，这时字符就会变成{amount}的形式。
+
+- 使用下表中不同形式的map命令，可以针对特定的模式设置键盘映射：
+
+  ![](https://pic1.zhimg.com/80/v2-53b70b061cc2f5fa4c496ac15fef89b4_1440w.png)
+  - Operator-pending模式，是指当你输入操作符（比如d）时，然后继续输入的移动步长和文本对象（dw）的状态。
+  - 第一列命令定义的映射，仍然可以被重新映射；第二列命令（包含noremap）定义的映射，是不可以被重新映射的。
+
+- 键盘映射实例
+
+  - 使用以下命令，可以在Normal Mode和Visual/Select Mode下，利用Tab键和Shift-Tab键来缩进文本：
+
+    ```text
+    nmap <tab> V>
+    nmap <s-tab> V<
+    vmap <tab> >gv
+    vmap <s-tab> <gv
+    ```
+
+  - 使用以下命令，指定F10键来新建标签页：
+
+    ```text
+    :map <F10> <Esc>:tabnew<CR>
+    ```
+
+    - 其中：<Esc>代表Escape键；<CR>代表Enter键；而功能键则用<F10>表示。首先进入命令行模式，然后执行新建标签页的:tabnew命令，最后返回常规模式。
+    - 同理：对于组合键，可以用<C-Esc>代表Ctrl-Esc；使用<S-F1>表示Shift-F1。对于Mac用户，可以使用<D>代表Command键。
+
+  - Alt键可以使用<M-key>或<A-key>来表示。
+
+- 关于键盘符号的详细说明，请使用:h key-notation命令查看帮助信息。
+
+- 使用:map命令，可以列出所有键盘映射。其中第一列标明了映射在哪种模式下工作：标记模式<space>常规模式，可视化模式，运算符模式n常规模式v可视化模式o运算符模式!插入模式，命令行模式i插入模式c命令模式
+
+- 如果想要取消一个映射，可以使用以下命令：
+
+  ```text
+  :unmap <F10>
+  ```
+
+  - 注意：必须为:unmap命令指定一个参数。如果未指定任何参数，那么系统将会报错，而不会取消所有的键盘映射。
+
+- 针对不同模式下的键盘映射，需要使用与其相对应的unmap命令。例如：使用:iunmap命令，取消插入模式下的键盘映射；而取消常规模式下的键盘映射，则需要使用:nunmap命令。
+
+  ![](https://pic2.zhimg.com/80/v2-6baf840cdfce6130262a917c164923dd_1440w.png)
+
+- 可以使用以下命令，取消所有映射。请注意，这个命令将会移除所有用户定义和系统默认的键盘映射。
+
+  ```text
+  :mapclear
+  ```
+
+##### 前缀键
+
+- Vim预置有很多快捷键，再加上各类插件的快捷键，大量快捷键出现在单层空间中难免引起冲突。为缓解该问题，而引入了前缀键<leader>。藉由前缀键， 则可以衍生出更多的快捷键命名空间（namespace)。例如将r键配置为<leader>r、<leader><leader>r等多个快捷键。
+- 使用`:help <leader>`命令，可以查看关于前缀键的更多信息。
+
+###### 定义前缀键
+
+- 前缀键默认为“\”。使用以下命令，可以将前缀键定义为逗号：
+
+  ```vim
+  let mapleader=","
+  ```
+
+- 使用以下命令，利用转义符“\”将前缀键设置为空格键也是不错的主意：
+
+  ```vim
+  let mapleader = "\<space>"
+  ```
+
+###### 配置实例
+
+- 定义以下快捷键，用于删除当前文件中所有的行尾多余空格：
+
+  ```vim
+  nnoremap <leader>W :%s/\s\+$//<cr>:let @/=''<CR>
+  ```
+
+- 定义以下快捷键，用于快速编辑和重载[vimrc配置文件](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-vimrc.html)：
+
+  ```vim
+  nnoremap <leader>ev :vsp $MYVIMRC<CR>
+  nnoremap <leader>sv :source $MYVIMRC<CR>
+  ```
+
+- 定义以下快捷键，使用前缀键和数字键快速切换[缓冲区](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-13-MultiBuffers.html)：
+
+  ```vim
+  nnoremap <leader>1 :1b<CR>
+  nnoremap <leader>2 :2b<CR>
+  nnoremap <leader>3 :3b<CR> 
+  ```
+
+##### 缩写
+
+- 利用:ab[breviate]缩写命令，我们可以用一个缩写来代替一组字符，此后只要输入缩写，就可以自动插入其代表的字符串以提高输入效率。
+
+###### 设置缩写
+
+- 使用以下命令，将定义ad来代替advertisement：
+
+  ```text
+  :abbreviate ad advertisement
+  ```
+
+  - 当想要输入advertisement时，只要输入ad，然后：
+    - 如果按下Ctrl-]键，可以输入advertisement并停留在插入模式；
+    - 如果按下Esc键，将插入扩展字符并返回命令模式；
+    - 如果按下Space或Enter键，那么将在插入扩展字符后，自动增加空格或回车，并停留在插入模式。
+
+###### 不同模式下的缩写
+
+- 使用下表中不同形式的abbreviate命令，可以针对特定的模式设置缩写：
+  - 所有模式:abbreviate
+  - 插入模式:iabbrev
+  - 命令行模式:cabbrev
+
+###### 缩写实例
+
+- 我们可以为多个单词设置缩写。例如以下命令，将设置Jack Berry的缩写为JB。
+
+  ```text
+  :abbreviate JB Jack Berry
+  ```
+
+- 如果你编写程序，那么利用以下设置，可以加快添加注释的速度：
+
+  ```text
+  :abbreviate #b /**********************
+  :abbreviate #e **********************/
+  ```
+
+- 如果你设计网页，那么利用以下缩写可以快速增加标签。其中<CR><LF>将在标签间自动插入换行，以方便你继续输入内容。
+
+  ```text
+  :iabbrev p <p><CR><LF></p>
+  ```
+
+- 利用以下命令，我们甚至还可以定位光标所处的位置：
+
+  ```text
+  :iabbrev icode <code class="inset">!cursor!</code><Esc>:call search('!cursor!','b')
+  ```
+
+- 我们还可定义命令缩写。例如以下命令，将在新的标签页中显示帮助信息：
+
+  ```text
+  :cabbrev h tab h
+  ```
+
+- 我们可以将常用的缩写命令定义在[vimrc](https://link.zhihu.com/?target=http%3A//yyq123.blogspot.com/2012/01/vim-vimrc.html)配置文件之中，它们将在Vim启动时自动装载，而不需要再逐一重新定义。
+
+###### 查看缩写
+
+- 使用:abbreviate命令，将列出所有缩写定义，其中第一列显示缩写的类型：
+  - 标记模式!插入模式，命令行模式i插入模式c命令模式
+
+###### 取消缩写
+
+- 可以使用以下命令，移除某个缩写：
+
+  ```text
+  :unabbreviate ad
+  ```
+
+- 针对不同模式下的缩写，需要使用与其相对应的unabbreviate命令。例如：使用:iunabbreviate命令，取消插入模式下的缩写，而:iabclear命令则会清除所有插入模式的缩写定义；依此类推，取消和清除命令行模式下的缩写，则需要使用:cunabbreviate和:cabclear命令。
+
+- 如果想要清除所有缩写，可以使用以下命令：
+
+  ```text
+  :abclear
+  ```
+
+###### 标记
+
+- 我们可以对文本进行标记，以方便在文档的不同位置间跳转。
+
+###### 创建标记
+
+- 将光标移到某一行，使用ma命令进行标记。其中，m是标记命令，*a*是所做标记的名称。
+- 可以使用小写字母a-z或大写字母A-Z中的任意一个做为标记名称。小写字母的标记，仅用于当前缓冲区；而大写字母的标记，则可以跨越不同的缓冲区。例如，你正在编辑File1，但仍然可以使用'A命令，移动到File2中创建的标记A。
+
+###### 跳转标记
+
+- 创建标记后，可以使用'a命令，移动到指定标记行的首个非空字符。这里'是单引号。也可以使用`a命令，移到所做标记时的光标位置。这里`是反引号（也就是数字键1左边的那一个）。
+
+###### 列示标记
+
+- 利用:marks命令，可以列出所有标记。这其中也包括一些系统内置的特殊标记（Special marks）：
+
+  ![](https://pic3.zhimg.com/80/v2-3ad270e389126612cd2e5264a0930a4e_1440w.png)
+  ```
+  . 最近编辑的位置
+  
+  0-9 最近使用的文件
+  
+  ∧ 最近插入的位置
+  
+  ' 上一次跳转前的位置
+  
+  " 上一次退出文件时的位置
+  
+  [ 上一次修改的开始处
+  
+  ] 上一次修改的结尾处
+  ```
+
+###### 删除标记
+
+- 如果删除了做过标记的文本行，那么所做的标记也就不存了。我们不仅可以利用标记来快速移动，而且还可以使用标记来删除文本，例如在某一行用ma做了标记，然后就可以使用d'a来删掉这一行。当然，我们也可以使用y'a命令就可以来复制这一行了。
+- 使用:delmarks a b c命令，可以删除某个或多个标记；而:delmarks! 命令，则会删除所有标记。
+- 利用:help mark-motions命令，可以查看关于标记的更多帮助信息。
+- [vim-signature](https://link.zhihu.com/?target=https%3A//github.com/kshenoy/vim-signature)插件用于在屏幕最左侧显示标记。
+
+##### 备份文件
+
+- Vim利用writebackup和backup两个选项，在编辑文件的过程中，自动生成备份文件，以防止异常情况下的数据丢失。
+
+###### 启用文件备份
+
+- 在默认情况下，Vim已经设置了writebackup选项。我们可以使用以下命令，启用backup选项。vim将首先删除旧的备份文件，然后再为正在编辑的文件生成新的备份文件：
+
+  ```vim
+  :set backup
+  ```
+
+###### 备份文件名称
+
+- 默认情况下，备份文件的名称是在原始文件名最后加上“~”后缀。例如，正在编辑一个名为“data.txt”的文件，那么Vim将产生名为“data.txt~”的备份文件。我们也可以使用以下命令，来自定义备份文件扩展名，新的备份文件名将命名为“data.txt.bu”。
+
+  ```vim
+  :set backupext=.bu
+  ```
+
+###### 备份文件位置
+
+- 默认情况下，备份文件将存储于原文件相同的目录下。使用以下命令，可以设置备份文件存放到指定位置：
+
+  ```vim
+  :set backupdir=C:/Temp
+  ```
+
+- 需要注意的是，如果在不同目录下编辑相同名称的文件，在保存退出时，Vim会将备份文件放置到同一指定的目录中，名字冲突会使已存在的备份文件被覆盖。
+
+###### 备份文件过滤
+
+- 如果你并不需要对所有文件都进行备份，那么可以利用以下命令取消对指定目录下文件的备份：
+
+  ```vim
+  set backupskip=D:/Temp/*
+  ```
+
+- 需要注意的是，Windows文件路径中斜线（/）的用法。
+
+###### 禁止文件备份
+
+- 在保持默认writebackup选项的情况下，我们可以使用以下命令，取消备份文件的生成：
+
+  ```vim
+  :set nobackup
+  ```
+
+- 需要注意的是，如果同时设置了nobackup和nowritebackup选项，那么在磁盘已满而更新文件时会造成数据的丢失，所以我们最好不要改变默认的writebackup选项。
+
+##### 交换文件
+
+- 在编辑文件的过程中，Vim将会在当前目录中自动生成一个以*.swp*结尾的临时交换文件，用于备份缓冲区中的内容，以便在意外退出时可以恢复之前编辑的内容。
+
+###### 启用/禁用交换文件
+
+- 可以使用以下命令，设置生成交换文件：
+
+  ```vim
+  :set swapfile
+  ```
+
+- 可以使用以下命令，设置Vim不产生交换文件：
+
+  ```vim
+  :set noswapfile
+  ```
+
+- 注意，以上设置仅针对当前文件生效。
+
+###### 处理交换文件
+
+- 当完成编辑并保存退出后，临时交换文件将会被删除；但如果Vim意外退出，那么这个临时文件就会留在硬盘中。当Vim再次启动时，会检查当前目录中是否存在交换文件。如果存在，则意味着Vim正在编辑此文件，或者在上次编辑过程中意外退出，这时Vim就会给出警告信息，并要求我们在以下四个选项中做出选择：
+  - **Open Read-Only**（以只读方式打开）：如果我们想要查看文件内容或是有另一个编辑过程正在运行，那么可以选择此选项；
+  - **Edit anyway**（编辑文件）：请尽量不要选择此选项。因为如果同时有两个或是多个编辑过程同时编辑一个文件，那么只有最后一个保存的编辑过程有效；
+  - **Recover**（恢复）：如果在编辑过程中vim意外退出，那么可以选择此选项尝试从交换文件恢复文档；
+  - **Quit**（退出）：选择此选项，将取消对此文件的修改。
+
+###### 查看交换文件
+
+- Vim意外退出时，并不会覆盖旧的交换文件，而是会重新生成新的交换文件。例如，第一次产生的交换文件名为“.file.txt.swp”；再次意外退出后，将会产生名为“.file.txt.swo”的交换文件；而第三次产生的交换文件则为“.file.txt.swn”；依此类推。
+
+- 使用以下命令，可以查看当前交换文件的名称：
+
+  ```vim
+  :swapname
+  ```
+
+- 也可以在命令行中使用以下命令，列示当前目录和临时目录下的交换文件：
+
+  ```vim
+  vim -r
+  ```
+
+###### 交换文件选项
+
+- 根据默认设置，交换文件会每隔4000毫秒（4秒）或者200个字符保存一次。我们可以使用以下命令，修改保存交换文件的频率：
+
+  ```vim
+  :set updatetime=23000
+  :set updatecount=400
+  ```
+
+  - 注意，如果我们将updatecount的值为0，那么就将不保存交换文件。
+
+- Vim默认在当前文件所处的目录下产生交换文件，我们可以通过directory选项来更改交换文件产生的目录。例如，使用以下命令将交换文件存放在/tmp目录下：
+
+  ```vim
+  :set directory=/tmp
+  ```
+
+- 注意，如果我们将交换文件存储在一个指定目录，那么当编辑不同目录下相同名称的文件时，就会产生命名冲突。我们可以将directory选项设置为一个以逗号分隔的目录列表，并将当前目录(.)设为目录列表的第一个选项，这样交换文件首先会被存放在当前目录下。
+
+  ```vim
+  :set directory=.,/tmp
+  ```
+
+###### 保存交换文件
+
+- 使用以下命令，可以保存修改到交换文件中，而原始文件则保持不变（直到使用:write或ZZ命令退出时原始文件才会被重写）。也就是说，我们可以在丢失原始文件的情况下，使用交换文件来恢复文档。
+
+  ```vim
+  :preserve
+  ```
+
+- 可以使用以下命令，来修复指定的文件：
+
+  ```vim
+  :recover temp.txt
+  ```
+  - 如果存在多个交换文件，那么可以根据屏幕提示选择从指定的交换文件恢复：
+
+- 如果没有指定文件名，那么将默认恢复当前缓冲区中的文件。如果试图修复的文件正处于编辑状态，那么将返回错误。如果想要放弃所做的编辑并修复文档，那么可以使用以下命令进行强制修复：
+
+  ```vim
+  :recover! temp.txt
+  ```
+
+- 在命令行下使用以下命令，可以从指定的交换文件进行恢复：
+
+  ```vim
+  vim -r file.txt.swo
+  ```
+
+- 你可以使用以下命令，查看关于交换文件的帮助信息：
+
+  ```vim
+  :help swap-file
+  ```
+
+##### vimrc
+
+- 在vim启动过程中，首先将查找配置文件并执行其中的命令。初始化文件一般有vimrc、gvimrc和exrc三种。
+
+- 使用`:version`命令，可以查看配置文件的详细列表：
+
+  ![](https://pic3.zhimg.com/80/v2-0f2f2a10817b30f70d42e59886a1e2ba_1440w.jpg)
+
+###### 配置文件位置
+
+- **vimrc**是主配置文件，它有全局和用户两种版本。
+
+- 全局global vimrc文件，存放在Vim的安装目录中。可以使用以下命令，确定Vim的安装目录：
+
+  ```vim
+  :echo $VIM
+  ```
+
+  - 默认情况下，系统vimrc存放在以下位置：
+
+    Linux: /usr/share/vim/vimrc
+
+    Windows: c:\program files\vim\vimrc
+
+- 用户personal vimrc文件，存放在用户主目录中。可以使用以下命令，确定用户主目录：
+
+  ```vim
+  :echo $HOME
+  ```
+
+  - 默认情况下，用户vimrc存放在以下位置：
+
+    Linux: /home/username/.vimrc
+
+    Windows: c:\documents and settings\username\_vimrc
+
+- 用户personal vimrc文件，可以使用以下命令确定：
+
+  ```vim
+  :echo $MYVIMRC
+  ```
+
+- 注意：用户配置文件优先于系统配置文件。
+
+- 注意：在Unix和Linux下，vim的配置文件被命名为以点开头的隐藏文件；而在Windows下，配置文件则以下划线开头命名。
+
+###### 编辑配置文件
+
+- 可以使用以下命令，新建缓冲区来编辑配置文件：
+
+  ```vim
+  :edit $MYVIMRC
+  ```
+
+- 也可以使用以下命令，新建标签页来编辑配置文件：
+
+  ```vim
+  :tabedit $MYVIMRC
+  ```
+
+###### 应用配置文件
+
+- 修改配置文件后，需要重新启动Vim，或使用:source命令来应用新的设置：
+
+  ```vim
+  :source $MYVIMRC
+  ```
+
+- 我们可以在配置文件中增加以下命令，在保存后自动应用配置：
+
+  ```vim
+  autocmd bufwritepost .vimrc source $MYVIMRC
+  ```
+
+###### 配置文件实例
+
+- 为了更结构化和模块化的组织vimrc文件，通常会利用自动[折叠](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-63-Fold.html)功能来分节设置各类选项。
+
+  - 例如以下语法将设置一个章节，并将具体的选项包含其中：
+
+  ```vim
+  " Section Name {{{
+  	set number "This will be folded
+  " }}}
+  ```
+  - 打开vimrc文件之后，将仅仅显示折叠之后的章节结构：
+
+    ![](https://pic3.zhimg.com/80/v2-9dc922804bfbcebe6d2bdee23b3cadee_1440w.jpg)
+
+  - 展开折叠将可以查看详细的配置命令。建议使用引号（"）进行详细注释：
+
+    ![](https://pic2.zhimg.com/80/v2-93903045265b4daf524ba49d4d4025c5_1440w.jpg)
+
+- 使用以下命令，可以查看更多帮助信息：
+
+  ```vim
+  :help vimrc
+  ```
+
+##### 模式行
+
+- 程序员对于制表符常常有不同的偏好，有的使用8个空格，而有的则使用4个空格。可以想见，如果使用不同设置的用户操作相同的文件，必将对文本格式造成影响。
+
+- 如果希望针对特定文件应用特定的设置，那么修改全局性的vimrc配置文件就显得小题大做了；而使用模式行(modeline)，则可以将选项设置配置在文件本身当中。
+
+- 例如将以下模式行放置到文件开头，将在打开该文件时设置制表符为4个空格：
+
+  ```vim
+  /* vim:set tabstop=4: */
+  ```
+
+###### 启用模式行
+
+- 默认设置下，‘modeline’选项是打开的，Vim将会在文件的开头5行和结尾5行中查找模式行：
+
+  ```vim
+  :set modeline
+  ```
+
+- 如果希望改变扫描的行数，那么可以设置‘modelines’选项：
+
+  ```vim
+  :set modelines=1
+  ```
+
+- 定义以下快捷键，可以启用模式行并自动应用到当前文件，而不需要重新打开文件：
+
+  ```vim
+  :nnoremap <leader>ml :setlocal invmodeline <bar> doautocmd BufRead<cr>
+  ```
+
+- 模式行主要有以下两种格式：
+
+  - 不包含set命令的格式
+
+    - [text{white}]{vi:|vim:|ex:}[white]{options}
+
+    - 模式行将持续到行尾处结束；
+
+    - 选项之间不能包含空格。
+
+    - 以下为正确的模式行：
+
+      ```vim
+      /* vim:tabstop=4:expandtabs:shiftwidth=4 */
+      ```
+
+    - 以下模式行选项中包含空格，将报错“Error E518: Unknown option: */”：
+
+      ```vim
+      /* vim: noai:ts=4:sw=4 */
+      ```
+
+  - 包含set命令的格式
+
+    - [text{white}]{vi:|vim:|Vim:|ex:}[white]se[t] {options}:[text]
+
+    - 模式行将在第二个“:”处结束；
+
+    - 模式行的开头和结尾可放置任意字符，建议使用“/* */”；
+
+    - 开头字符之后的空格为必需的分隔符，不可以省略；
+
+    - 选项之间以空格分隔。
+
+    - 以下为正确的模式行：
+
+      ```vim
+      /* vim: set ai tw=75: */
+      ```
+
+    - 以下模式行开头字符之后缺少空格，将无法生效，但不会报错：
+
+      ```vim
+      /*vim: set tabstop=4: */
+      ```
+
+###### 模式行实例
+
+- 在Vim帮助文件的末尾，将发现以下模式行：
+
+  ```vim
+  vim:tw=78:ts=8:noet:ft=help:norl:
+  ```
+  - 其中，tw(textwidth)选项设置最大文本宽度为78；ts(tabstop)选项设置制表符为8个空格；noet(noexpandtab)选项设置为不扩展制表符；ft(filetype)选项设置文件类型为help；norl(norightleft)选项设置文本从左向右显示。
+
+###### 禁用模式行
+
+- 使用以下设置，Vim将不会查找模式行：
+
+  ```vim
+  :set nomodeline
+  ```
+
+###### 帮助信息
+
+- 使用以下命令，可以查看当前设置：
+
+  ```vim
+  :verbose set modeline? modelines?
+  ```
+
+- 使用以下命令，可以查看帮助信息：
+
+  ```vim
+  :help 'modeline'
+  :help 'modelines' 
+  ```
+
+##### viminfo
+
+- Vm使用viminfo选项，来定义如何保存会话（session）信息，也就是保存Vim的操作记录和状态信息，以用于重启Vim后能恢复之前的操作状态。
+
+- viminfo文件默认存储在以下位置：
+
+  - Linux和Mac：$HOME/.viminfo，例如：~/.viminfo
+  - Windows：$HOME\_viminfo，例如：C:\Users\yiqyuan\_viminfo
+
+- viminfo文件主要保存以下内容：
+
+  - Command Line History（命令行历史纪录）
+  - Search String History（搜索历史纪录）
+  - Expression History（表达式历史纪录）
+  - Input Line History（输入历史记录）
+  - Debug Line History（调试历史纪录）
+  - Registers（寄存器）
+  - File marks（标记）
+  - Jumplist（跳转）
+  - History of marks within files（文件内标记）
+
+- Vim在退出时，会将上述信息存放到viminfo文件中；在启动时，将会自动读取viminfo信息文件。
+
+- 使用以下命令，可以手动创建一个viminfo文件：
+
+  ```vim
+  :wviminfo file_name
+  ```
+
+- 使用以下命令，可以重新读去viminfo文件：
+
+  ```vim
+  :rviminfo
+  ```
+
+- 使用以下命令，可以查看关于viminfo文件的帮助信息：
+
+  ```vim
+  :help viminfo
+  ```
+
+###### viminfo选项
+
+- viminfo选项可以指定保存哪些内容，以及在何处的viminfo文件中保存这些信息。viminfo选项是一组使用逗号分隔的字符串；其中每个参数，是以单个字符开头的数值或字符串值。
+
+- Windows下的默认值为：
+
+  ```vim
+  set viminfo='100,<50,s10,h,rA:,rB:
+  ```
+
+- Linux和Mac下的默认值为：
+
+  ```vim
+  set viminfo='100,<50,s10,h
+  ```
+
+<img src="https://pic3.zhimg.com/80/v2-8a207f9f9d39dadd8388b75dc3c3255e_1440w.jpg" style="zoom:51%;" />
+
+- 在单独指定viminfo文件的位置时，为了不覆盖viminfo选项的当前值，通常会在设置命令中使用“+=”操作符：
+
+  ```vim
+  :set viminfo+=n$LOCALAPPDATA/_viminfo
+  :set viminfo+=nC:\\_viminfo
+  ```
+
+- 您可以参考以下命令，在[vimrc](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-vimrc.html)配置文件中，定义viminfo选项：
+
+  ```vim
+  set viminfo=\"50,'1000,h,f1,rA:,r$TEMP:,r$TMP:,r$TMPDIR:,:500,!,n$VIM/_viminfo
+  ```
+  <img src="https://pic4.zhimg.com/80/v2-5a979ee7e81157bb0f8d710b6faa47bb_1440w.jpg" style="zoom:50%;" />
+  - 请不要将“<”设置过大，因为此选项将影响保存至viminfo文件中的信息量。在Vim启动时，如果读取尺寸过大的viminfo文件，将影响Vim启动速度；
+  - 请在[vimrc](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-vimrc.html)文件开头，首先定义`:set nocompatible`选项。
+
+- 使用以下命令，可以查看viminfo选项的更多信息：
+
+  ```vim
+  :help 'viminfo' 
+  ```
+
+##### 会话
+
+- 会话信息，将保存所有编辑窗口和全局设置。通过恢复会话，可以快速切换回之前工作环境。可以认为，会话是[viminfo](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-01-viminfo.html)的扩展补充，viminfo文件中保存了会话所需要使用的具体设置信息。
+
+- 如下图所示，我在编辑本文档的同时，打开了帮助文件和命令终端。首先，将当前编辑状态保存到会话文件；稍后，只需要恢复会话，就可以继续使用之前的窗口布局进行编辑了，而省去了手动打开多个窗口的繁琐。
+
+  <img src="https://pic3.zhimg.com/80/v2-04599d1db4e4250649d20b73f8e35652_1440w.jpg" style="zoom:51%;" />
+
+###### 保存会话
+
+- 使用以下命令，将保存会话信息至当前目录下，以“Session.vim”命名的文件：
+
+  ```vim
+  :mksession
+  ```
+
+- 如果已经存在同名的会话文件，那么需要在命令中使用“!”参数，进行强制覆盖：
+
+  ```vim
+  :mks!
+  ```
+
+- 也可以在命令中，指定会话信息文件的位置：
+
+  ```vim
+  :mksession ~/mysession.vim 
+  ```
+
+###### 恢复会话
+
+- 在[启动](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-209-Start.html)Vim时，通过指定“-S”参数，可以恢复之前保存的编辑会话：
+
+  ```vim
+  $ vim -S Session.vim
+  ```
+
+- 在Vim中使用以下命令，也可以恢复会话信息：
+
+  ```vim
+  :source Session.vim
+  ```
+
+- 使用以下命令，可以查看关于会话信息的帮助文件：
+
+  ```vim
+  :help session
+  ```
+
+###### 会话选项
+
+- 会话选项sessionoptions，用于指定保存会话的内容，默认值如下：
+
+  ```vim
+  :set sessionoptions = blank,buffers,curdir,folds,help,options,tabpages,winsize,terminal
+  ```
+
+  - sessionoptions选项是一组使用逗号分隔的字符串，包含以下参数：
+    - *blank*
+      恢复编辑无名缓冲区的[窗口](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-14-MultiWindows.html)；
+    - *buffers*
+      恢复所有[缓冲区](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-13-MultiBuffers.html)（包括隐藏和未载入的缓冲区）；
+    - *curdir*
+      恢复当前目录；
+    - *folds*
+      恢复[折叠](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-63-Fold.html)；
+    - *globals*
+      恢复以大写字母开始并至少包含一个小写字母的全局变量；
+    - *help*
+      恢复帮助窗口；
+    - *localoptions*
+      恢复（限定于缓冲区内）本地选项；
+    - *options*
+      恢复全局映射和选项；
+    - *resize*
+      恢复以行列指定的窗口大小；
+    - *sesdir*
+      设置当前目录为会话文件所在的位置；
+    - *salsh*
+      在文件名中使用salsh（/），来代替backslah（\）；
+    - *tabpages*
+      恢复所有[标签页](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-15-Tabs.html)；
+    - *terminal*
+      恢复终端窗口；
+    - *unix*
+      使用Unix模式的行尾标志（<NL>）；
+    - *winpos*
+      恢复 GUI Vim 的窗口位置；
+    - *winsize*
+      恢复窗口尺寸（相对于屏幕大小）；
+
+- 使用以下命令，可以查看关于会话选项的帮助信息：
+
+  ```vim
+  :help 'sessionoptions' 
+  ```
+
+##### 命令历史记录
+
+- Vim会将命令历史记录，保存在[viminfo](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-01-viminfo.html)文件中；通过viminfo和history选项，可以控制存储历史记录的类型和数量；在[命令行模式](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-46-CommandlineMode.html)和[搜索文本](https://link.zhihu.com/?target=http%3A//yyq123.blogspot.com/2009/03/vim.html)时，则可以重新调用这些历史记录。
+
+- 命令历史可以分为以下几种类型（{name}）：
+
+  <img src="https://pic3.zhimg.com/80/v2-dca2ca1237d08b4d820428418b1e3a82_1440w.jpg" style="zoom:50%;" />
+
+- 使用以下命令，可以显示命令行历史记录：
+
+  ```vim
+  :history
+  ```
+
+- 使用以下命令，可以显示所有类型的历史记录：
+
+  ```vim
+  :history all
+  ```
+
+- 使用以下格式的:history命令，可以查看指定类型和指定数目的历史记录：
+
+  ```vim
+  :his[tory] [{name}] [{first}][, [{last}]]
+  ```
+
+  - `{name}`，指定历史记录[类型](file:///E:/Anthony_GitHub/learn-vim/learn-vi-46-01-History.html#history_name)；
+
+  - `{first}`，指定命令历史的起始位置（默认为第一条记录）；
+
+  - `{last}`，指定命令历史的终止位置（默认为最后一条记录）。
+
+  - 如果没有指定 {first} 和 {last}，那么将会列出所有命令历史。
+
+  - 如果指定了 {first} 和 {last}，那么就会列出指定范围内的历史记录条目。例如以下命令，将列出第一到第五条命令行历史：
+
+    ```vim
+    :history c 1,5
+    ```
+
+- 正数，表示历史记录的绝对索引，也就是:history命令列出的第一列数字。即使历史记录中的其它条目被删除了，该索引数字也会保持不变。例如以下命令，将列出指定位置（第五条）命令行历史：
+
+  ```vim
+  :history c 5
+  ```
+
+- 负数，表示历史记录的相对索引。以最新一条记录 (索引号为 -1) 为基准向后算起。如以下命令，将列出所有历史记录中倒数第二条记录：
+
+  ```vim
+  :history all -2
+  ```
+
+- 使用以下命令，则会列出所有历史记录中最近的两条记录：
+
+  ```vim
+  :history all -2,
+  ```
+
+- 使用以下命令，可以查看:history命令的帮助信息：
+
+  ```vim
+  :help :history
+  ```
+
+###### 删除历史记录
+
+- 使用以下命令，可以删除命令行历史记录：
+
+  ```vim
+  :call histdel("")
+  ```
+
+- 可以删除指定类型的历史记录。例如使用以下命令，将删除所有查询历史记录：
+
+  ```vim
+  :call histdel("seach")
+  ```
+
+- 您也可以直接编辑[viminfo](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-01-viminfo.html)文件，直接删除其中的历史记录。请注意，需要重启Vim，以重新读取修改后的viminfo文件。
+
+###### 命令历史选项
+
+- 通过history选项，可以控制记录历史记录的数量（默认为50）。例如以下命令，设置保存1000条命令历史记录：
+
+  ```vim
+  :set history=1000
+  ```
+  - 请注意：在[viminfo](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-01-viminfo.html)选项中，也有命令历史相关参数；请在[vimrc](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-vimrc.html)配置文件中，检查'viminfo'和'history'设置的的一致性和优先级。
+
+##### 信息
+
+- Vim将默认记录近200次的信息显示。
+
+###### 查看信息
+
+- 使用以下命令，可以查看上一个命令的输出信息：
+
+  ```vim
+  g< 
+  ```
+
+- 使用以下命令，在显示信息的同时，也会将其存储在信息历史（message-history）之中：
+
+  ```vim
+  :echom "Hello World"
+  ```
+
+- 使用以下命令，可以查看所有信息：
+
+  ```vim
+  :messages
+  ```
+
+- 而使用以下命令，则可以查看最近一条报错信息（error-messages）：
+
+  ```vim
+  :echo errmsg
+  ```
+
+- 从[7.4.1735](https://link.zhihu.com/?target=https%3A//github.com/vim/vim/releases/tag/v7.4.1735)版本开始，可以使用以下命令清除信息历史：
+
+  ```vim
+  :messages clear
+  ```
+
+###### 信息语言
+
+- 使用以下命令，可以查看显示信息的语言：
+
+  ```vim
+  :language message
+  ```
+
+- 通过以下变量，也可以查看显示信息的语言：
+
+  ```vim
+  :echo LC_MESSAGES
+  ```
+
+- 在vimrc文件中使用以下命令，可以指定信息使用中文显示：
+
+  ```vim
+  :language message zh_CN.UTF-8
+  ```
+
+- 建议使用英文显示信息，以便在互联网上进行查找相关资源：
+
+  ```vim
+  :language message en_US.UTF-8
+  ```
+
+- 使用以下命令，可以查看更多帮助信息：
+
+  ```vim
+  :help :messages
+  ```
+
+###### shortmess选项
+
+- 'shortmess'选项，用于控制信息显示的种类和详细程度。其默认值为：
+
+  ```vim
+  :set shormess=filnxtToOS
+  ```
+  - 以下为主要标志位的含义（灰色行为默认值中的标志位）：
+
+    <img src="https://pic2.zhimg.com/80/v2-748c51fee4a5364b9c16f22c53d40d89_1440w.jpg" style="zoom:80%;" />
+
+- 如果不希望使用信息缩写，那么可以使用以下命令：
+
+  ```vim
+  :set shm=
+  ```
+
+- 如果希望使用缩写，但不截短信息，那么可以使用以下命令：
+
+  ```vim
+  :set shm=a
+  ```
+
+- 如果希望使用缩写，并在必要时截短信息，那么可以使用以下命令：
+
+  ```vim
+  :set shm=at
+  ```
+
+- 从[8.1.1270](https://link.zhihu.com/?target=https%3A//github.com/vim/vim/releases/tag/v8.1.1270)版本开始，在[vimrc](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-vimrc.html)配置文件中增加以下设置，可以在屏幕底部，显示匹配搜索结果的总数，以及当前所处第几个匹配结果：
+
+  ```vim
+  set shortmess-=S
+  ```
+
+- 使用以下命令，可以查看更多帮助信息：
+
+  ```vim
+  :help 'shortmess'
+  ```
+
+##### 重定向
+
+###### 重定向到文件
+
+- 使用以下命令，在将信息输出到屏幕的同时，也会保存到指定的文件中：
+
+  ```vim
+  :redir > {file}
+  ```
+
+- 如果指定的文件以及存在，那么需要使用!参数进行强制覆盖：
+
+  ```vim
+  :redir! > {file}
+  ```
+
+- 如果希望信息被追加到文件末尾，那么可以使用以下命令：
+
+  ```vim
+  :redir >> {file}
+  ```
+
+- 假设需要查询大量的信息输出（例如:version命令），或者保存调试信息，那么信息重定向就会非常有价值。
+
+- 使用以下命令，可以停止信息的重定向：
+
+  ```vim
+  :redir END
+  ```
+
+###### 重定向到寄存器
+
+- 我们可以将信息输出重定至[寄存器](https://link.zhihu.com/?target=https%3A//yyq123.github.io/learn-vim/learn-vi-12-Register.html)之中，比如剪贴板寄存器（+）、命名寄存器（a-z,A-Z）和未命名寄存器（"）。
+
+- 使用以下命令，可以将信息输出重定向至剪贴板寄存器：
+
+  ```vim
+  :redir @+
+  ```
+
+- 这样您就可以使用`"+p`命令， 将信息输出粘贴到当前文本。
+
+- 使用以下命令，可以将命令历史记录粘贴到当前文件中：
+
+  ```vim
+  :redir @+
+  :set nomore
+  :history
+  :put +
+  :set more
+  :redir END
+  ```
+  - 其中，`:set nomore`命令用于暂定显示“--More--”信息，否则在分页显示命令历史记录时，需要点击按键以继续下一页的显示。
+
+- 使用以下命令，可以查看更多帮助信息：
+
+  ```vim
+  :help :redir
+  ```
+
+##### wildmenu
+
+- 使用'wildmenu'选项，将启用增强模式的命令行补全。在命令行中输入命令时，按下'wildchar'键（默认为Tab）将自动补全命令和参数：此时将在命令行的上方显示可能的匹配项；继续按下'wildchar'键，可以遍历所有的匹配项；也可以使用方向键或者CTRL-P/CTRL-N键，在匹配列表中进行移动；最后点击回车键，选择需要的匹配项。
+
+- 使用以下命令，可以启用wildmenu：
+
+  ```vim
+  :set wildmenu
+  ```
+
+  - 例如在命令行中输入“:spe”，然后点击Tab键，将列出以spe开头的命令列表；再次点击Tab键，将可以在wildmenu中遍历匹配的命令：
+
+- 使用以下命令，可以查看wildmenu的帮助信息：
+
+  ```vim
+  :help wildmenu
+  ```
+
+###### wildmode
+
+- 在命令行中输入命令时，文件名也是可以自动补全的。例如希望编辑当前目录下的某个文件，在输入:e命令和空格之后，点击Tab键，将自动补全文件名。而补全的方式，则是通过以下'wildmode'选项来控制：
+
+- 使用""选项，将仅仅使用第一个匹配结果；即使再次按下wildchar键，也不会继续查找其它匹配项：
+
+  ```vim
+  :set wildmode=
+  ```
+
+- 使用"full"选项，将在wildmenu中显示匹配的文件；点击wildchar键，可以遍历匹配的文件：
+
+  ```vim
+  :set wildmode=full
+  ```
+
+- 使用"longest"选项，将用最长的公共子串补全：
+
+  ```vim
+  :set wildmode=longest
+  ```
+
+- 使用"longest:full"选项，将用最长的公共子串补全，并显示在wildmenu中：
+
+  ```vim
+  :set wildmode=longest:full
+  ```
+
+- 使用"list"选项，将显示可能匹配的文件列表：
+
+  ```vim
+  :set wildmode=list
+  ```
+
+- 使用"list:full"选项，将显示可能匹配的文件列表，并使用第一个匹配项进行补全：
+
+  ```vim
+  :set wildmode=list:full
+  ```
+
+- 使用"list:longest"选项，将显示可能匹配的文件列表，并使用最长的子串进行补全：
+
+  ```vim
+  :set wildmode=list:longest
+  ```
+
+- 推荐使用"**list:longest,full**"选项，点击Tab键，将显示可能匹配的文件列表，并使用最长的子串进行补全；再次点击Tab键，可以在wildmenu中遍历匹配的文件列表：
+
+  ```vim
+  set wildmode=list:longest,full
+  ```
+
+- 使用以下命令，可以查看wildmode的帮助信息：
+
+  ```vim
+  :help wildmode
+  ```
+
+###### wildignore
+
+- 通过'wildignore'选项，可以在匹配列表中忽略指定类型的文件：
+
+  ```vim
+  :set wildignore=*.dll,*.exe,*.jpg,*.gif,*.png
+  ```
+
+- 在'suffixes'选项中，会列出一系列文件名的前缀。当有多个文件符合匹配条件时，包含指定前缀的文件则会获得较低的优先级。也即是说，这些文件将会显示在匹配列表的最后。以下为suffixes选项的默认值：
+
+  ```vim
+  :set suffixes=.bak,~,.o,.h,.info,.swp,.obj
+  ```
+
+###### wildchar
+
+- 通过'wildchar'选项，可以设置命令行自动补全的触发键。默认为Tab键。例如以下命令，将其设置为F12键：
+
+  ```vim
+  :set wildchar=<F12>
+  ```
+
+###### wildmenu应用
+
+- 在命令行中输入`:color`以及空格，然后点击Tab键，将列出所有可用的[配色方案(Color Scheme)](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-62-ColorScheme.html)，继续点击Tab键可以选用需要的配色方案。
+
+  ```vim
+  :color 
+  ```
+
+- 使用以下命令，可以查看所有外部（例如PATH）和内部（例如MYVIMRC）变量：
+
+  ```vim
+  :echo $
+  ```
+
+##### 命令相关选项
+
+###### 路径分隔符选项
+
+- 在Windows下，文件路径中使用反斜杠（Backslash）：
+
+- 在Linux和Mac下，文件路径中使用正斜杠（Forward slash）：
+
+- 'shellslash'选项，仅适用于Windows操作系统，并且默认是关闭的。为了保证与Unix风格的兼容性，建议在[vimrc](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-vimrc.html)配置文件中，使用以下命令启用此选项：
+
+  ```vim
+  :set shellslash
+  ```
+
+  - 使用'shellslash'选项，可以在扩展文件名时使用正斜杠。即使你在输入文件名时使用反斜杠，Vim也会自动将其转换为正斜杠。
+
+###### 报错响铃选项
+
+- 当Vim捕获一个错误时，将会显示错误信息。如果希望同时发出报错响铃 (鸣叫或屏幕闪烁)，那么可以启用'errorbells'选项：
+
+  ```vim
+  :set errorbells
+  ```
+
+- 使用以下命令，则可以关闭'errorbells'选项：
+
+  ```vim
+  :set noerrorbells
+  ```
+
+- 'visualbell'选项，用于设置响铃的行为：鸣叫、屏幕闪烁或什么都不做。默认情况下，'visualbell'选项是关闭的。通过以下命令启用visualbell选项，将使用可视响铃代替鸣叫。当输入错误时，屏幕就会闪动然后回到正常状态：
+
+  ```vim
+  :set visualbell
+  ```
+
+- 通过以下命令，则可以关闭visualbell选项（而使用鸣叫）：
+
+  ```vim
+  :set novisualbell
+  ```
+
+- 如果既不想要鸣叫也不想要屏幕闪烁，那么可以使用以下设置：
+
+  ```vim
+  :set vb t_vb=
+  ```
+
+###### 信息显示选项
+
+- 启用'showmode'选项，将在屏幕底部显示当前所处的模式：
+
+  ```vim
+  :set showmode
+  ```
+
+- 启用'showcmd'选项，将会在输入命令时，在屏幕底部显示出部分命令：
+
+  ```vim
+  :set showcmd
+  ```
+
+- 例如希望输入fx命令来查找字符“x”时，当我们输入f时就会在底部显示“f”，这在输入复杂命令时将很有帮助。
+
+- 在[可视化模式](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-45-VisualMode.html)下，将显示选择区域的大小：
+
+  - 在行内选择若干字符时，显示字符数；
+  - 选择多于一行时，显示行数；
+  - 选择可视化列块时，显示行乘以列数（比如“2x10”）。
+
+- 默认情况下，如果屏幕底部显示的消息长度超出一行时，将会显示类似于“按回车继续”的提示信息。通过设置'cmdheight'选项来增加消息的行数，可以显示更多的信息以避免不必要的提示。例如使用以下命令，设置命令行高度为3行：
+
+  ```vim
+  :set cmdheight=3
+  ```
+
+- 默认情况下，'more'选项是启用的。当命令的输出超出一屏时（例如:version命令的输出），就会显示“-- More --”提示信息，并等待用户响应以继续显示屏更多信息：
+
+  - 使用以下命令关闭more选项，将会持续翻滚屏幕以显示信息，而不会暂停并显示提示信息：
+
+    ```vim
+    :set nomore
+    ```
+
+- 当删除或修改多行文本时，如果被影响的行数超出了'report'选项所指定的行数（默认值为2行），那么Vim将会在屏幕底部显示所改变的行数。如果希望始终显示反馈信息，那么可以将report选项设置为0：
+
+  ```vim
+  :set report=0
+  ```
+
+  - 此时即使只是删除了一行文本，Vim也将显示反馈信息：
+
+  ```text
+  1 line less
+  ```
+  - 相反地，如果不希望显示变更信息，那么可以将report选项设置为较大的值。
+
+##### 自动命令
+
+- 自动命令，是在指定事件发生时自动执行的命令。利用自动命令可以将重复的手工操作自动化，以提高编辑效率并减少人为操作的差错。
+
+- 比如自定义以下函数，用于在文件中插入当前日期：
+
+  ```vim
+  :function DateInsert()
+  :    $read !date
+  :endfunction
+  ```
+  - 使用以下命令，可以手动调用此函数：
+
+    ```vim
+    :call DateInsert()
+    ```
+
+  - 而通过以下自动命令，则可以在保存文件时自动执行函数，而不再需要额外的手动操作：
+
+    ```vim
+    :autocmd FileWritePre * :callDateInsert()<CR>
+    ```
+
+###### 定义自动命令
+
+- 可以使用以下格式的autocmd命令，来定义自动命令：
+
+  ```vim
+  :autocmd [group] events pattern [nested] command
+  ```
+
+  - *group*，组名是可选项，用于分组管理多条自动命令；
+  - *events*，事件参数，用于指明触发命令的一个或多个事件；
+  - *pattern*，限定针对符合匹配模式的文件执行命令；
+  - *nested*，嵌套标记是可选项，用于允许嵌套自动命令；
+  - *command*，指明需要执行的命令、函数或脚本。
+
+- events参数，Vim内置了近80个事件，以下表格按照类别列示了较为常用的事件：
+
+  <img src="https://pic4.zhimg.com/80/v2-212dbfc1f437e9dfa7d2981c5522f827_1440w.jpg" style="zoom:80%;" />
+  - 假设我们打开文件并输入文本，然后保存并退出，那么这些操作将以下顺序触发一系列事件：
+
+    <img src="https://pic2.zhimg.com/80/v2-a384d50505dc47a648844f87a6b3bb3d_1440w.jpg" style="zoom:80%;" />
+
+  - 您可以使用以下命令，获得各个事件的详细说明：
+
+    ```vim
+    :help autocommand-events
+    ```
+
+- pattern参数
+
+  - 匹配模式用来指定应用自动命令的文件。在匹配模式中，可以使用以下特殊字符：
+
+    ```
+    * 匹配任意长度的任意字符
+    ? 匹配单个字符
+    \?匹配字符'?'
+    . 匹配字符'.'
+    , 用于分割多个pattern
+    \,匹配字符','
+    ```
+
+  - 可以使用逗号来分割多个模式，以匹配多种类型的文件。例如以下命令，将对于.c和.h文件设置'textwidth'选项：
+
+    ```vim
+    :autocmd BufRead,BufNewFile *.c,*.h set tw=0
+    ```
+
+  - 您可以使用以下命令，获得匹配模式的详细说明：
+
+    ```vim
+    :help autocmd-patterns
+    ```
+
+- nested参数
+
+  - 默认情况下，自动命令并不会嵌套执行。例如在自动命令中执行:e或:w命令，将不会再次触发BufRead和BufWrite事件。而使用nested参数，则可以激活嵌套的事件。
+
+    ```vim
+    :autocmd FileChangedShell *.c nested e!
+    ```
+
+###### 查看自动命令
+
+- 使用以下命令，可以列出所有自动命令：
+
+  ```vim
+  :autocmd
+  ```
+
+- 你会发现自动命令的列表将会非常的长，其中既包括了在vimrc文件中用户定义的自动命令，也包括了各种插件定义的自动命令。
+
+- 如果在命令中指定了group，那么将会列出所有与指定group相匹配的自动命令；同理，也可以在命令中指定event和pattern，以查看相匹配的自动命令：
+
+  ```vim
+  :autocmd filetypedetect * *.htm
+  ```
+
+###### 删除自动命令
+
+- 使用以下命令，可以删除所有自动命令：
+
+  ```vim
+  :autocmd!
+  ```
+
+  - 注意：此操作也将删除插件所定义的自动命令，请谨慎操作。
+
+- 使用以下命令，可以删除指定组的自动命令：
+
+  ```vim
+  :autocmd! group
+  ```
+
+- 在命令中指定组、事件和匹配模式，可以删除特定的自动命令：
+
+  ```vim
+  autocmd! Unfocussed FocusLost *.txt
+  ```
+
+- 在命令中使用特殊字符“*”来指代所有事件或文件。例如以下命令，将删除Unfocussed组中所有针对txt文件的自动命令：
+
+  ```vim
+  autocmd! Unfocussed * *.txt
+  ```
+
+- 在命令中忽略文件匹配模式，那么所有针对指定事件的针对命令都将被删除。例如以下命令，将删除Unfocussed组在所有针对FocusLost事件的自动命令：
+
+  ```vim
+  autocmd! Unfocussed FocusLost
+  ```
+
+###### 自动命令组
+
+- 通过`:augroup`命令，可以将多个相关联的自动命令分组管理，以便于按组来查看或删除自动命令。例如以下命令，将C语言开发的相关自动命令，组织在“cprogram”组内：
+
+  ```vim
+  :augroup cprograms
+  :    autocmd!
+  :    autocmd FileReadPost *.c :set cindent
+  :    autocmd FileReadPost *.cpp :set cindent
+  :augroup END
+  ```
+
+- 如果我们针对同样的文件和同样的事件定义了多条自动命令，那么当满足触发条件时将分别执行多条自动命令。因此，建议在自动命令组的开头增加:autocmd!命令，以确保没有重复的自动命令存在。
+
+- 您可以使用以下命令，获得自动命令组的帮助信息：
+
+  ```vim
+  :help :augroup
+  ```
+
+###### 自动命令选项
+
+- 通过eventignore选项，可以忽略指定的事件，而不触发自动命令。例如使用以下命令，将忽略进入窗口和离开窗口的事件：
+
+  ```vim
+  :set eventignore=WinEnter,WinLeave
+  ```
+
+- 如果希望忽略所有事件，那么可以使用以下设置：
+
+  ```vim
+  :set eventignore=all
+  ```
+
+##### 自动命令实例
+
+- 以下自动命令，将在离开Vim编辑器时，自动保存文件：
+
+  ```vim
+  autocmd FocusLost * :wa
+  ```
+
+###### 根据文件类型执行自动命令
+
+- 可以根据文件类型，执行特定命令。例如以下自动命令，将删除php文件行尾的空格：
+
+  ```vim
+  autocmd BufEnter *.php :%s/[ \t\r]\+$//e
+  ```
+
+- 可以根据文件类型，载入相关插件：
+
+  ```vim
+  autocmd Filetype html,xml,xsl source $VIM/vimfile/plugin/closetag.vim
+  ```
+
+- 可以根据文件类型，设置[键盘映射](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-51-KeyMapping.html)：
+
+  ```vim
+  autocmd bufenter *.tex map <F1> :!latex %<CR>
+  ```
+
+- 可以根据文件类型，设置不同的选项：
+
+  ```vim
+  autocmd FileType ruby setlocal ts=2 sts=2 sw=2 expandtab
+  ```
+
+###### 自动创建目录
+
+- 定义以下自动命令，将在保存文件时，检查所指定的目录是否存在：
+
+  ```vim
+  augroup vimrc-auto-mkdir
+    autocmd!
+    autocmd BufWritePre * call s:auto_mkdir(expand('<afile>:p:h'), v:cmdbang)
+    function! s:auto_mkdir(dir, force)
+      if !isdirectory(a:dir)
+            \   && (a:force
+            \       || input("'" . a:dir . "' does not exist. Create? [y/N]") =~? '^y\%[es]$')
+        call mkdir(iconv(a:dir, &encoding, &termencoding), 'p')
+      endif
+    endfunction
+  augroup END
+  ```
+  - 如果使用`:w`命令保存文件时，引用了不存在的目录，那么将显示以下询问信息：
+
+    ```
+    'XXXXX' does not exist. Create? [y/N]
+    ```
+
+  - 你可以输入“y”，以自动创建目录并保存文件。
+
+  - 如果使用`:w!`命令保存文件时，引用了不存在的目录，那么将不会显示询问信息，而直接创建目录并保存文件。
+
+###### 自动应用配置文件
+
+- 在保存[vimrc](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-59-vimrc.html)配置文件时，将自动重载并生效变更之后设置，而免去了关闭并重新打开Vim的手工操作：
+
+  ```vim
+  augroup Reload_Vimrc        " Group name.  Always use a unique name!
+      autocmd!                " Clear any preexisting autocommands from this group
+      autocmd! BufWritePost $MYVIMRC source % | echom "Reloaded " . $MYVIMRC | redraw
+      autocmd! BufWritePost $MYGVIMRC if has('gui_running') | so % | echom "Reloaded " . $MYGVIMRC | endif | redraw
+  augroup END
+  ```
+
+###### 自动更新时间戳
+
+- 利用以下自动命令，将在保存文件时，自动更新文件中的时间戳信息。首先将查找以“This file last updated:”开头的行，然后将“:”之后的时间替换为当前时间。
+
+  ```
+  This file last updated: 12/23/2019 4:05:10 PM
+  function! UpdateTimestamp ()
+    '[,']s/^This file last updated: \zs.*/\= strftime("%c") /
+  endfunction
+  
+  augroup TimeStamping
+    autocmd!
+    autocmd BufWritePre,FileWritePre,FileAppendPre * :call UpdateTimestamp()
+  augroup END
+  ```
+
+### 代码开发
+
+##### 非可见字符
+
+- 默认情况下，Vim是不会显示space,tabs,newlines,trailing space,wrapped lines等不可见字符的。我们可以使用以下命令打开*list*选项，来显示非可见字符：
+
+  ```text
+  :set list
+  ```
+
+- 我们也可以使用以下命令，重新隐藏不可见字符：
+
+  ```text
+  :set nolist
+  ```
+
+- 通常我们会利用以下命令，切换显示或隐藏不可见字符：
+
+  ```vim
+  :set list!
+  ```
+
+###### 显示符号
+
+- 使用:set listchars命令，可以配置使用何种符号来显示不可见字符。例如以下命令，将制表符（tab）显示为…；将尾部空格（trail）显示为·；将左则超出屏幕范围部分（precedes）标识为«；将右侧超出屏幕范围部分（extends）标识为»。
+
+  ![](https://pic4.zhimg.com/80/v2-9a3b1d293f0d064a46680d9590203c9f_1440w.png)
+
+- 可以使用以下命令，查看可以输入的特殊字符：
+
+  ```text
+  :digraphs
+  ```
+
+![](https://pic3.zhimg.com/80/v2-e12c63ab2209f8a88180aa15705ef086_1440w.png)
+
+##### 折叠
+
+- 当我们查看很长的文本时（比如程序代码），可以使用 **:set foldenable** 命令来启动折叠。首先将内容按照其结构折叠起来，查看文件的大纲，然后再针对特定的部分展开折叠，显示文本的详细内容。
+
+- Vim将折叠等同于行来对待——你可以使用j或k命令，移动跳过包含多行的整个折叠；也可以使用y或d命令，复制或删除某个折叠。
+
+- 通常在折叠处向左或向右移动光标，或者进入插入模式，都将会自动打开折叠。我们也可以使用以下命令定义快捷键，使用空格键关闭当前打开的折叠，或者打开当前关闭的折叠。
+
+  ```
+  :nnoremap <space> za
+  ```
+
+- 按照折叠所依据的规则，可以分为Manual（手工折叠）、Indent（缩进折叠）、Marker（标记折叠）和Syntax（语法折叠）等几种。
+
+###### manual fold
+
+- 使用以下命令，启用手工折叠。
+
+  ```text
+  :set foldmethod=manual
+  ```
+
+- 在可视化模式下，使用以下命令，将折叠选中的文本：
+
+  ```text
+  zf
+  ```
+
+- 通过组合使用移动命令，可以折叠指定的行。例如：使用zf70j命令，将折叠光标之后的70行；使用**5zF**命令，将当前行及随后4行折叠起来；使用zf7G命令，将当前行至全文第7行折叠起来。
+
+- 我们也可以使用以下命令，折叠括号（比如()、[]、{}、><等）包围的区域：
+
+  ```text
+  zfa(
+  ```
+
+- Vim并不会自动记忆手工折叠。但你可以使用以下命令，来保存当前的折叠状态：
+
+  ```text
+  :mkview
+  ```
+
+- 在下次打开文档时，使用以下命令，来载入记忆的折叠信息：
+
+  ```text
+  :loadview
+  ```
+
+- 可以使用以下命令，查看关于手工折叠的帮助信息：
+
+  ```text
+  :help fold-manual
+  ```
+
+###### indent fold
+
+- 使用以下命令，启用缩进折叠。所有文本将按照（选项*shiftwidth* 定义的）缩进层次自动折叠。
+
+  ```text
+  :set foldmethod=indent
+  ```
+
+- 使用zm命令，可以手动折叠缩进；而利用zr命令，则可以打开折叠的缩进。
+
+- 使用以下命令，将可以根据指定的级别折叠缩进：
+
+  ```text
+  :set foldlevel=1
+  ```
+
+- 可以使用以下命令，查看关于缩进折叠的帮助信息：
+
+  ```text
+  :help fold-indent
+  ```
+
+###### syntax fold
+
+- 使用以下命令，启用语法折叠。所有文本将按照语法结构自动折叠。
+
+  ```text
+  :set foldmethod=syntax
+  ```
+
+- 可以使用以下命令，查看关于语法折叠的帮助信息：
+
+  ```text
+  :help fold-syntax
+  ```
+
+###### marker fold
+
+- 使用以下命令，启用标记折叠。所有文本将按照特定标记（默认为{{{和}}}）自动折叠。
+
+  ```text
+  :set foldmethod=marker
+  ```
+
+- 我们可以利用标记折叠，在文本中同时体现结构和内容，并且能够快速跳转到文件的不同部分。
+
+- 可以使用以下命令，查看关于标记折叠的帮助信息：
+
+  ```text
+  :help fold-marker
+  ```
+
+###### 折叠选项
+
+- 使用:set foldcolumn=N命令，将在屏幕左侧显示一个折叠标识列，分别用“-”和“+”而表示打开和关闭的折叠。其中，*N*是一个0-12的整数，用于指定显示的宽度。
+
+  ![](https://pic1.zhimg.com/80/v2-4f5b3a585fd7d4cac4f2595b17ec3d60_1440w.png)
+
+- 使用以下命令，可以查看关于折叠的帮助信息：
+
+  ```text
+  :help folding
+  ```
+
+![](https://pic4.zhimg.com/80/v2-c56f304dbf1566820b5f65e158560117_1440w.png)
+
+##### 缩进
+
+###### 手动缩进
+
+- 在Normal Mode下，命令>>将对当前行增加缩进，而命令<<则将对当前行减少缩进。我们可以在命令前使用数字，来指定命令作用的范围。例如以下命令，将减少5行的缩进：
+
+  ```text
+  5<<
+  ```
+
+- 如果代码没有正确排版，那么我们可以使用==命令来缩进当前行；也可以进入可视化模式并选择多行，然后使用=命令缩进选中的行。
+
+- 通过与[文本对象](https://link.zhihu.com/?target=http%3A//yyq123.blogspot.com/2016/12/vim-text-objects.html)组合，使用以下命令可以缩进{}括号内的代码。
+
+  ```text
+  =a{
+  ```
+
+- 如果需要缩进整个文件内的代码，则可以使用以下命令：
+
+  ```text
+  gg=G
+  ```
+
+- 在Insert/Replace Mode下，Ctrl-Shift-t可以增加当前行的缩进，而Ctrl-Shift-d则可以减少当前行的缩进。使用0-Ctrl-Shift-d命令，将移除所有缩进。需要注意的是，当我们输入命令中的“0”时，Vim会认为我们要在文本中插入一个0，并在屏幕上显示输入的“0”；然后当我们执行命令0-Ctrl-Shift-d时，Vim就会意识到我们要做的是减少缩进，这时0会就会从屏幕上消失。
+
+- 缩进宽度默认为8个空格。我们可以使用以下命令，来修改缩进宽度：
+
+  ```text
+  :set shiftwidth=4
+  ```
+
+- 通过以下设置，每次点击Tab键，将增加宽度为8列的Tab缩进。
+
+  ```text
+  :set tabstop=8
+  :set softtabstop=8
+  :set shiftwidth=8
+  :set noexpandtab
+  ```
+
+- 使用以下设置，每次点击Tab键，增加的缩进将被转化为4个空格。
+
+  ```text
+  :set tabstop=4
+  :set softtabstop=4
+  :set shiftwidth=4
+  :set expandtab
+  ```
+
+- 其中，*expandtab*选项，用来控制是否将Tab转换为空格。但是这个选项并不会改变已经存在的文本，如果需要应用此设置将所有Tab转换为空格，需要执行以下命令：
+
+  ```text
+  :retab!
+  ```
+
+###### 自动缩进
+
+- 在Vim中还可以进行自动缩进，主要有cindent、smartindent和autoindent三种模式。
+
+- **autoindent** 在这种缩进形式中，新增加的行和前一行使用相同的缩进形式。可以使用以下命令，启用autoindent缩进形式。也可以点击==键进行缩进。
+
+  ```text
+  :set autoindent
+  ```
+
+- **smartindent** 在这种缩进模式中，每一行都和前一行有相同的缩进量，同时这种缩进形式能正确的识别出花括号，当遇到右花括号（}），则取消缩进形式。此外还增加了识别C语言关键字的功能。如果一行是以#开头的，那么这种格式将会被特殊对待而不采用缩进格式。可以使用以下命令，启用smartindent缩进结构：
+
+  ```text
+  :set smartindent
+  ```
+
+- **cindent** Vim可以很好的识别出C和Java等结构化程序设计语言，并且能用C语言的缩进格式来处理程序的缩进结构。可以使用以下命令，启用cindent缩进结构：
+
+  ```text
+  :set cindent
+  ```
+
+### 标签
+
+##### 生成标签文件
+
+- 本节将介绍如何使用Ctag工具，来扫描代码库并生成包含关键词索引的标签文件（Tags File）。基于标签文件，Vim可以在标签之间快速跳转，并可以针对[标签自动补全](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-80-02-AutoCompletion-Detail.html%23compl-tag)。
+
+- [Ctags](https://link.zhihu.com/?target=http%3A//ctags.sourceforge.net/)是一个开源的命令行工具，用于从代码中索引标签（比如method, class, function等）并生成tags文件。
+
+- 目前Ctags支持包括Vim在内的41种[编程语言](https://link.zhihu.com/?target=http%3A//ctags.sourceforge.net/languages.html)。对于vimscript脚本，其中的functions, class, commands, menu, map, variable等语法，将会作为关键字被索引至tags文件中。
+
+- 您可以在操作系统的命令行中使用以下命令，来验证ctags是否安装成功，并获得相关的帮助信息：
+
+  ```bash
+  $ ctags --help
+  ```
+
+- 在Vim中使用以下命令，可以针对指定的文件生成tags文件：
+
+  ```vim
+  :!ctags filename 
+  ```
+
+- 你也可以针对当前目录及其子目录中的所有文件生成tags文件：
+
+  ```vim
+  :!ctags -R .
+  ```
+
+###### 标签文件
+
+- 默认生成的标签文件，是名为tags的文本文件。其开头包含若干行元数据，之后每行包含一个关键字以及与之匹配的文件名和位置信息。其中的关键字，按字母排序；并且以正则表达式作为定位信息。
+
+  <img src="https://pic4.zhimg.com/80/v2-c6dc32fdb60a83476a1771af9459f73f_1440w.jpg" style="zoom:80%;" />
+
+- 你可以使用`:help tags-file-format`命令，查看标签文件的格式说明。
+
+###### 自动生成标签文件
+
+- 利用[自动命令](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-49-01-autocmd.html)（autocmd），可以在保存文件时自动更新tags文件：
+
+  ```vim
+  :autocmd BufWritePost * call system("ctags -R")
+  ```
+
+##### 匹配单个标签
+
+- 标签是出现在标签文件（Tags File）中的一个标识符。它是一种能够跳转的标记。例如，在 C 程序里，每个函数名都可以是一个标签。
+
+###### 标签跳转
+
+- 使用以下命令，可以直接跳转至定义标签的位置：
+
+  ```vim
+  :tag {name}
+  ```
+
+- 在常规模式下，使用 **Ctrl-]** 快捷键，也可以查找光标下的标签（比如函数或宏等），并跳转到定义该标签的位置。
+
+- 在常规模式和插入模式下，按住Ctrl键并点击鼠标左键（**<C-LeftMouse>**），也可以跳转至标签定义处。
+
+- 使用以下命令，可以在新建窗口中跳转到定义标签的位置：
+
+  ```vim
+  :stag {name}
+  ```
+
+- 在常规模式下，使用 **Ctrl-W]** 快捷键，也可以在新建窗口中跳转到定义标签的位置。
+
+###### 标签栈
+
+- 根据'tagstack'选项的默认设置，Vim会在标签栈中记录你跳转过的标签，以及是从哪里跳转到这些标签。
+
+- 使用以下命令，可以查看标签栈的内容：
+
+  ```vim
+  :tags
+  ```
+
+![](https://pic4.zhimg.com/80/v2-f172a2e62e136048d54f36d0b75dd2ff_1440w.jpg)
+
+- 使用以下不带任何参数的命令，可以跳转到较新的标签处：
+
+  ```vim
+  :tag
+  ```
+
+- 使用以下命令，可以返回到之前的标签处：
+
+  ```vim
+  :pop
+  ```
+
+- 在常规模式下，使用使用 **Ctrl-T** 键，可以依次返回之前所处的位置。
+
+  在常规模式和插入模式下，按住Ctrl键并点击鼠标右键（**<C-RightMouse>**），也可以返回之前所处的位置。
+
+- 使用`:h tag-stack`命令，可以查看标签栈的帮助信息。
+
+##### 匹配多个标签
+
+- 如果您明确知道某个标签的名称，那么可以使用[匹配单个标签](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-79-02-Tag-SingleMatch.html)章节中介绍的命令直接跳转。本节将继续介绍搜索和匹配多个标签的操作。
+
+###### 标签搜索
+
+- 我们可以在文件的任意位置上执行`:tag`或`:tjump`命令，以跳转至指定的标签定义处。这样就省去了将光标移动至标签之上，然后再点击跳转快捷键的繁琐。
+- 如果启用了[wildmenu](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-46-02-wildmenu.html)选项，那么在输入命令时，我们只需要输入标签的开头几个字母，然后点击Tab键即可以自动补全标签名。
+
+- 通过在命令中使用[正则表达式](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vi-81-RegularExpressionBasic.html)，可以查找符合条件的标签。例如以下命令，将查找所有以“HTML”开头的标签，并跳转至第一个匹配标签：
+
+  ```vim
+  :tag /^HTML*
+  ```
+
+- 而以下命令，将会显示所有以“Color”开头的标签，你可以选择跳转至某一匹配标签：
+
+  ```vim
+  :tjump /^Color*
+  ```
+
+- 如果有多个匹配项存在，比如在几个文件中都定义了同名的函数，那么默认情况下，将优先跳转至当前文件中的匹配项。
+- 使用`:h tag-priority`命令，可以查看关于优先级的帮助信息。
+
+###### 标签匹配列表
+
+- 使用以下命令，将在屏幕底部显示标签匹配列表，然后根据您的选择在当前窗口中跳转至标签定义处：
+
+  ```vim
+  :tselect [name]
+  ```
+
+- 在常规模式下，使用 **g]** 快捷键，将显示与光标下标签匹配的列表：
+
+- 使用以下命令，将在屏幕底部显示标签匹配列表，然后根据您的选择在新建窗口中跳转至标签定义处：
+
+  ```vim
+  :stselect [name]
+  ```
+
+- 在常规模式下，使用 **Ctrl-Wg]** 快捷键，将在新建窗口中，针对光标下的标签执行:tselect命令。
+
+- 使用以下命令，可以根据匹配列表中的顺序进行标签跳转：
+
+  - `:tnext`跳转至下一个匹配项
+
+  - `:tprevious`跳转至上一个匹配项
+
+  - `:tfirst`跳转至第一个匹配项
+
+  - `:tlast`跳转至最后一个匹配项
+
+  - 在进行标签跳转的过程中，将在屏幕底部显示其相对位置：
+
+    ```text
+    tag 1 of n or more
+    ```
+
+###### 预览窗口
+
+- 当我们在代码中遇到某个函数，但不太清楚其具体含义，那么可以使用 **Ctrl-]** 键跳转至函数定义处，而此时当前屏幕将会显示该函数的具体实现代码；稍后我们仍需退回到之前的位置继续编写程序。
+
+- 如果我们希望在编辑当前代码段的同时参考具体的函数定义，那么可以使用预览窗口（Preview Window）。
+
+- 请注意，为了使用预览窗口，Vim必须包含[QuickFix](https://link.zhihu.com/?target=https%3A//yyq123.github.io/learn-vim/learn-vi-70-01-QuickFix.html)特性。
+
+- 使用以下命令，将在屏幕上方的预览窗口中显示指定标签的定义，并且保持当前光标的位置不变。也即是说，你可以同时在屏幕上查看引用函数的代码和定义函数的代码。
+
+  ```vim
+  :ptag [name] 
+  ```
+
+- 如果当前已经存在一个预览窗口，那么将重用此窗口。
+
+- 使用 **Ctrl-W}** 快捷键，也可以针对当前光标下的标签执行:ptag命令。
+
+- 使用以下命令，将执行:tjump命令，并在预览窗口中显示标签：
+
+  ```vim
+  :ptjump [name]
+  ```
+
+- 使用 **Ctrl-Wg}** 快捷键，也可以针对当前光标下的标签执行:ptjump命令。
+
+- 使用以下命令，将执行:tselect命令，并在预览窗口中显示标签：
+
+  ```vim
+  :ptselect [name]
+  ```
+
+- 使用以下命令，可以在预览窗口中进行标签跳转：
+  - `:ptnext`在预览窗口中执行:tnext命令
+  - `:ptprevious`在预览窗口中执行:tprevious命令
+  - `:ptfirst`在预览窗口中执行:tfirst命令
+  - `:ptlast`在预览窗口中执行:tlast命令
+  - `:ppop`在预览窗口中执行:pop命令
+  - `:pclose`关闭预览窗口
+- 使用 **Ctrl-Wz** 快捷键，也可以关闭预览窗口。
+
+###### 位置列表
+
+- 使用以下命令，可以跳转到指定标签，并在当前窗口的新位置列表中加入匹配的标签：
+
+  ```vim
+  :ltag [name]
+  ```
+
+- 使用以下命令，可以显示位置列表：
+
+  ```vim
+  :lopen 
+  ```
+
+- 例如，首先使用`:ltag /^HTML*`命令，查找所有以“HTML”开头的标签并将它们放入到位置列表当中；然后使用`:lopen`命令，查看位置列表。
+
+  ![](https://pic1.zhimg.com/80/v2-fb80c8af8398da117f190a26e255c8b8_1440w.jpg)
+
+- 使用以下命令，可以在位置列表中进行标签跳转：
+  - `:lnext`移动到下一个标签
+  - `:lprevious`移动到下一个标签
+  - `:lfirst`移动到第一个标签
+  - `:llast`移动到最后一个标签
+  - `:lclose`关闭位置列表
+
+###### 智能跳转
+
+- 看了这么多命令，是不是已经心烦意乱了？我们期待的理想状况应该是：如果只有一个匹配标签，那么直接跳转；如果发现多个匹配标签，则显示匹配列表。
+- 使用`**:tjump {name}**`命令，如果只发现一个匹配标签，将直接跳转至标签定义处；如果发现多个匹配标签，那么将显示标签匹配列表。
+- 在常规模式下，使用 **gCtrl-]** 快捷键，将针对光标下的标签执行:tjupm命令。
+- 使用`**:stjump**`命令，则可以在新建窗口中执行:tjupm命令。
+- 在常规模式下，使用 **Ctrl-W g Ctrl-]** 快捷键，将针对光标下的标签在新建窗口中执行:tjupm命令。
+
+##### 标签选项
+
+- 通过'tags'选项，可以指定查找标签文件的位置。根据以下默认设置，Vim将在当前目录查找标签文件：
+
+  ```vim
+  set tags=tags=./tags,tags
+  ```
+
+- 对于大量的代码文件，也可以设置更精细的查找路径：[[S\]](https://www.zhihu.com/question/47691414/answer/373700711)
+
+  ```vim
+  set tags=./.tags;,.tags
+  ```
+  - 其中，以逗号分隔的参数为：
+    - ./.tags;，代表在文件的所在目录下，查找名字为“.tags”的标签文件。使用以点开头的文件名，以便与常规的项目文件相区别。结尾的分号代表查找不到时继续向上递归到父目录。这样对于分布在不同子目录中的源代码文件，只需要在项目顶层目录放置一个.tags文件即可。
+    - .tags，是指同时在 Vim 的当前目录（即:pwd命令返回的目录）下查找 .tags 文件。
+
+- 假设我们针对rails源码库（*~/src/rails*）生成tags文件，并在'tags'选项中包含此文件，那么就可以在编写代码时，方便地跳转至标签的定义处，获得相关地使用说明。
+
+  ```vim
+  set tags+=~/tags/rails.tags
+  ```
+
+- 默认设置下，Vim使用二分法（binary search）来查找指定的标签名。如果您生成的[标签文件(Tags File)](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-79-01-Tag-File.html)没有经过排序，那么可以切换至线性查找（linear search）方式：
+
+  ```vim
+  :set notagbsearch
+  ```
+
+###### 标签函数
+
+- 通过调用Vim内置的taglist函数，可以实现自定义的标签匹配功能。taglist函数将根据输入的正则表达式，将所有匹配的标签以列表形式返回。使用`:help taglist`命令，可以查看该函数的帮助信息。
+
+- 例如以下代码，利用taglist函数实现了查找指定函数的功能：
+
+  ```vim
+  command! -nargs=1 TagFunction call s:TagFunction(<f-args>) 
+  function! s:TagFunction(name)
+     " Retrieve tags of the 'f' kind 
+     let tags = taglist('^'.a:name)
+     let tags = filter(tags, 'v:val["kind"] == "f"')
+     " Prepare them for inserting in the quickfix window
+     let qf_taglist = []   
+     for entry in tags
+         call add(qf_taglist, {
+              \ 'pattern':  entry['cmd'],
+              \ 'filename': entry['filename'],
+              \ })
+     endfor
+     " Place the tags in the quickfix window, if possible
+     if len(qf_taglist) > 0 
+        call setqflist(qf_taglist)
+        copen
+     else
+        echo "No tags found for ".a:name
+     endif
+  endfunction 
+  ```
+  - 使用`:TagFunction HTML`命令调用自定义函数，将查找所有以“HTML”开头的函数，并显示在[Quickfix](https://link.zhihu.com/?target=https%3A//yyq123.github.io/learn-vim/learn-vi-70-01-QuickFix.html)中。
+
+    ![](https://pic1.zhimg.com/80/v2-eb26afcde9caa4cf923d812c80ca78c4_1440w.jpg)
+
+###### 标签相关插件
+
+- [unimpaired.vim](https://link.zhihu.com/?target=http%3A//www.vim.org/scripts/script.php%3Fscript_id%3D1590)插件，映射了一系列方括号开头的快捷键，以方便在标签之间进行跳转。比如]t代表`:tnext`；[t代表`:tprev`等等。
+- [vim-gutentags](https://link.zhihu.com/?target=https%3A//github.com/ludovicchabant/vim-gutentags)插件，可以检测文件变动并自动增量更新[标签文件](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-79-01-Tag-File.html)（Tags File）。它可以异步更新标签，并且对于标签文件进行排序，以便于Vim使用二分法快速搜索关键字。
