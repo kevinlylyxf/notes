@@ -1722,9 +1722,11 @@
 
   - 点击**/**键，可以在文件列表中进行查找。
 
+- ：Sex水平分割一个窗口，浏览文件系统，：Vex垂直分割一个窗口，浏览文件系统
+
 ###### goto file
 
-- 如果当前文件中包含了其他文件名，那么我们可以移动到文件名位置，然后直接使用`gf`命令在新的[缓冲区](https://link.zhihu.com/?target=http%3A//yyq123.blogspot.com/2009/07/vim-buffer.html)中打开链接的文件。例如下图所示，在HTML文件中引用了CSS文件，那么只需要在CSS文件名处执行gf命令，Vim就会在当前文件夹中查找并打开引用的CSS文件。
+- 如果当前文件中包含了其他文件名，那么我们可以移动到文件名位置，然后直接使用`gf`命令在新的[缓冲区](https://link.zhihu.com/?target=http%3A//yyq123.blogspot.com/2009/07/vim-buffer.html)中打开链接的文件。例如下图所示，在HTML文件中引用了CSS文件，那么只需要在CSS文件名处执行gf命令，Vim就会在当前文件夹中查找并打开引用的CSS文件。gd命令跳至当前光标所在的变量声明处。
 
   ![](https://pic4.zhimg.com/80/v2-b9d83529635ab30c04abf461ab21e69f_1440w.jpg)
 
@@ -3972,3 +3974,953 @@
 
 - [unimpaired.vim](https://link.zhihu.com/?target=http%3A//www.vim.org/scripts/script.php%3Fscript_id%3D1590)插件，映射了一系列方括号开头的快捷键，以方便在标签之间进行跳转。比如]t代表`:tnext`；[t代表`:tprev`等等。
 - [vim-gutentags](https://link.zhihu.com/?target=https%3A//github.com/ludovicchabant/vim-gutentags)插件，可以检测文件变动并自动增量更新[标签文件](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-79-01-Tag-File.html)（Tags File）。它可以异步更新标签，并且对于标签文件进行排序，以便于Vim使用二分法快速搜索关键字。
+
+### 正则表达式
+
+##### 正则表达式命令
+
+- Vim提供以下两种grep（globally search a regular expression and print）搜索工具：
+
+  - `:vimgrep` 使用Vim内置的grep实现；
+
+  - `:grep` 调用外部的grep工具。
+
+- :grep命令会运行由选项grepprg所指定的程序。在Linux系统上，grepprg默认是[grep](https://link.zhihu.com/?target=http%3A//www.gnu.org/software/grep/manual/grep.html) -n：
+
+- 在Windows系统上，grepprg默认是[findstr](https://link.zhihu.com/?target=https%3A//docs.microsoft.com/en-us/windows-server/administration/windows-commands/findstr) /n
+
+- :vimgrep命令使用vim内置的搜索引擎，与`/`命令功能一致，但速度相对较慢。
+
+- 由此可见，使用:vimgrep命令在不同平台上将获得一致的体验。而:grep命令则是与操作系统相关的，在不同平台会有不同的行为。
+
+- `:grep`和`:vimgrep`命令，都将在[QuickFix](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-70-01-QuickFix.html)中显示搜索结果。
+
+- `:lgrep`和`:lvimgrep`命令实现相同的功能，但使用地址列表（Location List）来显示匹配结果。
+
+- 使用`:copen`命令打开的Quickfix，是全局性的。而使用`:lopen`打开的Location List，则是独立存在于各个窗口中的。
+
+- 对于Quickfix，使用`:cp`命令，跳转到上一个匹配处；使用`:cn`命令，跳转到下一个匹配处。
+
+- 对于Location List，使用`:lpre`命令，跳转到上一个匹配处；使用`:lnext`命令，跳转到下一个匹配处。
+
+###### vimgrep
+
+- 使用以下命令，可以在当前目录下查找指定字符串：
+
+  ```vim
+  :vimgrep grep *
+  ```
+
+- 如果希望在当前目录及其子目录中进行查找，那么可以使用**通配符：
+
+  ```vim
+  :vimgrep blue **
+  ```
+
+- 以下命令将在当前目录及其子目录中的所有HTML文件中，查找指定字符串：
+
+  ```vim
+  :vim blue **/*.html
+  ```
+
+- 请注意，:vimgrep命令可以缩写为`:vim`。
+
+- 首先在常规模式下，使用`*`命令查找光标下的单词；然后使用以下命令，可以重用之前的查找：
+
+  ```vim
+  :vim // *.html
+  ```
+
+- 默认情况下，将自动跳转至第一个匹配处；如果希望停留在当前位置，那么可以在命令中使用j参选：
+
+  ```vim
+  :vimgrep /foo/j **/*.md
+  ```
+
+- 使用以下命令，可以查看更多帮助信息：
+
+  ```vim
+  :help :vimgrep
+  ```
+
+###### grep
+
+- 使用以下命令，将在当前目录下查找所有文件：
+
+  ```vim
+  :grep block *.*
+  ```
+
+- 默认情况下，grep是区分大小写的，可以使用-i选项来忽略大小写：
+
+  ```vim
+  :grep -i word filename
+  ```
+
+- 使用-o选项，将只显示匹配的字符，而不是整行内容：
+
+  ```vim
+  :grep -o [[:punct:]] filename
+  ```
+
+- 使用以下命令，可以查看更多帮助信息：
+
+  ```vim
+  :help :grep
+  ```
+
+- 请注意，递归搜索子目录的 **/*.* 通配符，对于Linux下的:vimgrep和:grep命令有效；但对于Windows下的:grep命令不起作用。
+
+###### grepprg选项
+
+- 使用以下命令，可以查看'grepprg'选项的当前设置：
+
+  ```vim
+  :set grepprg?
+  ```
+
+- 在不同的操作系统下，Vim将默认使用不同的外部grep工具：
+  - 在Windows下
+    `grepprg=findstr /n`
+  - 在Linux下
+    `grepprg=grep -n $* /dev/null`
+
+- 如果希望默认查询当前目录以及其子目录，那么可以使用以下设置：
+  - 在Windows下
+    `set grepprg=findstr /S /n`
+  - 在Linux下
+    `set grepprg=grep -nR $* /dev/null`
+
+- 使用以下命令，可以查看更多帮助信息：
+
+  ```
+  :help 'grepprg'
+  :help pattern
+  ```
+
+- 关于正则表达式的更多信息，可以参考以下网站：
+
+  - [Vim Regular Expressions 101](https://link.zhihu.com/?target=http%3A//vimregex.com/)
+  - [Regular-Expressions.info](https://link.zhihu.com/?target=https%3A//www.regular-expressions.info/)
+
+- 使用以下网站，可以视觉化正则表达式，以便分步理解复杂的表达式：
+
+  - [REGEXPER](https://link.zhihu.com/?target=https%3A//regexper.com/)
+  - [Regular Expressions 101](https://link.zhihu.com/?target=https%3A//regex101.com/)
+
+##### 正则表达式基础
+
+###### 行首与行尾
+
+- **^acme**，将匹配以acme开始的行。注意：除非出现在模式的开头，否则音调符号^就不是一个代表行开头的通配符，而会代表其他的含义。2^4，将匹配包含"2^4"的所有行。如果要查找以“^”开头的行，则需要使用^^模式。其中第一个^是通配符用于指示一行的开头，而第二个^则是实际的音调符号。如果要指明前导^是一个实际的音调符号而不是表示一行开头的通配符，那么就需要在其前面加一个转义的反斜杠“\”来组成\^acme模式。
+
+- **acme$**，将匹配以acme结尾的行。^acme$，将匹配只包含acme一个单词的行。而^$，则会匹配所有空行。
+
+- **dog.bone**，将匹配dog-bone，dog bone，dog/bone，但不会匹配dogbone，因为dog和bone之间并没有分隔符。其中.表示匹配任一字符
+
+- 要指示任何字符出现的次数，可以同时使用句点和星号（.*），例如dog.*bone将匹配以下字符串（但不会匹配dog在一行而bone在另一行的情况）：
+
+  ```
+  dogbone
+  dog-bone
+  doggy bone
+  My dog has a bone
+  ```
+
+###### 词尾与词首
+
+- **<**用于匹配一个单词的开始。**>**用于匹配一个单词的结束。也就是说，只要将想要查找的字符串包围其中，就可以实现精确查找。例如在文件中有单词Californian和Unfortunately。如果使用命令**/for**来查找，那么也会找到这两个单词。
+
+  ![](https://pic3.zhimg.com/80/v2-3ca758146256a15b49c14ee21133d4b2_720w.png)
+
+- 如果使用表达式/\<for\>来进行查找，则只会精确的查找到for，而不会出现其他的匹配。
+
+###### 匹配次数
+
+- 星号（\*）通配符，作用于其之前的一个元素，表示可以匹配0次或是多次。表达式的贪婪（greedy）特性，将尝试查找尽可能多的匹配项。te*将会匹配te，tee，teee等等。甚至还会匹配t，因为在这里e可以出现0次。
+- 加号（+）通配符，表示一个字符可以匹配一次或是多次。所以表达式te\+可以匹配te，tee，teee等等。但是不会再匹配t，因为这里e最少要出现一次。
+- 等号（=）通配符，表示一个字符匹配0次或是一次。所以表达te\=可以匹配t和te，但是不会匹配tee，因为这个表达式只能匹配不多于两个字符。
+
+##### 正则表达式进阶
+
+###### 范围
+
+- **[]**通配符，表示只可以匹配方括号内列表的字符。例如**t[aeiou]n**将匹配一个小写元音字符，可以找到tan,ten,tin,ton,tun。
+- 在方括号内，可以通过短横线来指明包括字符或数字的范围。例如**[0-9]**可以匹配0到9中的任一数字。我们还可以组合其他字符，例如**[0-9aeiou]**可以匹配任意一个数字或是小写的元音字符。
+- 如果需要匹配"-"本身，那么需要使用反斜杠进行转义。例如表达式**one[\-]way**可以匹配one-way，但不会匹配one way。
+
+###### 排除
+
+- **^**通配符，可以排除指定的字符。
+- **`acme[^0-9]`**匹配所有包含acme，后跟一个非数字字符的行。但不会匹配以acme结尾的行，因为模式中的acme之后必须有一个字符。
+- **`^[^a-zA-Z]`**匹配以非字母开头的行，但不会匹配空行，因为行中必须有一个非字母字符存在。
+
+- 如果需要匹配"^"本身，那么需要使用反斜杠进行转义。例如表达式**2[\^\*]4**可以匹配2^4和2*4。
+
+###### 重复次数
+
+- **{minimum,maximum}**表达式指出一个字符重复的次数。例如表达式**`a\{3,5}`**可以匹配3到5个a（aaa，aaaa，aaaaa）。Vim默认是会尽可能多地进行匹配（Matching as much as possible）。在表达式中，最小次数是可以省略的，即默认最小次数为0，所以表达式**`a\{,5}`**可以匹配0到5个a。最大次数也是可以省略的，即默认匹配无穷大，所以表达式**`a\{3,}`**最少可以匹配3个a，最多个数没有限制。
+
+- **{number}**表达式只指定一个数字，Vim就会精确的匹配相应的次数。例如**`a\{5}`**只会精确的匹配5次。
+
+- **{-minimum,maximum}**在数字前增加一个负号(-)，那么Vim在查找时就会尽可能少地进行匹配（Matching as little as possible）。例如**`ab\{-1,3}`**将只匹配 "abbb"中的"ab"。表达式**`a\{-3,}`**可以匹配三个或是更多个a，但尽可能少地进行匹配。而表达式**`a\{-,5}`**可以匹配0到5个字符。
+
+- 表达式**`a\{-5}`**将会精确的匹配5个字符。
+
+  ![](https://pic1.zhimg.com/80/v2-63fea3e184ee2c5602d100a7e52bfefc_720w.png)
+
+###### 捕获组
+
+- ()用于保证需要组合出现的字符。表达式**`a\(XY\)\*b`**将会匹配ab, aXYb, aXYXYb, aXYXYXYb。
+
+###### 或操作
+
+- |用于查找两个或是多个可能的匹配。例如表达式**`foo\|bar`**可以找到foo或是bar。我们可以连接使用多个或运算符，例如表达式**`Larry\|Moe\|Curly`**将找到Larry、Moe和Curly。而表达式**`end\(if\|while\|for\)`**则可以匹配"endif", "endwhile" 和 "endfor"几个不同的元素组合。
+- 如果希望匹配多次，那么可以组合使用加号和括号运算符。例如表达式**`/\(foo\|bar\)\+`**可以匹配 "foo", "foobar", "foofoo", "barfoobar"等等。
+
+###### 特殊字符元素
+
+![](https://pic3.zhimg.com/80/v2-220a079d462a4c7da5044644f13788f6_720w.png)
+
+- 表达式**\a**匹配任意字符，而表达式**\a\a\a**则可以匹配任意三个字符。而**\a\a\a_**则可以匹配任意后带一个下划线的三个字符。
+
+- 操作符**\d**可以匹配任意数字；**\d\d\d\d**则可以匹配任意四个数字（即使其为更长数字串中的一部分）。
+
+- 如果希望精确匹配四位数字，那么可以使用以下任一命令：
+
+  ```vim
+  /\<\d\d\d\d\>
+  /\<\d\{4}\>
+  ```
+
+- **\u**可以匹配任意大写字符；**\U**则可以匹配任意非大写字符。使用以下命令，可以将整篇文本替换为大写字母：
+
+  ```vim
+  :%s/.*/\U&/
+  ```
+
+- 如果需要找出包含空格的空行，那么可以使用**^\s.\*$**表达式；如果需要找到没有空格的空行，则可以使用**\S**
+
+- **\s\+$**可以匹配尾部的空格； **\+\ze\t**则可以匹配Tab制表符之前的空格。（请注意，此表达式开头为空格）
+- 请注意，以上预定义字符是不能内嵌在[]中使用的。例如，表达式[\d\l]是错误的，应使用**\(\d\|\l\)**表达式匹配数字或小写字符。
+
+###### 预定义字符类
+
+- 如果我们想要查找所有大写字符，可以使用表达式**[A-Z]**，或者使用预定义的字符类[:upper:]。使用**/[[:upper:]]**命令可以匹配所有大写字母；而使用**`/[[:upper:][:lower:]]`**命令则可以匹配包括大写和小写字母在内的所有字母。
+
+![](https://pic4.zhimg.com/80/v2-19e8fba1611f264b656058615e84632b_720w.png)
+
+###### 转义符
+
+- 如果需要查找某些特殊符号（比如美元符号），那么可以使用反斜杠backslash（\）进行转义。例如：表达式**\$**可以匹配美元符号（$），而表达式**\^**则可以匹配脱字符（^）。需要注意的是，反斜杠backslash（\）本身也是特殊符号，所以需要用两个反斜杠\\来匹配。
+
+###### 帮助信息
+
+- 可以使用以下命令，查看关于查找模式的更多帮助信息：
+
+  ```vim
+  :help pattern
+  ```
+
+##### 捕获组
+
+- `()`用于保证需要作为整体而组合出现的字符。例如表达式`a\(XY\)*b`将会匹配ab, aXYb, aXYXYb, aXYXYXYb。
+- 逆向引用（Back Reference）表达式`\n`，用于引用之前定义的第n个捕获组。其中n为数字1–9。
+- 例如对于文本“he fly fly flies”，表达式`\(fly\) \1`将匹配“fly fly”。因为`\1`再次引用了第一个捕获组“fly”，所以将匹配2个“fly”。、
+
+###### 捕获组匹配
+
+<img src="https://pic2.zhimg.com/80/v2-ac093c29ff9cec91690036f0bdfe1a71_720w.jpg" style="zoom:67%;" />
+
+- 假设需要查找以上多种格式的电话号码，其中：
+
+  - 可能包含区号，也可能没有区号；
+  - 区号由3位数字组成；
+  - 区号可能被括号包围，也可能没有括号；
+  - 区号和号码之间，可能有横线或者空格相连，也可能没有任何连接符；
+  - 号码由3位数字，横线连接符，和4位数字组成。
+
+- 使用以下命令，可以满足以上格式需求：
+
+  ![](https://pic4.zhimg.com/80/v2-2a229df815be2abf67960287676264c7_720w.jpg)
+
+- 由此可见，将区号及其后的连接符作为一个整体捕获为组，这样就可以通过后续的 \? 表达式来匹配0个或1个捕获组，以实现匹配包含区号和不包含区号的多种情况。
+
+###### 捕获组嵌套
+
+- 以下文本中包含FIRSTNAME LASTNAME格式的姓名信息：
+
+  ```text
+  Prepared by Tommas Young
+  Prepared by Tommy Young
+  ```
+
+- 使用以下命令，可以将其转换为LASTNAME, FIRSTNAME格式：
+
+  ```vim
+  :%s/\(Tom\%(mas\|my\)\) \(Young\)/\2, \1/g
+  Prepared by Young, Tommas
+  Prepared by Young, Tommy
+  ```
+
+- 从以上命令可以看到，捕获组是可以嵌套的；\%(\) 指定的组将不会被计数，这可以允许我们使用更多的组，并且查找速度也更快。
+
+###### 捕获组替换
+
+- 假设需要将以下文本中的单引号替换为双引号：
+
+  ```text
+  The string contains a 'quoted' word.
+  The string contains 'two' quoted 'words'.
+  The 'string doesn't make things easy'.
+  The string doesn't contain any quotes, isn't it.
+  ```
+
+- 通过以下命令中的嵌套捕获组来完成替换操作：
+
+  ```vim
+  :%s/\s'\(\('\w\|[^']\)\+\)'/ "\1"/g
+  The string contains a "quoted" word.
+  The string contains "two" quoted "words".
+  The "string doesn't make things easy".
+  The string doesn't contain any quotes, isn't it.
+  ```
+
+- 其中，\s' 用于匹配紧跟在空格之后即单词开头的单引号；\('\w\|[^']\) 则将非开头的单引号视为单词的一部分，以防止其被替换位双引号。
+
+###### 替换字符串中的元字符
+
+- 在替换和全局命令中， 某些元字符（metacharacters）在查找表达式和替换表达式中的含义是不同的。
+
+- 例如以下命令，查找部分中的“.”因为有特殊意义，所有需要进行转义；而替换部分中的“.”和“$”则会被视为普通文本。
+
+  ```
+  :%s/1\. Start/2. Next, start with $100/
+  ```
+
+- 例如以下命令，会将“A”或“B”或“C”，分别替换为“[abc]”。也就是说，“[]”在替换部分也会被视为普通文本。
+
+  ```vim
+  :%s/[ABC]/[abc]/g
+  
+  ABC --------> [abc][abc][abc]
+  ```
+
+###### 替换表达式中的元字符
+
+![](https://pic1.zhimg.com/80/v2-e76122c7eae10a9a6f4ed69df6213b7c_720w.jpg)
+
+###### 使用元字符交换文本位置
+
+- 使用以下命令，可以交换以逗号分隔的列：
+
+  ```vim
+  :%s/\([^,]*\),\([^,]*\),\(.*\)/\2,\1,\3/
+  ```
+
+![](https://pic1.zhimg.com/80/v2-cc2b9f8773c97b64ae109b629cd164dc_720w.jpg)
+
+- 查找表达式包括：
+  - \([^,]*\)，匹配除逗号之外的所有字符，即将第一列的内容捕获为组1；
+  - \([^,]*\)，匹配除逗号之外的所有字符，即将第二列的内容捕获为组2；
+  - \(.*\)，匹配剩余的所有字符，捕获为组3；
+
+- 替换表达式包括：
+
+  - \2,\1,\3，按照组2组1组3的顺序恢复各组的内容，即交换第二列与第一例的次序。
+
+- 请注意，作为分隔符的逗号，在查找和替换部分均被视为普通文本。
+
+- 假设需要将以下记录中的Name字段，转换为Firstname Lastname的形式：
+
+  ```text
+  Name: McFly, Susan S.; Areas: Graphics; Phone: 999-3333
+  ```
+
+  - 可以使用以下命令，将逗号之前的Lastnmae捕获至组1，将分号之前的Firtname捕获至组2，然后再按照从组2到组1的顺序进行替换：
+
+    ```vim
+    :%s/: \([^,]*\), \([^;]*\);/: \2 \1;
+    ```
+
+    ```text
+    Name: Susan S. McFly; Areas: Graphics; Phone: 999-3333 
+    ```
+
+  - 使用以下全局命令，则可以将替换操作限制在以“Name:”开头的行：
+
+    ```vim
+    :g/^Name/s/: *\([^,]*\), \([^;]*\);/: \2 \1;/
+    ```
+
+###### 使用元字符转换大小写
+
+- 使用以下命令，将单词首字母转换为大写：
+
+  ```vim
+  :%s/\<\(.\)\([^[:space:][:punct:]]*\)\>/\u\1\2/g
+  ```
+
+![](https://pic1.zhimg.com/80/v2-351443719c5a28f4c24ef677437d4a84_720w.png)
+
+- 查找表达式包括：
+
+  - \<，匹配单词开头；
+  - \(.\)，匹配单词首字母，捕获为组1；
+  - \([^[:space:][:punct:]]*\)，匹配除空格和标点符号之外的字符串，即将单词首字母之外的其余部分捕获为组2；
+  - \>，匹配单词末尾；
+
+- 替换表达式包括：
+
+  - \u，将下一个字符转换为大写；
+  - \1，恢复捕获组1（即单词首字母）
+  - \2，恢复捕获组2（即单词剩余部分）
+
+- 使用以下命令，可以将匹配文本全部转换为大写：
+
+  ```text
+  :%s/Fortran/\U&/
+  fortran --------> FORTRAN
+  ```
+
+###### 使用元字符进行精确替换
+
+- 假设以下代码中rotine的名称以“test”为前缀，以“box”为后缀，而黄色高亮的中间部分则是可变的：
+
+  ![](https://pic2.zhimg.com/80/v2-a74545420f92cfa727560710d4a961e1_720w.jpg)
+
+- 如果希望将后缀替换为“block”，那么可以将可变的字母作为捕获组进行替换：
+
+  ```vim
+  :g/test\([abc]\)box/s//test\1block/g
+  ```
+
+![](https://pic4.zhimg.com/80/v2-c9c56c82e29ec1fa873a1ff200987f87_720w.jpg)
+
+- 假设需要将代码中“?dep=01”替换为：
+
+  ```text
+  {{path('index',{dep:01})}}
+  ```
+
+- 也就是说，只替换表达式的字符部分，但保留数字部分不变。可以使用(\d\d)捕获两位数字部分，然后在替换时使用\1来恢复数字：
+
+  ```vim
+  :%s/?dep=\(\d\d\)/{{path('index',{dep:\1})}}/g 
+  ```
+
+##### 替换字符串中的submatch()
+
+- `submatch({nr})`函数，只用于 :substitute 命令或 substitute() 函数中。它将返回匹配文本的第{nr}个子匹配。如果{nr}为0，则返回整个匹配文本。
+- 将submatch()和其它函数相结合，可以对替换文本进行更丰富的操作。使用`:help submatch()`命令，可以查看更多帮助信息。
+
+###### 更新列表序号
+
+- 如果希望在第1条之后插入一个新的条目，那么就意味着需要调整后续各个条目的序号：
+
+  ```text
+  Article 1: 3 Steps To Enable Thesaurus Option
+  Article 2: Steps to Add Custom Header
+  Article 3: Automatic Word Completion
+  Article 4: How To Record and Play Macro
+  Article 5: Make Vim as Your C IDE
+  ```
+
+- 使用以下命令，将第2行及之后各行中的序号分别加1：
+
+  ```vim
+  :2,$s/\d\+/\=submatch(0) + 1/
+  ```
+
+  ```text
+  Article 1: 3 Steps To Enable Thesaurus Option
+  Article 3: Steps to Add Custom Header
+  Article 4: Automatic Word Completion
+  Article 5: How To Record and Play Macro
+  Article 6: Make Vim as Your C ID
+  ```
+
+- 请注意，替换命令中并没有使用/g标志，因此将仅仅替换第一个匹配字符，以避免条目文本中的数字也被更改。
+
+###### 转换单词大小写
+
+- 假设需要在以下条目中，将首个单词的首个字母转换为大写：
+
+  ```text
+  The following activities can be done using vim:
+  a. source code walk through,
+  b. record and play command executions,
+  c. making the vim editor as ide
+  ```
+
+- 使用以下命令，将匹配“.”及空格之后的单词字符（0-9A-Za-z），并替换为大写：
+
+  ```vim
+  :%s/\.\s*\w/\=toupper(submatch(0))/g
+  The following activities can be done using vim:
+  a. Source code walk through,
+  b. Record and play command executions,
+  c. Making the vim editor as ide
+  ```
+
+###### 替换文件路径
+
+- 将当前光标下的相对路径名，替换为完整的绝对路径名：
+
+  ```vim
+  :s/\f*\%#\f*/\=fnamemodify(submatch(0), ':p')/
+  ```
+
+  - 其中，\= 表示使用表达式作为替换字符串（请参考帮助信息`:help sub-replace-expression`）；\f*\%#\f* 将匹配文件名（请参考帮助信息`:help /\f`） 。
+
+- 如果希望将可视化模式下选中的文件名，替换为完整的绝对路径名，那么在命令中使用\%V参数：
+
+  ```vim
+  :s/\%V.*\%V/\=fnamemodify(submatch(0), ':p')/
+  ```
+
+###### 数据补零
+
+- 将每行数据中不满8位的字符串，向右对齐并在前部以0补足8位：
+
+  ```vim
+  :%s/.*/\=printf('%08s',submatch(0))/g
+  ```
+
+![](https://pic3.zhimg.com/80/v2-0fd3d9d605d6042dfac214640c5d97ea_720w.jpg)
+
+##### 4种magic模式
+
+- 根据对于特殊元字符的不同解释方式，Vim正则表达式可以分为四种模式：magic，no magic，very magic和very nomagic。
+
+  - **[magic](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-86-Magic.html)**模式，使用`\m`前缀，其后模式的解释方式为'magic'选项。`^`，`$`，`.`，`*`和`[]`等字符含有特殊意义；而`+`、`?`、`()`、和`{}`等其它字符则按字面意义解释。magic为默认设置，表达式中的\m前缀可以省略；
+  - **[no magic](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-86-Magic.html)**模式，使用`\M`前缀，其后模式的解释方式为'nomagic'选项。除了`^`和`$`之外的特殊字符，都将被视为普通文本；
+  - **[very magic](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vim-Regex-VeryMagic.html%23regex-very-magic)**模式，使用`\v`前缀，其后模式中除 '0'-'9'，'a'-'z'，'A'-'Z' 和 '_' 之外的字符都当作特殊字符解释；
+  - **[very nomagic](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vim-Regex-VeryMagic.html%23regex-very-no-magic)**模式，使用`\V`前缀，其后模式中只有反斜杠（`\`）具有特殊意义。
+
+- 不同模式之间的区别，在于哪些特殊字符需要使用反斜杠（`\`）进行转义。例如星号（*），在magic和very magic模式下视为特殊修饰符；而在no magic和very nomagic模式下则被视为普通字符，必须使用“\*”恢复其特殊作用。
+
+- 对于简单的正则表达式，使用“\”对特殊字符进行转义，可能并不会造成困扰；但在复杂的正则表达式中，对大量特殊字符的重复转义，将使得表达式过于繁琐且难以阅读。
+
+- 例如在默认的magic模式下，使用以下命令查找十六进制色彩值。其中，使用`()`构建[捕获组](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vim-Regex-Groups.html)；使用`{}`匹配6位和3位十六进制值。因为有多种特殊字符需要进行转义，造成表达式过于冗长：
+
+  ```vim
+  /\m#\(\x\{6\}\|\x\{3\}\)
+  ```
+
+  - 而使用very magic模式，则可以简化表达式：
+
+    ```vim
+    /\v#(\x{6}|\x{3})
+    ```
+
+- 4种Magic模式的差异和用法，可以简单总结如下：
+
+  ![](https://pic2.zhimg.com/80/v2-6b5c9e9dd2feafceedf0aedeaed3e141_720w.jpg)
+
+- 以下表格，列示了常用特殊字符在不同模式下的应用。其中，黄色高亮表示为无需转义的特殊字符：
+
+  ![](https://pic4.zhimg.com/80/v2-c0a945e07ad16064adb6a33db9a59dc3_720w.jpg)
+
+- 请注意，”`\{\}`“也可简写为”`\{}`“；”`\[]`“必须仅保留开头的反斜杠；”`\(\)`“则需要完整的两个反斜杠。（感谢[liouperng](https://www.zhihu.com/people/liouperng)指教）
+
+###### magic默认模式
+
+- 建议始终将['magic'](file:///E:/Anthony_GitHub/learn-vim/options.html#'magic')选项保持在缺省值。
+
+- 建议在模式之前，通过使用“\v“或“\M“等前缀，来明确激活特定模式。
+
+- 如果希望始终使用Very magic模式，那么请在vimrc中定义以下键盘映射，将在查找和替换时自动激活very magic模式：
+
+  ```vim
+  nnoremap / /\v
+  vnoremap / /\v
+  cnoremap %s/ %s/\v
+  nnoremap :g/ :g/\v
+  ```
+
+###### 模式转换
+
+- 你甚至可以在表达式当中改变模式。例如以下命令，开头使用very magic模式，之后转换为magic模式，整体表达式将匹配“foo(bar)”：
+
+  ```vim
+  /\vfoo\(\mbar)
+  ```
+
+- 当然，非常不建议采用此种易引起误解的表达式写法。我们可以将其改写为very nomagic模式：
+
+  ```vim
+  /\Vfoo(bar)
+  ```
+
+- 请使用以下命令，查看更多帮助信息：
+
+  ```vim
+  :help /magic
+  ```
+
+##### magic模式
+
+###### magic选项
+
+- 默认情况下，magic选项是打开的。如果关闭了此选项，那么正则表达式中的许多的特殊字符就失去了他们神奇的魔力，而变成了普通的字符。
+
+- 我们使用以下只有一行的文件来测试magic选项。先用:%print命令将整个文件打印出来:
+
+  ```text
+  Test aaa* aa* a*
+  ```
+
+- 然后设置magic选项并且执行替换命令。其中，*p*标记打印出所改变的行:
+
+  ```vim
+  :set magic
+  :1 substitute /a*/b/p
+  ```
+
+- 命令的执行结果如下:
+
+  ```text
+  bTest aaa* aa* a*
+  ```
+
+- 命令只是改变了一行开始的部分。为什么会将Test变为b*Test呢？这是因为*可以匹配0次或是多次，而Test正是以0个a开始的。为什么只是替换了一次呢？这是因为:substitute命令中是改变第一个出现的地方，如果我们使用*g*标记就可以替换全部的匹配项了。如果希望g标记成为默认设置，那么可以使用:set gdefault命令。
+
+- 我们撤销刚才的命令并再次执行替换命令:
+
+  ```vim
+  :undo
+  :1 substitute /a*/b/pg
+  ```
+
+- 命令的执行结果如下:
+
+  ```text
+  bTest b*b b*b b*
+  ```
+
+- 如果在关闭magic选项的情况下再次执行命令:
+
+  ```vim
+  :undo
+  :set nomagic
+  :1 substitute /a*/b/pg
+  ```
+
+- 命令的执行结果如下:
+
+  ```text
+  Test aab ab b
+  ```
+
+###### smagic命令
+
+- :smagic命令，可以在执行替换命令时强制转换*等特殊字符的意义。例如我们执行以下命令:
+
+  ```vim
+  :smagic /a*/b/pg
+  ```
+
+- 命令的执行结果如下:
+
+  ```text
+  bTest b*b b*b b*
+  ```
+
+- :snomagic命令，强行关掉magic选项:
+
+  ```vim
+  :snomagic /a*/b/pg
+  ```
+
+- 命令的执行结果如下:
+
+  ```text
+  Test aab ab b
+  ```
+
+##### very magic模式
+
+- 假设希望在以下CSS代码中，查找所有颜色代码：
+
+  ```text
+  body { color: #3c3c3c; }
+  strong { color: #000; }
+  ```
+
+- 在默认的Magic模式下，使用以下命令可以匹配以“#”开头的十六进制色彩值：
+
+  ```vim
+  /#\([0-9a-fA-F]\{6}\|[0-9a-fA-F]\{3}\)
+  ```
+
+- 在以上正则表达式中，`[]`用于指定可选字符范围，但不需要转义；`()`用于构建[捕获组(Groups)](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim-Regex-Groups.html)，需要使用`\`进行转义；`{}`用于指定重复次数，但只需要对开括号进行转义，与之对应的闭括号可以不用转义。由此可见，在Magic模式下，需要对很多特殊符号进行转义，而且转义的方式也欠缺一致性。在编写较复杂的正则表达式时，显得琐碎且难以阅读。
+
+- 使用`\v`激活Very Magic模式，则可简化为更加友好的正则表达式：
+
+  ```vim
+  /\v#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})
+  ```
+
+![](https://pic1.zhimg.com/80/v2-1aef1e9ad96e727f58ab665768936578_720w.jpg)
+
+###### very magic
+
+- 在模式开头使用`\v`激活very magic模式，其后除下划线（_）、大小写字母以及数字之外的所有字符都具有特殊含义。这样可以避免重复输入大量的转义符（\），也使得正则表达式更加清晰易读。
+
+- 假设在以下文本中，希望搜索单引号包围的内容：
+
+  ```text
+  you have mocking some 'bird of the year'.
+  you have mocking some 'the year's bird'.
+  ```
+
+- 在默认的magic模式下，使用以下模式来处理单词中的单引号：
+
+  ```vim
+  /'\('\w\|[^']\)\+'
+  ```
+
+![](https://pic1.zhimg.com/80/v2-6355f5a8adf4b6790c332d24d098e268_720w.jpg)
+
+- 如果使用VeryMagic模式，命令则可以简化为：
+
+  ```vim
+  /\v'('\w|[^'])+'
+  ```
+
+- 假设在以下文本中，希望仅保留英文字母：
+
+  ```text
+  12345aaa678
+  12345bbb678
+  12345ccc678
+  ```
+
+- 使用以下替换命令，可以删除其中的数字部分：
+
+  ```vim
+  :%s/\d\{5\}\(\D\+\)\d\{3\}/\1/
+  aaa
+  bbb
+  ccc
+  ```
+
+- 如果使用VeryMagic模式，命令则可以简化为：
+
+  ```vim
+  :%s/\v\d{5}(\D+)\d{3}/\1/
+  ```
+
+- 由此可见，Very magic模式为使用正则表达式提供了极大的便利。但很不幸，我们并无法将Very magic模式设置为默认选项。潜在的替代方案是，定义以下键盘映射，在查找时自动激活very magic模式：
+
+  ```vim
+  :noremap / /\v
+  ```
+
+- 使用以下命令，可以查看更多帮助信息：
+
+  ```vim
+  :help /\v
+  ```
+
+###### very no magic
+
+- 在模式开头使用`\V`指定Very No Magic模式，将使得其后模式中只有反斜杠（\）具有特殊意义，而`()`、`[]`、`|`、`.`、`*`和`?`等等元字符都将被视为普通文本。
+
+- 如果您需要精确的完整匹配，并且查找字符串中包含特殊字符时，那么可以使用Very nomagic模式。
+
+- 例如以下命令，将查找字符串“Fun.test(*args)” 。也就是说，其中的“*”和“.”都被视为普通字符，而不需要进行转义：
+
+  ```vim
+  /\VFun.test(*args)
+  ```
+
+- 假设需要在以下文本中查找“a.k.a”：
+
+  ```text
+  The N key searches backward
+  the \v pattern switch (a.k.a. very magic)
+  ```
+
+- 因为“.”在正则表达式中具有特殊含义，它将会匹配任意字符，所以使用以下命令，将会同时匹配单词“backward”中的部分字符：
+
+  ```vim
+  /a.k.a
+  ```
+
+![](https://pic4.zhimg.com/80/v2-cc7f6d37319da1136a00f47a7da128ab_720w.jpg)
+
+- 当然，可以使用转义符来消除“.”的特殊含义：
+
+  ```vim
+  /a\.k\.a\.
+  ```
+
+- 而更简单的方法是，在命令中使用`\V`激活very nomagic模式：
+
+  ```vim
+  /\Va.k.a.
+  ```
+
+- 此时，将只会按字面匹配到单词“a.k.a”：
+
+  ![](https://pic3.zhimg.com/80/v2-8633d2f88c48bc7930eebb6776222e86_720w.jpg)
+
+- 使用以下命令，可以查看更多帮助信息：
+
+  ```vim
+  :help /\V
+  ```
+
+- 我们可以将 very magic 和 very nomagic 模式，理解为对于正则表达式的两种极端处理方式。需要构建较复杂正则表达式时，推荐使用very magic模式；需要按字面意义查找文本时，则推荐使用very nomagic模式。
+
+##### 正则表达式实例
+
+###### 匹配空格
+
+- 删除所有行首的空格：
+
+  ```vim
+  :%s/^□□*\(.*\)/\1/
+  ```
+
+  其中，使用^□□*查找行首的一个或多个空格；而\(.*\)将行中的其它内容捕获为组；在替换部分使用\1来恢复捕获组。
+
+- 删除所有行尾的空格：
+
+  ```vim
+  :%s/\(.*\)□□*$/\1/
+  ```
+
+  - 其中，使用□□*$查找行尾的一个或多个空格；而\(.*\)将行中的其它内容捕获为组；在替换部分使用\1来恢复捕获组。
+
+- 将多个空格替换为一个空格：
+
+  ```vim
+  :%s/□□*/□/g
+  ```
+
+  - 其中，第一个□代表一个实际的空格，而□*则会匹配零个或多个空格。
+
+- 将冒号或句点之后的多个空格，替换为一个空格：
+
+  ```vim
+  :%s/\([:.]\)□□*/\1□/g
+  ```
+
+  - 其中，方括号内的的特殊字符（比如.）并不需要转义。
+
+- 请在实际使用以上命令时，将其中的“□”替换为“ ”。
+
+###### 匹配换行
+
+- 如果想要查找的内容之中包含换行符，那么可以使用"\n"通配符。执行以下命令，将匹配以"the"结尾的行，和以"word"开头的下一行：
+
+  ```vim
+  /the\nword
+  ```
+
+- 如果希望同时匹配包含换行，以及不包含换行（但包含一个空格）的"the word"，那么可以使用"\_s"匹配空格或换行：
+
+  ```vim
+  /the\_sword
+  ```
+
+- 如果希望同时匹配包含多个空格以及换行的"the word"，那么可以使用"+"通配符来匹配一次或多次：
+
+  ```vim
+  /the\_s\+word
+  ```
+
+![](https://pic2.zhimg.com/80/v2-131e63513559a6b544b28ba54df1cb19_720w.png)
+
+###### 匹配单复数
+
+- 将单数单词，替换为复数：
+
+  ```vim
+  :%s/^Note[□:s]*/Notes:□/g
+  ```
+
+  - 其中，"Note[□:s]"将匹配"Note□","Notes", 和"Note:"；而星号则会匹配零个后缀，即"Note"。
+
+![](https://pic1.zhimg.com/80/v2-e5c05d1f89f2c686c316984b79a537e0_720w.jpg)
+
+###### 匹配包围的字符串
+
+- 匹配引号包围的字符串（包含换行）：
+
+  ```vim
+  "\_[^"]*"
+  ```
+
+- 匹配特定单词包围的字符串（包含换行）：
+
+  ```vim
+  \(we\).*\1
+  ```
+
+  - 其中，"\(we\)"将指定单词捕获为组，然后使用"\1"反向引用捕获组，以定义字符串的边界。
+
+  ![](https://pic2.zhimg.com/80/v2-30fb38245a51c0457b5c0c28c756c809_720w.jpg)
+
+###### 匹配章节编号
+
+- 删除下图中黄色高亮区域，即行头以点分隔的章节号：
+
+  ```vim
+  :%s/^[1-9][0-9]*\.[1-9][0-9.]*□//
+  ```
+
+![](https://pic4.zhimg.com/80/v2-547711014812fd8c944384cfacf1ccc7_720w.jpg)
+
+- 其中，模式末尾的"[0-9.]*"可以继续匹配更多层级的章节号。
+
+###### 匹配序列号
+
+- 匹配最少3个字符，最多16个字符，由字母和数字组成的用户名：
+
+  ```vim
+  ^[a-zA-Z0-9_-]{3,16}$
+  ```
+
+- 查找类似“1MGU103”的序列号。即由1个数字，3个大写字符和3个数字组成的字符串。可以使用以下几种不同的模式：
+
+  ```
+  [0-9][A-Z]{3}[0-9]{3}
+  
+  \d\u{3}\d{3}
+  
+  \d\u\u\u\d\d\d
+  
+  [[:digit:]][[:upper:]]{3}[[:digit:]]{3}
+  ```
+
+  - 其中：
+    - "[0-9]"，"\d"，"[:digit:]"，均可匹配数字；
+    - "[A-Z]"，"\u"，"[:upper:]"，均可匹配大写字母；
+    - "{3}"，用于精确匹配3次。
+    - 请注意，以上表达式均采用[Very Magic](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vim-Regex-VeryMagic.html)模式。
+
+###### 匹配IP地址
+
+- 匹配IPv4网络地址。即从"0.0.0.0"到"999.999.999.999"范围内的，以点分割的四段数字。
+
+  ```vim
+  /\v([0-9]{1,3}[\.]){3}[0-9]{1,3}
+  ```
+
+  - 但是以上命令，并不会判断数字串是否是一个有效的IP地址。比如"256.60.124.136"也会被匹配。但有效的IP地址中，每段数字均应为"0-255"。
+
+- 匹配有效的IP地址。
+
+  ```vim
+  /\v(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)
+  ```
+
+![](https://pic1.zhimg.com/80/v2-7451495aea16c54c40413a32c7edb478_720w.png)
+
+- 以上表达式分为四段重复的[捕获组](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vim-Regex-Groups.html)，每组数字的范围如下图所示：
+
+  ![](https://pic2.zhimg.com/80/v2-1d32a1faf088aed8b568bac8157ded91_720w.jpg)
