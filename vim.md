@@ -2155,7 +2155,7 @@
 
 ###### 跳转标记
 
-- 创建标记后，可以使用'a命令，移动到指定标记行的首个非空字符。这里'是单引号。也可以使用`a命令，移到所做标记时的光标位置。这里`是反引号（也就是数字键1左边的那一个）。
+- 创建标记后，可以使用'a命令，移动到指定标记行的首个非空字符。这里'是单引号。也可以使用`a命令，移到所做标记时的光标位置。这里是反引号（也就是数字键1左边的那一个）。
 
 ###### 列示标记
 
@@ -4924,3 +4924,81 @@
 - 以上表达式分为四段重复的[捕获组](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vim-Regex-Groups.html)，每组数字的范围如下图所示：
 
   ![](https://pic2.zhimg.com/80/v2-1d32a1faf088aed8b568bac8157ded91_720w.jpg)
+
+### 脚本
+
+##### 脚本语句
+
+###### 判断
+
+- if语句的一般形式如下：
+
+  ```vim
+  if condition
+  	code_to_execute_if_condition_is_met
+  endif
+  ```
+
+  - 只有条件(condition)为真时，if语句块内的语句才会被执行。
+
+- if语句还可以包含else子句：
+
+  ```vim
+  if condition
+  	code_to_execute_if_condition_is_true
+  else
+  	code_to_execute_if_condition_is_NOT_true
+  endif
+  ```
+
+- if-else结构还可以进行多重判断
+
+  ```vim
+  if condition1
+  	code_to_execute_if_condition1_is_true
+  else
+  	if condition2
+  		code_to_execute_if_condition2_is_true
+  	endif
+  endif
+  ```
+
+###### 循环
+
+- while命令开始一个循环，并由endwhile命令结束。在条件为真是，循环中的代码将被重复执行。
+
+  ```vim
+  let x=0
+  while x <= 5
+  	echo "x is now " x
+  	let x+=1
+  endwhile
+  ```
+
+  - continue命令回到程序的顶部开始执行下一次循环；而break命令则立刻退出循环。
+
+    ```vim
+    while conter < 30
+    	if skip_flag
+    		continue
+    	endif
+    	if exit_flag
+    		break
+    	endif
+    endwhile
+    ```
+
+###### execute
+
+- :execute将执行参数中指定的命令：
+
+  ```vim
+  :let command = " echo 'Hello world!'"
+  :execute command
+  
+  Hello world
+  ```
+
+##### 变量
+
+- &放在选项前面，表示选项变量

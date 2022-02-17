@@ -7422,7 +7422,7 @@ http://c.biancheng.net/linux_tutorial/
   Hello,World!
   ```
 
-  - say.py 文件中使用了原本在 hello.py 文件中才有的 say() 函数，相对于 day.py 来说，hello.py 就是一个自定义的模块（有关自定义模块，后续章节会做详细讲解），我们只需要将 hellp.py 模块导入到 say.py 文件中，就可以直接在 say.py 文件中使用模块中的资源。
+  - say.py 文件中使用了原本在 hello.py 文件中才有的 say() 函数，相对于 say.py 来说，hello.py 就是一个自定义的模块（有关自定义模块，后续章节会做详细讲解），我们只需要将 hellp.py 模块导入到 say.py 文件中，就可以直接在 say.py 文件中使用模块中的资源。
   - 与此同时，当调用模块中的 say() 函数时，使用的语法格式为“模块名.函数”，这是因为，相对于 say.py 文件，hello.py 文件中的代码自成一个命名空间，因此在调用其他模块中的函数时，需要明确指明函数的出处，否则 Python 解释器将会报错。
 
 ###### import导入模块
