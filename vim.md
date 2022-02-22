@@ -130,7 +130,7 @@
 ###### 大小写敏感
 
 - 在默认情况下，Vim是大小写敏感的。如果文件中包含有include,INCLUDE,Include等多个字符串。当我们使用命令/include来查找时，则只有include字符会被高亮显示。但是如果我们使用:set ignorecase命令，设置为忽略大小写，则include,INCLUDE,Include所有字符串都会被高亮显示。当然我们也可以使用:set noignorecase命令，重新设置为大小写敏感。
-- 在设置了ignorecase选项后，我们查找字符串word，则会同时匹配word、Word，WORD等；如果我们查找字符串WORD，匹配的结里也是一样的。但是如果设置了:set ignorecase和:set smartcase两项之后，就会执行不同的匹配模式：如果输入的是小写字符，那么就会匹配各种可能的组合，与ignorecase选项的情况相同；但是如果在输入中有一个大写字符，那么这时就会转变为精确查找，与noignorecase选项的情况相同。
+- 在设置了ignorecase选项后，我们查找字符串word，则会同时匹配word、Word，WORD等；如果我们查找字符串WORD，匹配的结果也是一样的。但是如果设置了:set ignorecase和:set smartcase两项之后，就会执行不同的匹配模式：如果输入的是小写字符，那么就会匹配各种可能的组合，与ignorecase选项的情况相同；但是如果在输入中有一个大写字符，那么这时就会转变为精确查找，与noignorecase选项的情况相同。
 - 我们也可以在执行查找命令时，使用修饰符来控制大小写敏感。在命令中加入修饰符\C将执行大小写敏感的查找，比如?\Cword命令就只匹配单词word。而在命令中加入修饰符\c则执行忽略大小写的查找。
 
 ###### 设置查找选项
