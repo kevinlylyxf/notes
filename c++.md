@@ -1579,16 +1579,118 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 ##### 友员函数和友员类
 
 - 在 [C++](http://c.biancheng.net/cplus/) 中，一个类中可以有 public、protected、private 三种属性的成员，通过对象可以访问 public 成员，只有本类中的函数可以访问本类的 private 成员。现在，我们来介绍一种例外情况——友元（friend）。借助友元（friend），可以使得其他类中的成员函数以及全局范围内的函数访问当前类的 private 成员。
+
 - 在当前类以外定义的、不属于当前类的函数也可以在类中声明，但要在前面加 friend 关键字，这样就构成了友元函数。友元函数可以是不属于任何类的非成员函数，也可以是其他类的成员函数。
+
 - 友元函数可以访问当前类中的所有成员，包括 public、protected、private 属性的。
+
 - 友元函数不同于类的成员函数，在友元函数中不能直接访问类的成员，必须要借助对象
+
 - 成员函数在调用时会隐式地增加 this [指针](http://c.biancheng.net/c/80/)，指向调用它的对象，从而使用该对象的成员；而 show() 是非成员函数，没有 this 指针，编译器不知道使用哪个对象的成员，要想明确这一点，就必须通过参数传递对象（可以直接传递对象，也可以传递对象指针或对象引用），并在访问成员时指明对象。
--  一个函数可以被多个类声明为友元函数，这样就可以访问多个类中的 private 成员。
+
+- 一个函数可以被多个类声明为友元函数，这样就可以访问多个类中的 private 成员。
+
 - 不仅可以将一个函数声明为一个类的“朋友”，还可以将整个类声明为另一个类的“朋友”，这就是友元类。友元类中的所有成员函数都是另外一个类的友元函数。
+
 - 关于友元，有两点需要说明：
   - 友元的关系是单向的而不是双向的。如果声明了类 B 是类 A 的友元类，不等于类 A 是类 B 的友元类，类 A 中的成员函数不能访问类 B 中的 private 成员。
   - 友元的关系不能传递。如果类 B 是类 A 的友元类，类 C 是类 B 的友元类，不等于类 C 是类 A 的友元类。
+  - 如果将类的封装比喻成一堵墙的话，那么友元机制就像墙上了开了一个门，那些得 到允许的类或函数允许通过这个门访问一般的类或者函数无法访问的私有属性和方法。友元机制使类的封装性得到消弱，所以使用时一定要慎重。
+
 - 除非有必要，一般不建议把整个类声明为友元类，而只将某些成员函数声明为友元函数，这样更安全一些。
+
+- 在C++中，我们使用类对数据进行了隐藏和封装，类的数据成员一般都定义为私有成员，成员函数一般都定义为公有的，以此提供类与外界的通讯接口。但是，有时需要定义一些函数，这些函数不是类的一部分，但又需要频繁地访问类的数据成员，这时可以将这些函数定义为该函数的友元函数。除了友元函数外，还有友元类，两者统称为友元。友元的作用是提高了程序的运行效率（即减少了类型检查和安全性检查等都需要时间开销），但它破坏了类的封装性和隐藏性，使得非成员函数可以访问类的私有成员。
+
+- 友元能够使得普通函数直接访问类的保护数据，避免了类成员函数的频繁调用，可以节约处理器开销，提高程序的效率，但所矛盾的是，即使是最大限度大保护，同样也破坏了类的封装特性，这即是友元的缺点，在现在cpu速度越来越快的今天我们并不推荐使用它，但它作为c++一个必要的知识点，一个完整的组成部分，我们还是需要讨论一下的。 在类里声明一个普通函数，在前面加上friend修饰，那么这个函数就成了该类的友元，可以访问该类的一切成员。
+
+- 友元函数实例
+
+  ```c
+  #include <iostream> 
+  using namespace std; 
+  class Internet 
+  { 
+  public: 
+  Internet(char *name,char *address) // 改为：internet(const char *name , const char *address)
+  { 
+  strcpy(Internet::name,name); 
+  strcpy(Internet::address,address); 
+  } 
+  friend void ShowN(Internet &obj);   //友元函数的声明 
+  public: 　　　　　　　　　　　　　// 改为：private
+  char name[20]; 
+  char address[20]; 
+  }; 
+  void ShowN(Internet &obj)        //类外普通函数定义，访问a对象的保护成员name,不能写成,void Internet::ShowN(Internet &obj) 
+  { 
+  cout<<obj.name<<endl;          //可访问internet类中的成员
+  } 
+  void main() 
+  { 
+  Internet a("谷歌","http://www.google.cn/";); 
+  ShowN(a); 
+  cin.get(); 
+  } 
+  ```
+
+  - 使用友元可以访问类里面的private成员，在使用友元的情况下直接访问不用通过小函数来访问，这样大大降低了封装性，但是为使用带来了便利。
+  - 我们使用友元访问的是实例化后的类，访问实例化后的成员变量，所以友元函数的形参是具体的某一个类，在使用前我们要实例化一个，然后传到友元函数里面来使用，访问类里面的各种成员变量。
+
+- 友元类的实例，分别定义一个类A和类B ，各有一个私有整数成员变量通过构造函数初始化；类A有一个成员函数Show(B &b)用来打印A和B的私有成员变量，请分别通过友元函数和友元类来实现此功能。使用友元类 和 友元函数实现：
+
+  ```c++
+  #include <iostream>
+   
+  using namespace std;
+  class B;
+  class A;
+  void Show( A& , B& );
+   
+  class B
+  {
+  private:
+  int tt;
+  friend class A;
+  friend void Show( A& , B& );
+   
+  public:
+  B( int temp = 100):tt ( temp ){}
+   
+  };
+   
+  class A
+  {
+  private:
+  int value;
+  friend void Show( A& , B& );
+   
+  public:
+  A(int temp = 200 ):value ( temp ){}
+   
+  void Show( B &b )
+  {
+    cout << value << endl;
+    cout << b.tt << endl; 
+  }
+  };
+   
+  void Show( A& a, B& b )
+  {
+  cout << a.value << endl;
+  cout << b .tt << endl;
+  }
+   
+  int main()
+  {
+  A a;
+  B b;
+  a.Show( b );
+  Show( a, b );
+        return 0;
+  }
+  ```
+
+  
 
 #### 引用
 
