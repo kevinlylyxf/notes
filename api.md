@@ -1372,7 +1372,121 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
     close(fd1);
     ```
 
-    
+
+##### stat、lstat、fstat
+
+- ```
+  stat, fstat, lstat, fstatat - get file status
+  #include <sys/types.h>
+  #include <sys/stat.h>
+  #include <unistd.h>
+  
+  int stat(const char *pathname, struct stat *buf);
+  int fstat(int fd, struct stat *buf);
+  int lstat(const char *pathname, struct stat *buf);
+  
+  stat()用来将参数file_name 所指的文件状态, 复制到参数buf 所指的结构中。
+  stat 和lstat的区别：当文件是一个符号链接时，lstat返回的是该符号链接本身的信息；而stat返回的是该链接指向的文件的信息。
+  ```
+
+- ```
+  struct stat {
+                 dev_t     st_dev;         /* ID of device containing file */
+                 ino_t     st_ino;         /* inode number */
+                 mode_t    st_mode;        /* file type and mode */
+                 nlink_t   st_nlink;       /* number of hard links */
+                 uid_t     st_uid;         /* user ID of owner */
+                 gid_t     st_gid;         /* group ID of owner */
+                 dev_t     st_rdev;        /* device ID (if special file) */
+                 off_t     st_size;        /* total size, in bytes */
+                 blksize_t st_blksize;     /* blocksize for filesystem I/O */
+                 blkcnt_t  st_blocks;      /* number of 512B blocks allocated */
+  
+                 /* Since Linux 2.6, the kernel supports nanosecond
+                    precision for the following timestamp fields.
+                    For the details before Linux 2.6, see NOTES. */
+  
+                 struct timespec st_atim;  /* time of last access */
+                 struct timespec st_mtim;  /* time of last modification */
+                 struct timespec st_ctim;  /* time of last status change */
+  
+             #define st_atime st_atim.tv_sec      /* Backward compatibility */
+             #define st_mtime st_mtim.tv_sec
+             #define st_ctime st_ctim.tv_sec
+             };
+             
+  The following mask values are defined for the file type of the st_mode field:
+  
+             S_IFMT     0170000   bit mask for the file type bit field
+  
+             S_IFSOCK   0140000   socket
+             S_IFLNK    0120000   symbolic link
+             S_IFREG    0100000   regular file
+             S_IFBLK    0060000   block device
+             S_IFDIR    0040000   directory
+             S_IFCHR    0020000   character device
+             S_IFIFO    0010000   FIFO
+             
+  Because tests of the above form are common, additional macros are defined by POSIX to allow the test of the file type in st_mode to be written more
+         concisely:
+  
+             S_ISREG(m)  is it a regular file?
+  
+             S_ISDIR(m)  directory?
+  
+             S_ISCHR(m)  character device?
+  
+             S_ISBLK(m)  block device?
+  
+             S_ISFIFO(m) FIFO (named pipe)?
+  
+             S_ISLNK(m)  symbolic link?  (Not in POSIX.1-1996.)
+  
+             S_ISSOCK(m) socket?  (Not in POSIX.1-1996.)
+  
+  ```
+
+- stat64系列函数包括stat64,fstat64,lstat64。由于stat系列函数只能获取32位长度的文件的属性，所以[glibc](https://so.csdn.net/so/search?q=glibc&spm=1001.2101.3001.7020)又提供了stat64系列函数，用于获取64位长度的文件的属性。其中结构体也是stat64
+
+  ```
+  使用stat64需要添加宏定义_GNU_SOURCE
+  
+  #ifndef _GNU_SOURCE
+  	#define _GNU_SOURCE
+  #endif
+  
+  int isFolder(const char *path)
+  {
+  	struct stat64 st;
+   
+  	if(0 != stat64(path, &st)){
+  		return 0;
+  	}
+  	
+  	if(S_ISDIR(st.st_mode)){
+  		return 1;
+  	}else{
+  		return 0;
+  	}
+  }
+  
+  int isLink(const char *path)
+  {
+  	struct stat64 st;
+  	
+  	if(0 != lstat64(path, &st)){
+  		return 0;
+  	}
+  	
+  	if(S_ISLNK(st.st_mode)){
+  		return 1;
+  	}else{
+  		return 0;
+  	}
+  }
+  ```
+
+  
 
 ###### 多次打开同一文件与O_APPEND
 
@@ -1395,6 +1509,8 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
   - O_APPEND为什么能够将分别写改为接续写？关键的核心的东西是文件指针。分别写的内部原理就是2个fd拥有不同的文件指针，并且彼此只考虑自己的位移。但是O_APPEND标志可以让write和read函数内部多做一件事情，就是移动自己的文件指针的同时也去把别人的文件指针同时移动。（也就是说即使加了O_APPEND，fd1和fd2还是各自拥有一个独立的文件指针，但是这两个文件指针关联起来了，一个动了会通知另一个跟着动）
   - O_APPEND对文件指针的影响，对文件的读写是原子的。
   - 原子操作的含义是：整个操作一旦开始是不会被打断的，必须直到操作结束其他代码才能得以调度运行，这就叫原子操作。每种操作系统中都有一些机制来实现原子操作，以保证那些需要原子操作的任务可以运行。
+
+
 
 ### IO模型
 
