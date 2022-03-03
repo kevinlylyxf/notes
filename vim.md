@@ -58,6 +58,46 @@
   - %表示当前文件名 ，所以是将当前文件以16进制显示，！是运行外部命令，如果！是第一个字符，例如!xxd %，此时会出现Press ENTER or type command to continue，这时按键之后就会退出显示，但是如果以%开头就表示将当前文件内容替换为执行命令的结果，例如%!ls，这个命令将当前文件的内容改为ls系统命令输出的结果，此时文件内容被改变
   - %前面只能是%，如果我们知道文件名，输入文件名就会出错例如123.md!xdd，此时会报错没有这个命令，所以只能是%
 
+- vim下组合键一般是不区分大小写的，因为区分大小写这个按键会很麻烦，一般在map快捷键是是不分区大小写的例如
+
+  ```
+  inoremap <C-A> <ESC>A
+  ```
+
+  - 此时按ctrl在按小写的a同样是这个按键映射的功能
+
+  - 但是组合键外面是区分大小写的，例如<LEADER>开始的按键后面在尖括号外面的字母按键是区分大小写的，还有例如
+
+    ```
+    CTRL-W T           move current window to a new tab page
+    CTRL-W t           go to top window
+    ```
+
+    - 其中组合键中的w是不区分大小写的，怎么写都行，组合键外面的是区分的
+
+- mkview命令就是保存当前的窗口，到时候可以使用loadview恢复出来，这样就保存了当前窗口，mkview命令可以带一个文件名，这样就保存到这个文件中，然后loadview恢复的时候就从这个文件里面恢复，如果没有文件名，默认就保存到~/.vim/view中
+
+  - mkview" 的输出包含如下项目: 
+
+  - 该窗口使用的参数列表。如果使用全局参数列表，它被重设为全局列表的值。参数列   表的索引位置也被保存。 
+
+  - 窗口编辑的文件。如果没有文件，该窗口被清空。 
+
+  - 如果 ['viewoptions'](https://yianwillis.github.io/vimcdoc/doc/options.html#'viewoptions') 包含 "options" 或者 "localoptions" 的话，恢复映射、缩写   和局部于窗口的选项。一般，只有局部于当前缓冲区和窗口的选项值被恢复。如果视   图作为会话的一部分被保存，并且 ['sessionoptions'](https://yianwillis.github.io/vimcdoc/doc/options.html#'sessionoptions') 包含 "options" 的话，局部选   项的全局值也被保存。 
+
+  - 如果使用手动折叠并且 ['viewoptions'](https://yianwillis.github.io/vimcdoc/doc/options.html#'viewoptions') 包含 "folds" 的话，恢复折叠。也恢复手动   打开和关闭的折叠。 
+
+  - 滚动条的位置和文件中的光标位置。如果有关闭的折叠，这不能很好的工作。 
+
+  - 本地的当前目录，如果和全局当前目录不同且 ['viewoptions'](https://yianwillis.github.io/vimcdoc/doc/options.html#'viewoptions') 包含 "curdir" 的话。
+
+    ```
+    set viewoptions=set viewoptions=cursor,folds,slash,unix
+    代表mkview保存的视图恢复的时候的状态，以及一些具体的设置
+    ```
+
+    
+
 ### 基础知识
 
 ##### 基本编辑
@@ -3670,7 +3710,7 @@
   :set foldmethod=manual
   ```
 
-- 在可视化模式下，使用以下命令，将折叠选中的文本：
+- 在可视化模式下，使用以下命令，将折叠选中的文本：手工折叠要先在可视模式下选中然后折叠
 
   ```text
   zf
@@ -3718,6 +3758,10 @@
   :set foldlevel=1
   ```
 
+- 在缩进折叠的情况下，可以设置foldignore来缩进
+
+  - 仅在 'foldmethod' 为 "indent" 时使用。 以 'foldignore' 中的字符开头的行将从周围的行中获取其折叠级别。 在检查此字符之前会跳过空格。默认的“#”适用于 C 程序。
+  
 - 可以使用以下命令，查看关于缩进折叠的帮助信息：
 
   ```text
