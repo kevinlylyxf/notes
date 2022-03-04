@@ -1,11 +1,40 @@
 ### 基础理解
 
-- 复制粘贴
+##### vim插件结构目录
 
-   - vim下每一个删除剪切操作都会把东西放到剪切板上去
-   - y0,复制到当前行开始 y$,复制到当前行结束 yfn，复制到第一个n结束的位置
-   - vim中的剪切板和系统的剪切板是隔开的，如果需要共享，可以设置set clipboard=unnamedplus,此时所有的剪切操作都会到系统剪切板里，如果只是想偶尔复制东西到系统剪切板，"+y可以将选中的东西复制到系统剪切板，如果没有在可视模式下选中，那就是光标所在的当前行。
-   - vim中的寄存器有很多，类型各不相同，有未命名寄存器，数字寄存器存储的是c、d、x删除的文本，其不断被覆盖，文本寄存器a-z存储的是复制的文本，用"ay来复制到a，"Ay,就是将新复制的添加到a寄存器后面，b类似，要用B添加。粘贴时要指明寄存器"ap
+- 在vim安装目录下同样有一套插件目录，在自己配置的环境下同样有一套，作用是一样的，一般安装目录/usr/share/vim，自己配置的目录在~/.vim
+
+###### autoload
+
+- 随着对Vim的深度定制，Vim初始化时所加载的插件越来越多，其中可能包含一些大型插件，导致Vim初始化非常耗时。autoload的目的就是尽量延迟插件的加载。
+
+- 引用autoload目录下的插件时，需要提供文件路径、文件名和函数名，并用’#’连接它们。例如，autoload目录下有一个插件名为bar.vim，bar.vim中定义了函数test()，要通过如下方式调用test函数：
+
+   ```text
+   :call bar#test()
+   ```
+
+- 如果，bar.vim插件存放在autoload子目录foo下，也就是autoload/foo/bar.vim，为了调用test()函数，需要如下使用如下格式：
+
+   ```text
+   :call foo#bar#test()
+   ```
+
+- 引用autoload目录下插件中的全局变量使用同样的方式。
+
+- vim-plug下载到autoload目录下，call plug#begin()    call plug#end()就是这个道理
+
+###### plugin
+
+- 此目录下的插件在启动vim时会自动加载
+- vim-plug默认的插件安装目录~/.vim/plugged，并不是plugin，vim-plug插件会自己控制插件的安装与加载，并不需要vim本身去加载了，所以换了一个文件，有vim-plug来控制加载。
+
+##### 复制粘贴
+
+- vim下每一个删除剪切操作都会把东西放到剪切板上去
+- y0,复制到当前行开始 y$,复制到当前行结束 yfn，复制到第一个n结束的位置
+- vim中的剪切板和系统的剪切板是隔开的，如果需要共享，可以设置set clipboard=unnamedplus,此时所有的剪切操作都会到系统剪切板里，如果只是想偶尔复制东西到系统剪切板，"+y可以将选中的东西复制到系统剪切板，如果没有在可视模式下选中，那就是光标所在的当前行。
+- vim中的寄存器有很多，类型各不相同，有未命名寄存器，数字寄存器存储的是c、d、x删除的文本，其不断被覆盖，文本寄存器a-z存储的是复制的文本，用"ay来复制到a，"Ay,就是将新复制的添加到a寄存器后面，b类似，要用B添加。粘贴时要指明寄存器"ap
 
 - ```
    autocmd TermOpen term://* startinsert
@@ -45,6 +74,29 @@
   set wrapscan启用循环查找
   ```
 
+- ```
+  set colorcolumn=100
+  'colorcolumn' 是一个逗号分隔的屏幕列列表，用 ColorColumn |hl-ColorColumn| 突出显示。 用于对齐文本。 会使屏幕重绘变慢。屏幕列可以是一个绝对数字，也可以是一个以'+'或'-'开头的数字，它可以添加到'textwidth'中或从'textwidth'中减去。
+  :set cc=+1  " highlight column after 'textwidth'
+  :set cc=+1,+2,+3  " highlight three columns after 'textwidth'
+  :hi ColorColumn ctermbg=lightgrey guibg=lightgrey
+  When 'textwidth' is zero then the items with '-' and '+' are not used.A maximum of 256 columns are highlighted.
+  这个设置是让100列以后的文档特殊显示提示你超过你设置的列的大小了
+  ```
+  
+- ```
+  set virtualedit=block
+  虚拟编辑意味着可以将光标定位在没有实际字符的地方。 这可以在制表符的中间或超出行尾。 对于在可视模式下选择矩形和编辑表格很有用。
+  Virtual editing means that the cursor can be positioned where there is no actual character.  This can be halfway into a tab or beyond the end of the line.  Useful for selecting a rectangle in Visual mode and editing a table.
+  A comma separated list of these words:
+  	block       Allow virtual editing in Visual block mode.
+  	insert      Allow virtual editing in Insert mode.
+  	all         Allow virtual editing in all modes.
+  	onemore     Allow the cursor to move just past the end of the line
+  	none        When used as the local value, do not allow virtual
+  ```
+
+  
 
 ### 一些使用
 
@@ -5217,6 +5269,23 @@
 
 ## Tmux
 
+#### Tmux作用
+
+- 命令行的典型使用方式是，打开一个终端窗口（terminal window，以下简称"窗口"），在里面输入命令。用户与计算机的这种临时的交互，称为一次"会话"（session） 。
+- 会话的一个重要特点是，窗口与其中启动的进程是[连在一起](https://www.ruanyifeng.com/blog/2016/02/linux-daemon.html)的。打开窗口，会话开始；关闭窗口，会话结束，会话内部的进程也会随之终止，不管有没有运行完。
+- 一个典型的例子就是，[SSH 登录](https://www.ruanyifeng.com/blog/2011/12/ssh_remote_login.html)远程计算机，打开一个远程窗口执行命令。这时，网络突然断线，再次登录的时候，是找不回上一次执行的命令的。因为上一次 SSH 会话已经终止了，里面的进程也随之消失了。
+- 为了解决这个问题，会话与窗口可以"解绑"：窗口关闭时，会话并不终止，而是继续运行，等到以后需要的时候，再让会话"绑定"其他窗口。
+- Tmux 就是会话与窗口的"解绑"工具，将它们彻底分离。
+  - 它允许在单个窗口中，同时访问多个会话。这对于同时运行多个命令行程序很有用。
+  - 它可以让新窗口"接入"已经存在的会话。
+  - 它允许每个会话有多个连接窗口，因此可以多人实时共享会话。
+  - 它还支持窗口任意的垂直和水平拆分。
+- Tmux 的最简操作流程
+  - 新建会话`tmux new -s my_session`。
+  - 在 Tmux 窗口运行所需的程序。
+  - 按下快捷键`Ctrl+b d`将会话分离。
+  - 下次使用时，重新连接到会话`tmux attach-session -t my_session`。
+
 #### 常用操作指令及快捷键
 
 ```
@@ -5224,7 +5293,7 @@
 指  令：tmux ls
 快捷键：Ctrl+b s
 
-# 新建tmux窗口
+# 新建tmux窗口，重新命名，不用默认的名字
 指  令：tmux new -s <session-name>
 
 # 重命名会话
