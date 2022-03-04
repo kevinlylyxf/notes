@@ -5409,3 +5409,120 @@ $ tmux source-file ~/.tmux.conf
 set -g mouse on 
 ```
 
+## curl
+
+- curl 是常用的命令行工具，用来请求 Web 服务器。它的名字就是客户端（client）的 URL 工具的意思。
+- Curl 是一个常用的命令行数据传输工具，可以方便的从命令行创建网络请求。它支持众多协议，支持如 HTTP, HTTPS, FTP, FTPS, SFTP, IMAP, SMTP, POP3 等等协议。Curl 提供了很多强大的功能，我们可以利用它来进行 HTTP 请求、上传/下载文件等，且支持 Cookie、用户密码验证、代理隧道、限速等。
+- Curl 用于上传和下载指定 URL 的数据，它是一个客户端(client-side)工具，一个客户端 URL 工具。这也是它的名字的由来。
+
+##### 发起一个http get请求
+
+- 当使用 curl 命令直接访问一个网址时，将发起一个 GET 请求，然后返回响应体。
+
+  ```bash
+  curl https://www.liuxing.io
+  ```
+
+  - 在命令行运行以上命令将返回，所访问[liuxing.io](https://www.liuxing.io/)页面源码。
+  - 如果不加任何参数，将输出到标准输出即屏幕上。
+
+##### 重定向跟踪
+
+- `-L`参数会让 HTTP 请求跟随服务器的重定向。curl 默认不跟随重定向。
+
+- 当请求一个 URL 返回 301 之类的重定向响应时，可以使用 `-L` 参数来自动重定向跟踪响应头里的`Location`时。
+
+  ```bash
+  curl liuxing.io
+  ```
+
+- 在该网址设置了 301 重定向到 https 版 [https://www.liuxing.io](https://www.liuxing.io/) 。上面的示例不会自动完成重定向追踪。但我们可以使用以下命令：
+
+  ```bash
+  curl -L liuxing.io
+  ```
+
+##### 储存响应到文件
+
+- `-o`参数将服务器的回应保存成文件，等同于`wget`命令。
+
+- `-O`参数将服务器回应保存成文件，并将 URL 的最后部分当作文件名。
+
+- 使用`-o`参数指定文件名，可以将响应结果储存到文件中
+
+  ```bash
+  curl -o liuxing.io.html https://www.liuxing.io
+  ```
+
+- 还可以使用`-O`参数直接用服务器上的文件名保存在本地
+
+  ```javascript
+  curl -O https://www.liuxing.io/index.html
+  ```
+
+  - 此时文件名是index.html
+
+##### 静默输出
+
+- -f选项说明，（HTTP）在服务器错误时静默失败（根本没有输出）。 这主要是为了使脚本等能够更好地处理失败的尝试。 在正常情况下，当 HTTP 服务器无法传递文档时，它会返回一个 HTML 文档来说明这一点（通常还描述了原因等等）。 该标志将阻止 curl 输出并返回错误 22。
+- -f (--fail) 表示在服务器错误时，阻止一个返回的表示错误原因的 html 页面，而由 curl 命令返回一个错误码 22 来提示错误，-f选项阻止了上面说的HTML文档
+
+##### 安静模式
+
+- ```
+  -S, --show-error
+                When used with -s, --silent, it makes curl show an error message
+                if it fails.
+  -s, --silent
+                Silent or quiet mode. Don't show progress meter or error messages.
+                Makes Curl mute. It will still output the data you ask for,
+                potentially even to the terminal/stdout unless you redirect it.
+  
+                Use -S, --show-error in addition to this option to disable
+                progress meter but still show error messages.
+  ```
+
+  - -s选项是静音模式，只是不输出进度表和错误信息，正常的信息还是会显示的
+  - -S选项是显示错误信息，这连个选项放在一起就是不显示进度表，但是显示错误信息。
+
+#### raw.githubusercontent.com
+
+- raw.githubusercontent.com是github用来存储用户上传的文件的服务地址，避免和主服务器抢占资源，两者除了最开始的位置，后面的文件夹路径都一样。
+
+- 一般情况下我们访问的是github.com，但是这个网站上有一些其他的东西，网页的显示也是代码，所以这个页面上有一些其他的东西我们是不需要的，例如我们用curl下载时，如果这个页面有其他的东西，我们只是想要其中的代码，然后用-o选项保存成文件的时候就会出错。github网站给我们提供了解决办法，在github仓库中，我们点进去一个git仓库，例如vim-plug，此时我们会看到里面有一个plug.vim的源码，点进去我们看到和页面没什么区别，此时如果我们用curl下载就会有许多没用的东西，所以我们点击raw按钮，此时页面就会改变为没有其他的东西，只有我们想要的代码，此时上方的导航栏上面就是raw.githubusercontent.com，此时我们可以用curl下载，然后用-o选项保存到文件中，这样这个文件只有我们想要的代码。
+
+  ```
+  curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+      https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+      
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ```
+
+#### DNS污染和DNS劫持
+
+##### DNS污染
+
+- **网域服务器缓存污染**（DNS cache pollution），又称**域名服务器缓存投毒**（DNS cache poisoning），是指一些刻意制造或无意中制造出来的[域名服务器](https://baike.baidu.com/item/域名服务器/9705133)[数据包](https://baike.baidu.com/item/数据包)，把域名指往不正确的IP地址。一般来说，在[互联网](https://baike.baidu.com/item/互联网)上都有可信赖的网域服务器，但为减低网络上的流量压力，一般的域名服务器都会把从上游的域名服务器获得的解析记录暂存起来，待下次有其他机器要求解析域名时，可以立即提供服务。一旦有关网域的局域域名服务器的缓存受到污染，就会把网域内的计算机导引往错误的服务器或服务器的网址。
+- 某些国家或地区出于某些目的为了防止某网站被访问，而且其又掌握部分国际DNS根[目录服务器](https://baike.baidu.com/item/目录服务器/7750458)或镜像，也会利用此方法进行屏蔽。
+- 原理解析
+  - 我们假设A为用户端，B为DNS服务器，C为A到B链路的一个节点的网络设备（路由器，交换机，网关等等）。然后我们来模拟一次被污染的DNS请求过程。
+  - A向B构建[UDP](https://baike.baidu.com/item/UDP)连接，然后，A向B发送查询请求，查询请求内容通常是：“A baidu.com”，这一个数据包经过节点设备C继续前往[DNS服务器](https://baike.baidu.com/item/DNS服务器/8079460)B；然而在这个过程中，C通过对数据包进行特征分析（远程通讯端口为DNS服务器端口，激发内容关键字检查，检查特定的域名如上述的“baidu.com",以及查询的记录类型"[A记录](https://baike.baidu.com/item/A记录)"），从而立刻返回一个错误的解析结果（如返回了"A 123.123.123.123"），众所周知，作为链路上的一个节点，C机器的这个结果必定会先于真正的域名服务器的返回结果到达用户机器A，而我们的DNS解析机制有一个重要的原则，就是只认第一，因此C节点所返回的查询结果就被A机器当作了最终返回结果，用于构建链接。
+- 防除方法
+  - 对于DNS污染，一般除了使用[代理服务器](https://baike.baidu.com/item/代理服务器)和[VPN](https://baike.baidu.com/item/VPN)之类的软件之外，并没有什么其它办法。但是利用我们对DNS污染的了解，还是可以做到不用代理服务器和VPN之类的软件就能解决DNS污染的问题，从而在不使用代理服务器或VPN的情况下访问原本访问不了的一些网站。当然这无法解决所有问题，当一些无法访问的网站本身并不是由DNS污染问题导致的时候，还是需要使用代理服务器或VPN才能访问的
+  - DNS污染的数据包并不是在网络数据包经过的[路由器](https://baike.baidu.com/item/路由器)上，而是在其旁路产生的。所以DNS污染并无法阻止正确的DNS解析结果返回，但由于旁路产生的数据包发回的速度较国外[DNS服务器](https://baike.baidu.com/item/DNS服务器)发回的快，操作系统认为第一个收到的数据包就是返回结果，从而忽略其后收到的数据包，从而使得DNS污染得逞。而某些国家的DNS污染在一段时期内的污染IP却是固定不变的，从而可以忽略返回结果是这些IP地址的数据包，直接解决DNS污染的问题。
+  - 修改[hosts](https://baike.baidu.com/item/hosts)文件，操作系统中[Hosts文件](https://baike.baidu.com/item/Hosts文件)的权限优先级高于DNS服务器，操作系统在访问某个域名时，会先检测HOSTS文件，然后再查询DNS服务器。可以在[hosts](https://baike.baidu.com/item/hosts)添加受到污染的DNS地址来解决DNS污染和DNS劫持。
+
+##### DNS劫持
+
+- [域名](https://baike.baidu.com/item/域名)劫持就是在劫持的网络范围内拦截[域名解析](https://baike.baidu.com/item/域名解析)的请求，分析请求的域名，把审查范围以外的请求放行，否则直接返回假的IP地址或者什么也不做使得请求失去响应，其效果就是对特定的网址不能访问或访问的是假网址。
+- 由于[域名](https://baike.baidu.com/item/域名)劫持往往只能在特定的被劫持的网络范围内进行，所以在此范围外的[域名服务器](https://baike.baidu.com/item/域名服务器)(DNS)能够返回正常的IP地址，高级用户可以在网络设置把DNS指向这些正常的[域名服务器](https://baike.baidu.com/item/域名服务器)以实现对网址的正常访问。所以[域名](https://baike.baidu.com/item/域名)劫持通常相伴的措施——封锁正常[DNS](https://baike.baidu.com/item/DNS)的[IP](https://baike.baidu.com/item/IP)。域名劫持只是在其可控制的范围内先解析域名然后在处理，如果这个解析过程就不经过他，我们就可以避过域名劫持，例如国内的DNS服务器被墙，我们可以设置国外的DNS，这样就避过了域名劫持
+- 如果知道该[域名](https://baike.baidu.com/item/域名)的真实IP地址，则可以直接用此IP代替域名后进行访问。比如访问谷歌 ，可以把访问改为http://216.239.53.99/ ，从而绕开[域名](https://baike.baidu.com/item/域名)劫持。
+
+#### curl通过翻墙不能访问github的原因
+
+- 正常情况下被墙的一些地址被DNS污染了之后，我们只要通过代理服务器翻墙之类的操作即可以正常访问，因为其加密了我们访问的信息，所以GFW就不知道我们真正要访问那个地址，所以都放过了，我们就能访问了。但是curl不能正常访问我们需要的网址。其不能访问说明其没有走代理，即使在设置了代理的情况下
+- 目前来看因为curl能自己配置代理，我们可以使用-x选项或者--proxy选项来设置curl的代理来访问。
+- 因为hosts文件能解决，目前就是直接修改host文件来让curl访问被DNS污染的网址。
+- 现在找到具体原因了，curl通过设置代理不能访问被墙的地址
+  - curl走的是http和https协议，但是我们的代理设置的为socks5，这样就导致代理设置的不对
+  - 即使是设置http_proxy和https_proxy，但是mac下在系统设置里面是有具体的端口设置的，不能都设置为1089，因为这两个代理的端口设置的为8889，所以导致前面测试不成功，后来设置这两个环境变量的代理，测试成功了，即使没有hosts文件修改的情况下。证明了代理是正确的可用的，只是前面设置的不对导致的。查看网络可以用netstat查看端口
