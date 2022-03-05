@@ -148,7 +148,30 @@
     代表mkview保存的视图恢复的时候的状态，以及一些具体的设置
     ```
 
+
+##### verbose作用
+
+- verbose在命令行中使用可以检测某个快捷键有没有被映射过，以保证快捷键的唯一映射，否则容易出错
+
+- 在coc.nim配置文件中有这么一句
+
+  ```
+  verbose imap <tab>
+  
+  i  <Tab>       * pumvisible() ? "\<C-N>" : <SNR>2_check_back_space() ? "\<Tab>" : coc#refresh()
+          Last set from ~/.vim/vimrc line 251
+  ```
+
+  - 此语句可以检测插入模式下tab键有没有被映射，输入这个语句，屏幕上会打印出来vimrc中映射的信息，可以看到在第几行映射的，还可以看到在那个模式下映射的。以此可以看到是不是唯一的映射，还可以看到映射的是什么命令
+
+  - 例如自己定义的快捷键，可以检测
+
+    ```
+    verbose noremap ti
     
+     ti          * :tabe<CR>
+            Last set from ~/.vim/vimrc line 215
+    ```
 
 ### 基础知识
 
@@ -5521,8 +5544,23 @@ set -g mouse on
 #### curl通过翻墙不能访问github的原因
 
 - 正常情况下被墙的一些地址被DNS污染了之后，我们只要通过代理服务器翻墙之类的操作即可以正常访问，因为其加密了我们访问的信息，所以GFW就不知道我们真正要访问那个地址，所以都放过了，我们就能访问了。但是curl不能正常访问我们需要的网址。其不能访问说明其没有走代理，即使在设置了代理的情况下
+
 - 目前来看因为curl能自己配置代理，我们可以使用-x选项或者--proxy选项来设置curl的代理来访问。
+
 - 因为hosts文件能解决，目前就是直接修改host文件来让curl访问被DNS污染的网址。
+
 - 现在找到具体原因了，curl通过设置代理不能访问被墙的地址
-  - curl走的是http和https协议，但是我们的代理设置的为socks5，这样就导致代理设置的不对
+
+  - curl走的是http和https协议，但是我们的代理设置的为socks5，这样就导致代理设置的不对，所以我们设置协议为http协议就可以了。
   - 即使是设置http_proxy和https_proxy，但是mac下在系统设置里面是有具体的端口设置的，不能都设置为1089，因为这两个代理的端口设置的为8889，所以导致前面测试不成功，后来设置这两个环境变量的代理，测试成功了，即使没有hosts文件修改的情况下。证明了代理是正确的可用的，只是前面设置的不对导致的。查看网络可以用netstat查看端口
+
+- 在代理设置时，前面的表示协议类型
+
+  ```
+  export http_proxy=http://127.0.0.1:8889
+  export https_proxy=http://127.0.0.1:8889
+  export all_proxy=socks5://127.0.0.1:1089
+  ```
+
+  - 其中http和socks5代表协议类型，其也可以使用https协议，看自己设置，但是一般设置为http和socks
+  - 其中all_proxy表示所有的流量都走协议的意思，所以我们也可以设置export all_proxy=http://127.0.0.1:8889，这样curl就能访问被墙的地址了，但是http协议本地监听端口是8889，要注意端口的对应。如果不设置all_proxy我们可以设置https_proxy和http_proxy来走http代理
