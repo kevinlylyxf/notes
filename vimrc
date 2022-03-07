@@ -39,7 +39,7 @@ set hidden
 set expandtab
 set tabstop=4
 set shiftwidth=4
-set softtabstop=2
+set softtabstop=4
 set autoindent
 set list
 set listchars=tab:\|\ ,trail:▫
@@ -68,7 +68,7 @@ set shortmess+=c
 set completeopt=longest,noinsert,menuone,noselect,preview
 set ttyfast "should make scrolling faster
 set lazyredraw "same as above
-set visualbell
+"set visualbell
 silent !mkdir -p $HOME/.vim/tmp/backup
 silent !mkdir -p $HOME/.vim/tmp/undo
 if has('persistent_undo')
@@ -77,7 +77,7 @@ if has('persistent_undo')
 endif
 set backupdir=$HOME/.vim/tmp/backup,.
 set directory=$HOME/.vim/tmp/backup,.
-set colorcolumn=100
+" set colorcolumn=100
 set updatetime=100
 set virtualedit=block
 
@@ -239,4 +239,18 @@ call plug#begin('~/.vim/plugged')
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 call plug#end()
+
+
+" ===
+" === coc.nvim
+" ===
+let g:coc_global_extensions = [
+        \ 'coc-marketplace',
+        \ 'coc-json',
+        \ 'coc-vimlsp']
+inoremap <silent><expr> <TAB>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<TAB>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
