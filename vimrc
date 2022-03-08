@@ -25,6 +25,7 @@ autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
 "set clipboard=unnamedplus
 let &t_ut=''
 set autochdir
+set encoding=utf-8
 
 
 " ===
@@ -93,7 +94,7 @@ tnoremap <C-N> <C-\><C-N>
 " ===
 " === fold Behaviors
 " ===
-nnoremap <space> za
+nnoremap <LEADER>/ za
 
 
 " ===
@@ -137,13 +138,13 @@ vnoremap <LEADER>tt :s/    /\t/g
 noremap <silent> \v v$h
 
 " <LEADER>K/J keys for 5 times k/j (faster navigation)
-noremap <silent><LEADER>K 5k
-noremap <silent><LEADER>J 5j
+noremap <silent><LEADER>u 5k
+noremap <silent><LEADER>n 5j
 
-" N key: go to the start of the line
-noremap <silent><LEADER>H 0
-" I key: go to the end of the line
-noremap <silent><LEADER>L $
+" go to the start of the line
+noremap <silent><LEADER>, 0
+" go to the end of the line
+noremap <silent><LEADER>. $
 
 " Faster in-line navigation
 noremap <silent><LEADER>w 5w
@@ -238,6 +239,13 @@ call plug#begin('~/.vim/plugged')
 " Auto Complete
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
+" fzf
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-surround'
+Plug 'preservim/nerdtree'
+Plug 'airblade/vim-gitgutter'
 call plug#end()
 
 
@@ -247,10 +255,81 @@ call plug#end()
 let g:coc_global_extensions = [
         \ 'coc-marketplace',
         \ 'coc-json',
-        \ 'coc-vimlsp']
+        \ 'coc-vimlsp'
+		\ 'coc-clangd']
+		
+" <tab>
 inoremap <silent><expr> <TAB>
       \ pumvisible() ? "\<C-n>" :
       \ <SID>check_back_space() ? "\<TAB>" :
       \ coc#refresh()
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+" Use <c-space> to trigger completion.
+inoremap <silent><expr> <c-space> coc#refresh()
+
+" Make <CR> auto-select the first completion item and notify coc.nvim to
+" format on enter, <cr> could be remapped by other vim plugin
+inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+" GoTo code navigation.
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Use `<LEADER>-` and `<LEADER>=` to navigate diagnostics
+" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
+nmap <silent> <LEADER>- <Plug>(coc-diagnostic-prev)
+nmap <silent> <LEADER>= <Plug>(coc-diagnostic-next)
+
+" Use <LEADER>H to show documentation in preview window.
+nnoremap <silent> <LEADER>H :call <SID>show_documentation()<CR>
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  elseif (coc#rpc#ready())
+    call CocActionAsync('doHover')
+  else
+    execute '!' . &keywordprg . " " . expand('<cword>')
+  endif
+endfunction
+
+" Highlight the symbol and its references when holding the cursor.
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+" Symbol renaming.
+nmap <leader>rn <Plug>(coc-rename)
+
+" Formatting selected code.
+xmap <leader>f  <Plug>(coc-format-selected)
+nmap <leader>f  <Plug>(coc-format-selected)
+augroup mygroup
+  autocmd!
+  " Setup formatexpr specified filetype(s).
+  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  " Update signature help on jump placeholder.
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+augroup end
+
+" Applying codeAction to the selected region.
+" Example: `<leader>aap` for current paragraph
+xmap <leader>a  <Plug>(coc-codeaction-selected)
+nmap <leader>a  <Plug>(coc-codeaction-selected)
+
+" Map function and class text objects
+" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
+xmap if <Plug>(coc-funcobj-i)
+omap if <Plug>(coc-funcobj-i)
+xmap af <Plug>(coc-funcobj-a)
+omap af <Plug>(coc-funcobj-a)
+xmap ic <Plug>(coc-classobj-i)
+omap ic <Plug>(coc-classobj-i)
+xmap ac <Plug>(coc-classobj-a)
+omap ac <Plug>(coc-classobj-a)
