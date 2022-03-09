@@ -7,15 +7,15 @@
 " ===
 " Install vim-plug if not found
 if empty(glob('~/.vim/autoload/plug.vim'))
-	silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-		\ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+    silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+        \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
 " Run PlugInstall if there are missing plugins
 autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
-	\| PlugInstall --sync | source $MYVIMRC
-	\| endif
+    \| PlugInstall --sync | source $MYVIMRC
+    \| endif
 
 
 
@@ -73,8 +73,8 @@ set lazyredraw "same as above
 silent !mkdir -p $HOME/.vim/tmp/backup
 silent !mkdir -p $HOME/.vim/tmp/undo
 if has('persistent_undo')
-	set undofile
-	set undodir=$HOME/.vim/tmp/undo,.
+    set undofile
+    set undodir=$HOME/.vim/tmp/undo,.
 endif
 set backupdir=$HOME/.vim/tmp/backup,.
 set directory=$HOME/.vim/tmp/backup,.
@@ -94,7 +94,7 @@ tnoremap <C-N> <C-\><C-N>
 " ===
 " === fold Behaviors
 " ===
-nnoremap <LEADER>/ za
+nnoremap <LEADER><LEADER> za
 
 
 " ===
@@ -138,8 +138,8 @@ vnoremap <LEADER>tt :s/    /\t/g
 noremap <silent> \v v$h
 
 " <LEADER>K/J keys for 5 times k/j (faster navigation)
-noremap <silent><LEADER>u 5k
-noremap <silent><LEADER>n 5j
+noremap <silent> K 5k
+noremap <silent> J 5j
 
 " go to the start of the line
 noremap <silent><LEADER>, 0
@@ -255,7 +255,7 @@ call plug#end()
 let g:coc_global_extensions = [
         \ 'coc-marketplace',
         \ 'coc-json',
-        \ 'coc-vimlsp'
+        \ 'coc-vimlsp',
 		\ 'coc-clangd']
 		
 " <tab>
@@ -271,7 +271,7 @@ function! s:check_back_space() abort
 endfunction
 
 " Use <c-space> to trigger completion.
-inoremap <silent><expr> <c-space> coc#refresh()
+inoremap <silent><expr> <c-o> coc#refresh()
 
 " Make <CR> auto-select the first completion item and notify coc.nvim to
 " format on enter, <cr> could be remapped by other vim plugin
