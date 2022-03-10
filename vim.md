@@ -5290,6 +5290,66 @@
 
 - &放在选项前面，表示选项变量
 
+## vim插件
+
+#### Vim-surround
+
+- 插件对(), [], {}, <>, ‘’, “”，标记语言xml html 有效，其中xml中前后的标记用t代表
+
+- Vim插件surround的命令在vim不同操作模式下有不同的操作命令
+
+  - 命令行模式
+
+    ```
+    ds                删除一个配对符号 (delete a surrounding)
+    cs                更改一个配对符号 (change a surrounding)
+    ys                增加一个配对符号 (yank a surrounding)
+    yS                在新的行增加一个配对符号并进行缩进
+    yss               在整行增加一个配对符号
+    ySs/Yss     		  在整行增加一个配对符号，配对符号单独成行并进行缩进
+    ```
+
+    - 在vim光标所在位置配合vim动作(motion, 如w向后一个单词)或文本对象(如iw)，可以实现非常强大的功能。
+
+      例如 `ysW(` 会在当前光标所在单词的周围增加一个**()**配对，
+
+    - ```
+      'Hello world!'
+      Now press cs'<q> to change it to
+      <q>Hello world!</q>
+      
+      <q>Hello world!</q>
+      To go full circle, press cst" to get
+      "Hello world!"
+      其中的xml标签用t表示，增加标签和修改标签直接写上标签名字即可，不用写t，标签是第一个操作符用写，修改成的不用写
+      ```
+
+      
+
+  - 可视化模式
+
+    ```
+    s                增加一个配对符号
+    S               在整行增加一个配对符号，配对符号单独成行并进行缩进
+    ```
+
+    - Finally, let's try out visual mode. Press a capital V (for linewise visual mode) followed by `S<p class="important">`.
+
+      ```
+      <p class="important">
+        <em>Hello</em> world!
+      </p>
+      ```
+
+  - 插入模式
+
+    ```
+    Ctrl + s                    增加一个配对符号
+    Ctrl +s, Ctrl +s        在整行增加一个配对符号，配对符号单独成行并进行缩进
+    ```
+
+    
+
 ## Tmux
 
 #### Tmux作用
