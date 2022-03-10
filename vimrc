@@ -252,11 +252,27 @@ Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'airblade/vim-gitgutter'
 
+
+" Editor Enhancement
 Plug 'tpope/vim-surround'
+
+" Status line & navigation
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 Plug 'preservim/nerdtree'
+
+" colors
+Plug 'tomasr/molokai'
+
+" For general writing
+Plug 'junegunn/goyo.vim'
 
 call plug#end()
 
+" ===
+" === colors
+" ===
+colorscheme molokai
 
 " ===
 " === coc.nvim
@@ -342,3 +358,17 @@ xmap ic <Plug>(coc-classobj-i)
 omap ic <Plug>(coc-classobj-i)
 xmap ac <Plug>(coc-classobj-a)
 omap ac <Plug>(coc-classobj-a)
+
+
+
+" ===
+" === nerdtree
+" ===
+nnoremap tt :NERDTreeToggle<CR>
+
+
+
+" ===
+" === goyo
+" ===
+nnoremap gy :Goyo<CR>
