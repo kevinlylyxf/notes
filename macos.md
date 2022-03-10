@@ -1,3 +1,7 @@
+### 统一使用
+
+- 在虚拟机中安装manjaro使用v2ray时总是错误的原因，应该看一下时间对不对，v2ray有严格的时间限制，时间不对的情况下就不能正确使用了，所以要调整时间，调整完时间就能正确使用了目前来看。
+
 ### Mac
 
 - 环境变量也是一个变量，而且是全局变量，除非在shell中写入export，只在当前shell中有用，重新启用shell就没用了，如果想一直起作用，只需要写入配置文件中，但是在linux环境下有好几个可以设置环境变量，有的是对所有用户有作用，有的是对当前用户有作用。在需要的时候可以使用它，变量的使用就是为了方便，可以将很长的一串当做一个我们定义的变量，然后通过变量来使用，简化了使用。例如PATH，我们执行程序的路径去里面寻找，然后去执行。环境变量的使用USER=lyl，HOME=/home/lyl，如果在程序中使用到当前用户，直接调用USER环境变量就可以了。环境变量的命名在程序中一般都有体现，要不然找不到。例如PATH是程序运行时的路径，在程序中要调用PATH才行，不能调用其他的环境变量，也不在其他的环境变量中寻找。
@@ -39,4 +43,64 @@ alias unproxy='unset all_proxy && unset http_proxy && unset https_proxy'
   yay -S libxcrypt-compat
   ```
 
-  
+- manjaro删除不需要的依赖包的命令
+
+  ```
+  sudo pacman -R $(pacman -Qdtq)
+  ```
+
+  - -Q查询的时候会将版本号都输出出来，这样删除的时候就会出错，因为其将版本号也当作软件包的一部分。-q选项可以将版本号这些信息都隐藏掉。这样就能正确删除。-d是列出所有作为依赖关系安装的软件包 [过滤器]。-t选项列出不被任何软件包(可选)要求的软件包(-tt 忽略可选依赖)，这样就是不被依赖的被选出来了。-d选出依赖包-t选出不被依赖的选项包。
+
+- manjaro软件源，pacman -Sy命令更新源时会输出
+
+  ```
+  core 已经是最新版本
+  extra 已经是最新版本
+  community 已经是最新版本
+  multilib 已经是最新版本
+  ```
+
+  - 说明manjaro配置了四个软件源，我们也可以配置自己的软件源，配置文件/etc/pacman.conf
+
+    ```
+    [core]
+    SigLevel = PackageRequired
+    Include = /etc/pacman.d/mirrorlist
+    
+    [extra]
+    SigLevel = PackageRequired
+    Include = /etc/pacman.d/mirrorlist
+    
+    [community]
+    SigLevel = PackageRequired
+    Include = /etc/pacman.d/mirrorlist
+    
+    # If you want to run 32 bit applications on your x86_64 system,
+    # enable the multilib repositories as required here.
+    
+    [multilib]
+    SigLevel = PackageRequired
+    Include = /etc/pacman.d/mirrorlist
+    
+    ```
+
+    - 这是系统配置的软件源
+
+  - 配置自己的软件源
+
+    ```
+    Arch Linux 中文社区仓库 是由 Arch Linux 中文社区驱动的非官方用户仓库。包含中文用户常用软件、工具、字体/美化包等。
+    [archlinuxcn]
+    Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
+    
+    我们也可以配置多个源，然后放在文件里面，用Include表示那个文件，将所有的源都加进来
+    [archlinuxcn]
+    SigLevel = Optional TrustedOnly
+    Include = /etc/pacman.d/archlinuxcn
+    其中archlinuxcn是一个文件，里面是各种服务器，一行一行的由Server带头显示
+    Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
+    Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
+    Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
+    ```
+
+    

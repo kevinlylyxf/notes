@@ -5564,3 +5564,68 @@ set -g mouse on
 
   - 其中http和socks5代表协议类型，其也可以使用https协议，看自己设置，但是一般设置为http和socks
   - 其中all_proxy表示所有的流量都走协议的意思，所以我们也可以设置export all_proxy=http://127.0.0.1:8889，这样curl就能访问被墙的地址了，但是http协议本地监听端口是8889，要注意端口的对应。如果不设置all_proxy我们可以设置https_proxy和http_proxy来走http代理
+
+## fzf
+
+##### fzf官方文档说明
+
+```
+fzf project consists of the following components:
+
+	-fzf executable
+	-fzf-tmux script for launching fzf in a tmux pane
+	-Shell extensions
+		Key bindings (CTRL-T, CTRL-R, and ALT-C) (bash, zsh, fish)
+        Fuzzy auto-completion (bash, zsh)
+	-Vim/Neovim plugin
+You can download fzf executable alone if you don't need the extra stuff.
+Key bindings (CTRL-T / CTRL-R / ALT-C) and fuzzy auto-completion may not be enabled by default.
+```
+
+- 上面说明fzf安装完有四个组件，可以单独下载fzf可执行文件进行使用，用各种包管理器安装fzf后，上面四个组件都下载了，但是只有最基本的功能，其中Fuzzy auto-completion (bash, zsh)和key bindings没有进行扩展使用，所以我们需要进行额外的操作来让这两个功能正常。这样在bash或zsh中就能在命令行中使用`cd ** <tab> 或者 vim **<tab>`来使用。
+
+##### mac
+
+```
+brew install fzf
+
+# To install useful key bindings and fuzzy completion:
+$(brew --prefix)/opt/fzf/install
+```
+
+- mac下安装完进行扩展功能的正常使用时，因为brew安装完，在安装包里面有个install脚本，我们直接执行这个脚本就可以了
+
+##### linux
+
+- linux可以使用各种包管理器进行安装例如`pacman -S fzf`，此时只是下载了基本的fzf可执行程序，需要我们进行额外的扩展进行操作。
+
+- 使用命令查找fzf安装在哪里
+
+  ```
+  whereis fzf
+  fzf: /usr/bin/fzf /usr/share/fzf /usr/share/man/man1/fzf.1.gz
+  ```
+
+- 可以看到fzf安装在`/usr/share/fzf`，里面有四个文件
+
+  ```
+  completion.bash  
+  completion.zsh  
+  key-bindings.bash  
+  key-bindings.zsh
+  ```
+
+  - 分别为zsh和bash的键扩展和模糊补全功能
+
+- 我们只需要将我们需要的放到相应的配置文件中就可以，例如将key-bindings.bash 和key-bindings.zsh放到.zshrc中就可以
+
+  ```
+  if [[ -e /usr/share/fzf ]]; then
+      source /usr/share/fzf/completion.zsh
+      source /usr/share/fzf/key-bindings.zsh
+  fi
+  ```
+
+  - 相当于我们在启动zsh的时候就自动执行了这两个脚本，这样我们就可以使用扩展功能和键扩展了。
+
+- 上面这是手动安装的，最简单的方法是下载git仓库，里面有一个安装脚本，直接执行就可以了，但是最后source的是仓库里面那两个文件，导致这个仓库不能删除，我们可以简单修改一下，然年将这个仓库删除

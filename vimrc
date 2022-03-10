@@ -147,8 +147,8 @@ noremap <silent><LEADER>, 0
 noremap <silent><LEADER>. $
 
 " Faster in-line navigation
-noremap <silent><LEADER>w 5w
-noremap <silent><LEADER>b 5b
+noremap <silent> W 5w
+noremap <silent> B 5b
 
 
 " ===
@@ -191,8 +191,8 @@ noremap sh :set nosplitright<CR>:vsplit<CR>:set splitright<CR>
 noremap sl :set splitright<CR>:vsplit<CR>
 
 " Resize splits with arrow keys
-noremap <LEADER><up> :res +5<CR>
-noremap <LEADER><down> :res -5<CR>
+noremap <LEADER><up> :res -5<CR>
+noremap <LEADER><down> :res +5<CR>
 noremap <LEADER><left> :vertical resize-5<CR>
 noremap <LEADER><right> :vertical resize+5<CR>
 
@@ -224,6 +224,11 @@ noremap tmn :+tabmove<CR>
 
 
 " ===
+" === Buffers management
+" ===
+noremap <LEADER>d :bdelete %
+
+" ===
 " === Other useful stuff
 " ===
 " find and replace
@@ -242,10 +247,14 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 " fzf
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+
+" git
 Plug 'tpope/vim-fugitive'
+Plug 'airblade/vim-gitgutter'
+
 Plug 'tpope/vim-surround'
 Plug 'preservim/nerdtree'
-Plug 'airblade/vim-gitgutter'
+
 call plug#end()
 
 
