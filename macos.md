@@ -51,7 +51,9 @@ alias unproxy='unset all_proxy && unset http_proxy && unset https_proxy'
 
   - -Q查询的时候会将版本号都输出出来，这样删除的时候就会出错，因为其将版本号也当作软件包的一部分。-q选项可以将版本号这些信息都隐藏掉。这样就能正确删除。-d是列出所有作为依赖关系安装的软件包 [过滤器]。-t选项列出不被任何软件包(可选)要求的软件包(-tt 忽略可选依赖)，这样就是不被依赖的被选出来了。-d选出依赖包-t选出不被依赖的选项包。
 
-- manjaro软件源，pacman -Sy命令更新源时会输出
+##### manjaro软件源
+
+- pacman -Sy命令更新源时会输出
 
   ```
   core 已经是最新版本
@@ -103,4 +105,23 @@ alias unproxy='unset all_proxy && unset http_proxy && unset https_proxy'
     Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
     ```
 
-    
+
+##### fcitx
+
+- 安装输入法
+
+  ```
+  sudo pacman -S fcitx-im
+  sudo pacman -S fcitx-configtool
+  sudo pacman -S fcitx-sogoupinyin
+  ```
+
+- 添加输入法配置文件 `sudo vim ~/.xprofile`
+
+  ```
+  export GTK_IM_MODULE=fcitx
+  export QT_IM_MODULE=fcitx
+  export XMODIFIERS="@im=fcitx"
+  ```
+
+- 打开配置页面进行配置输入法
