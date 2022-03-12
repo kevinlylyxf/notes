@@ -64,6 +64,7 @@ set splitbelow
 set showmode
 set showcmd
 set wildmenu
+set wildmode=list:longest,full
 set ignorecase
 set smartcase
 set shortmess+=c
@@ -279,7 +280,7 @@ Plug 'tomasr/molokai'
 Plug 'junegunn/goyo.vim'
 
 " comment
-Plug 'scrooloose/nerdcommenter'
+Plug 'preservim/nerdcommenter'
 
 call plug#end()
 
