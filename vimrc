@@ -34,6 +34,7 @@ set encoding=utf-8
 set exrc
 set secure
 set number
+set hlsearch
 set relativenumber
 set cursorline
 set hidden
