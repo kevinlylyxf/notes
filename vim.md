@@ -3971,9 +3971,11 @@
 
 - 本节将介绍如何使用Ctag工具，来扫描代码库并生成包含关键词索引的标签文件（Tags File）。基于标签文件，Vim可以在标签之间快速跳转，并可以针对[标签自动补全](https://link.zhihu.com/?target=http%3A//yyq123.github.io/learn-vim/learn-vi-80-02-AutoCompletion-Detail.html%23compl-tag)。
 
-- [Ctags](https://link.zhihu.com/?target=http%3A//ctags.sourceforge.net/)是一个开源的命令行工具，用于从代码中索引标签（比如method, class, function等）并生成tags文件。
+- ctags是一个开源的命令行工具，用于从代码中索引标签（比如method, class, function等）并生成tags文件。
 
 - 目前Ctags支持包括Vim在内的41种[编程语言](https://link.zhihu.com/?target=http%3A//ctags.sourceforge.net/languages.html)。对于vimscript脚本，其中的functions, class, commands, menu, map, variable等语法，将会作为关键字被索引至tags文件中。
+
+- 目前ctags主要分为三个，分别为ctags、Exuberant-ctags、universal-ctags，其中ctags支持的语言较少，Exuberant-ctags支持的语言较多但是已经不维护了，universal-ctags且还在维护，我们主要使用universal-ctags
 
 - 您可以在操作系统的命令行中使用以下命令，来验证ctags是否安装成功，并获得相关的帮助信息：
 
@@ -3991,6 +3993,12 @@
 
   ```vim
   :!ctags -R .
+  ```
+
+- 将tags文件生成为其他名字
+
+  ```
+  ctags -R -f .tags
   ```
 
 ###### 标签文件
@@ -4121,6 +4129,20 @@
     tag 1 of n or more
     ```
 
+- 在标签的显示匹配中有以下几种，以表示是在本文件中还是全局的文件中，代表不同的匹配
+
+  ```
+  When there are multiple matches for a tag, this priority is used:
+  1. "FSC"  A full matching static tag for the current file.
+  2. "F C"  A full matching global tag for the current file.
+  3. "F  "  A full matching global tag for another file.
+  4. "FS "  A full matching static tag for another file.
+  5. " SC"  An ignore-case matching static tag for the current file.
+  6. "  C"  An ignore-case matching global tag for the current file.
+  7. "   "  An ignore-case matching global tag for another file.
+  8. " S "  An ignore-case matching static tag for another file.
+  ```
+
 ###### 预览窗口
 
 - 当我们在代码中遇到某个函数，但不太清楚其具体含义，那么可以使用 **Ctrl-]** 键跳转至函数定义处，而此时当前屏幕将会显示该函数的具体实现代码；稍后我们仍需退回到之前的位置继续编写程序。
@@ -4200,7 +4222,7 @@
 - 通过'tags'选项，可以指定查找标签文件的位置。根据以下默认设置，Vim将在当前目录查找标签文件：
 
   ```vim
-  set tags=tags=./tags,tags
+  set tags=./tags,tags
   ```
 
 - 对于大量的代码文件，也可以设置更精细的查找路径：[[S\]](https://www.zhihu.com/question/47691414/answer/373700711)
@@ -5324,7 +5346,7 @@
       其中的xml标签用t表示，增加标签和修改标签直接写上标签名字即可，不用写t，标签是第一个操作符用写，修改成的不用写
       ```
 
-      
+    - 删除的ds命令不用写具体的文件对象，直接ds“就可以了
 
   - 可视化模式
 

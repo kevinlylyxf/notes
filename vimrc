@@ -81,8 +81,12 @@ set directory=$HOME/.vim/tmp/backup,.
 " set colorcolumn=100
 set updatetime=100
 set virtualedit=block
+" tag file set
+set tags=./.tags;,.tags
 
 au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+
+
 
 
 " ===
@@ -129,6 +133,9 @@ noremap <LEADER><CR> :nohlsearch<CR>
 " Space to Tab
 nnoremap <LEADER>tt :%s/    /\t/g
 vnoremap <LEADER>tt :s/    /\t/g
+
+" tags set
+noremap <LEADER>] <C-w>g}
 
 
 " ===
@@ -270,6 +277,9 @@ Plug 'tomasr/molokai'
 " For general writing
 Plug 'junegunn/goyo.vim'
 
+" comment
+Plug 'scrooloose/nerdcommenter'
+
 call plug#end()
 
 " ===
@@ -308,7 +318,7 @@ inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
 
 " GoTo code navigation.
 nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gt <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 
@@ -362,6 +372,9 @@ omap ic <Plug>(coc-classobj-i)
 xmap ac <Plug>(coc-classobj-a)
 omap ac <Plug>(coc-classobj-a)
 
+" Switch between source/header
+noremap hc :CocCommand clangd.switchSourceHeader<CR>
+
 
 
 " ===
@@ -381,7 +394,7 @@ nnoremap gy :Goyo<CR>
 " === vista.vim
 " ===
 noremap <LEADER>v :Vista!!<CR>
-let g:vista_default_executive = 'ctags'
+let g:vista_default_executive = 'coc'
 let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
 let g:vista_fzf_preview = ['right:50%']
 let g:vista#renderer#enable_icon = 1
@@ -389,3 +402,26 @@ let g:vista#renderer#icons = {
 \   "function": "\uf794",
 \   "variable": "\uf71b",
 \  }
+
+
+" ===
+" === nerdcommenter
+" ===
+" Add spaces after comment delimiters by default
+let g:NERDSpaceDelims = 1
+
+" Allow commenting and inverting empty lines (useful when commenting a region)
+let g:NERDCommentEmptyLines = 1
+
+" Enable NERDCommenterToggle to check all selected lines is commented or not 
+let g:NERDToggleCheckAllLines = 1
+
+" Use compact syntax for prettified multi-line comments
+let g:NERDCompactSexyComs = 1
+
+
+" [count]<leader>cc |NERDCommenterComment|
+" [count]<leader>cu |NERDCommenterUncomment|
+" [count]<leader>cs |NERDCommenterSexy|
+" [count]<leader>c<space> |NERDCommenterToggle|
+" [count]<leader>cm |NERDCommenterMinimal|
