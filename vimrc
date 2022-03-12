@@ -275,6 +275,7 @@ Plug 'liuchengxu/vista.vim'
 
 " colors
 Plug 'tomasr/molokai'
+Plug 'morhetz/gruvbox'
 
 " For general writing
 Plug 'junegunn/goyo.vim'
@@ -287,7 +288,8 @@ call plug#end()
 " ===
 " === colors
 " ===
-colorscheme molokai
+" colorscheme molokai
+colorscheme gruvbox
 
 " ===
 " === coc.nvim
