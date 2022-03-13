@@ -235,7 +235,7 @@ noremap tmn :+tabmove<CR>
 " ===
 " === Buffers management
 " ===
-noremap <LEADER>d :bdelete %
+noremap <LEADER>d :bdelete %<CR>
 
 " ===
 " === Other useful stuff
