@@ -288,6 +288,7 @@ call plug#end()
 " ===
 " === colors
 " ===
+set background=dark
 " colorscheme molokai
 colorscheme gruvbox
 
