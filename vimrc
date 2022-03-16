@@ -288,6 +288,9 @@ Plug 'junegunn/goyo.vim'
 " comment
 Plug 'preservim/nerdcommenter'
 
+" undo tree
+Plug 'mbbill/undotree'
+
 call plug#end()
 
 " ===
@@ -435,3 +438,19 @@ let g:NERDCompactSexyComs = 1
 " [count]<leader>cs |NERDCommenterSexy|
 " [count]<leader>c<space> |NERDCommenterToggle|
 " [count]<leader>cm |NERDCommenterMinimal|
+
+
+" ===
+" === undotree 
+" ===
+" The current state is marked as > number <.
+" The next state which will be restored by :redo or <ctrl-r> is marked as { number }
+" The [ number ] marks the most recent change.
+" Saved changes are marked as s and the big S indicates the most recent saved change.
+nnoremap <LEADER>ut :UndotreeToggle<CR>
+let g:undotree_WindowLayout = 2
+let g:undotree_ShortIndicators = 1
+let g:undotree_SplitWidth = 24
+let g:undotree_DiffAutoOpen = 1
+let g:undotree_DiffpanelHeight = 8
+let g:undotree_SetFocusWhenToggle = 1
