@@ -1373,7 +1373,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   - 不管是声明还是定义，函数名前面都不能出现返回值类型，即使是 void 也不允许；
   - 函数体中不能有 return 语句。
   - 构造函数也是在类体内声明，类体外定义
-  
+
 - 和普通成员函数一样，构造函数是允许重载的。一个类可以有多个重载的构造函数，创建对象时根据传递的实参来判断调用哪一个构造函数。
 
 - 构造函数的调用是强制性的，一旦在类中定义了构造函数，那么创建对象时就一定要调用，不调用是错误的。如果有多个重载的构造函数，那么创建对象时提供的实参必须和其中的一个构造函数匹配；反过来说，创建对象时只有一个构造函数会被调用。
@@ -1410,6 +1410,30 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   ```
 
   - 上面这种是错误的，只能在构造函数里面初始化类里面定义的变量，如果没有在构造函数里面初始化，我们也可以写成函数，在函数里面为这个赋值，总之，在类定义的时候直接这样写是错误的，注意上面这只是类的定义
+
+- 一个类的对象作为另一个类的数据成员时如何构造函数
+
+  - 一个类的对象作为另一个类的数据成员。
+
+  - 一个类中的数据成员除了可以是int, char, float等这些基本的数据类型外，还可以是某一个类的一个对象。用子对象创建新类。
+
+    ```
+    class School{
+    protected:
+    	int a;
+    	int b;
+    	Student stu;
+    }
+    下面的stu和上面的a和b一样都是一种声明，这个School类只是一种声明，并没有占用空间，只有他实例化之后才会申请空间
+    如果一个类A的对象作为另一个类B的数据成员，则在类B的对象创建过程中，调用其构造函数的过程中，数据成员（类A的对象）会自动调用类A的构造函数。
+    但应注意：如果类A的构造函数为有参函数时，则在程序中必须在类B的构造函数的括号后面加一“：”和被调用的类A的构造函数，且调用类A的构造函数时的实参值必须来自类B的形参表中的形参。这种方法称为初始化表的方式调用构造函数。如：以上面定义的类X为例，在对类X的对象进行初始化时，必须首先初始化其中的子对象，即必须首先调用这些子对象的构造函数。因此，类X的构造函数的定义格式应为：
+    X：：X（参数表0）：成员1（参数表1），成员2（参数表2），…，成员n(参数表n)
+    其中，参数表1提供初始化成员1所需的参数，参数表2提供初始化成员2所需的参数，依此类推。并且这几个参数表的中的参数均来自参数表0，另外，初始化X的非对象成员所需的参数，也由参数表0提供。
+    ```
+
+    - 只要把类对象当作普通对象一样看待就行了，其在类里面只是一种声明，我们在实例化这个类的时候会调用构造函数来给类里面的对象赋值，如果一个类里面有另一个类的对象，那么这个类就会自动调用另一个类的构造函数
+
+  
 
 ##### 析构函数
 
@@ -1542,6 +1566,70 @@ int snprintf ( char * str, size_t size, const char * format, ... );
       
   XUIClientOps * client = g_mgr->clientOps();通过g_mgr来访问里面的成员函数clientOps，得到里面的类XUIClientOps，然后调用里面的方法。可以用临时变量client，不用每次用到里面的类就写上g_mgr->clientOps()，这样比较麻烦，虽然每次得到的都是同一个类对象
   ```
+  
+  ```c++
+  class XPolicySystem
+  {
+  protected:
+  	XPolicySystem()
+  	{
+  		m_hBus = NULL;
+  	}
+  	
+  	virtual ~XPolicySystem()
+  	{
+  		if(m_hBus){
+  			msgbus_close(m_hBus);
+  			m_hBus = NULL;
+  		}
+  	}
+  	
+  	HBUS m_hBus;
+  	XPolicyServer m_policyServer;
+  	XBusRequestMessage m_busMessage;
+  	static XPolicySystem g_policySystem;
+  public:
+  	int start();
+  	int stop();
+  	int init();
+  	
+  	HBUS getBusHandle()
+  	{
+  		return m_hBus;
+  	}
+  	
+  	XBusRequestMessage &getBusMessage(){
+  		return m_busMessage;
+  	}
+  	
+  	static XPolicySystem & system()
+  	{
+  		return g_policySystem;
+  	}
+  
+  	void destroy()
+  	{
+  		return;
+  	}	
+  };
+  int XPolicySystem::init()
+  {
+  	int error = -1, len = 0;
+  	char * buffer = NULL;
+  	m_hBus = msgbus_connect(__MSGBUS_POLICY_NODE, &error);		
+  	if(!m_hBus){
+  		printf("failed to bind node <%s>:%s\n", __MSGBUS_POLICY_NODE, msgbus_get_error_string(error));
+  		goto DONE;
+  	}
+     DONE:：
+         return error；
+  }
+  在init的时候我们用的是那个静态对象来初始化，初始化静态对象之后，里面的m_hBus字段就有了东西，我们就可以使用了
+      XPolicySystem::system().init()
+      XPolicySystem::system().getBusMessage().sendBroadcast(XPolicySystem::system().getBusHandle(), broadcast_data)
+  ```
+  
+  
   
 - 静态对象在编译时就放在了全局静态区，这种方法只是将那个静态对象拿到，方便后续的使用，而且这个静态对象就一个，使用时不用重复定义，拿到这个直接用就可以
 
