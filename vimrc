@@ -137,8 +137,28 @@ nnoremap <LEADER>tt :%s/    /\t/g
 vnoremap <LEADER>tt :s/    /\t/g
 
 " tags set
-noremap <LEADER>] <C-w>g}
+" jump directly
+" ctrl + ] jump
+noremap s] <C-w>]   " new window jump
 
+" jump after select use in multiple options
+" g] preview multiple under the screen after select in this window
+noremap <LEADER>] <C-w>g] " preview multiple under the screen after select jump to new window
+noremap tj :tnext<CR>
+noremap tk :tprevious<CR>
+noremap t, :tfirst<CR>
+noremap t. :tlast<CR>
+
+" display the definition of the lable in the preview window
+" show definition directly
+noremap s[ <C-w>}
+" show definition after select use in multiple options
+noremap <LEADER>[ <C-w>g} 
+noremap xj :ptnext<CR>
+noremap xk :ptprevious<CR>
+noremap x, :ptfirst<CR>
+noremap x. :ptlast<CR>
+noremap xn <C-w>z   " close preview window
 
 " ===
 " === Cursor Movement
@@ -241,6 +261,11 @@ noremap tmn :+tabmove<CR>
 " === Buffers management
 " ===
 noremap <LEADER>d :bdelete %<CR>
+noremap bb :buffers<CR>
+noremap bj :bnext<CR>
+noremap bk :bprevious<CR>
+noremap b, :bfirst<CR>
+noremap b. :blast<CR>
 
 " ===
 " === Other useful stuff
@@ -347,7 +372,7 @@ function! s:show_documentation()
     execute 'h '.expand('<cword>')
   elseif (coc#rpc#ready())
     call CocActionAsync('doHover')
-  else
+else
     execute '!' . &keywordprg . " " . expand('<cword>')
   endif
 endfunction
