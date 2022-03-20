@@ -250,7 +250,7 @@ echo ${str##*aa}  #结果为 @@@
 
 - git add就是暂存区，git commit是版本库，git 只能比较本地的，远程的不能比较，即不能比较本地和远程的diff
 
-  - git diff -h可以查看帮助，里面有显示可以只显示变化的文件名git diff --name-only
+  - git diff -h可以查看帮助，里面有显示可以只显示变化的文件名git diff HEAD^  --name-only
 
   - 比较不同分支之间的差异
   
