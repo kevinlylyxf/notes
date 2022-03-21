@@ -330,6 +330,13 @@ colorscheme gruvbox
 " ===
 let g:coc_global_extensions = [
         \ 'coc-marketplace',
+        \ 'coc-cmake',
+        \ 'coc-docker',
+        \ 'coc-diagnostic',
+        \ 'coc-pyright',
+        \ 'coc-snippets',
+        \ 'coc-xml',
+        \ 'coc-sh',
         \ 'coc-json',
         \ 'coc-vimlsp',
 		\ 'coc-clangd']
