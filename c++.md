@@ -1433,7 +1433,236 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
     - 只要把类对象当作普通对象一样看待就行了，其在类里面只是一种声明，我们在实例化这个类的时候会调用构造函数来给类里面的对象赋值，如果一个类里面有另一个类的对象，那么这个类就会自动调用另一个类的构造函数
 
-  
+- 在继承之外，在C++中一个类成员函数调用另一个类成员的方法主要有：类的组合，友元类，类的前向声明，单例模式等，下面主要讲讲这4种方法的实现
+
+  - 利用类的组合
+
+    ```
+    组合通俗来讲就是类B有类A的属性，如声明一个Person类，再声明一个Teacher类，Person类对象有年龄和姓名成员，而Teacher类对象成员也有年龄和姓名属性，所以我们可以将类Person的对象作为类Teacher的成员变量，那么就实现了Teacher类对象也有这两个属性。如下所示:
+    #include<iostream>
+    #include<string>
+    using namespace std;
+     
+    class Person
+    {
+      public:
+    	  Person(int _age, string _name) :age(_age), name(_name) {}
+    	  ~Person() {};
+    	void print() 
+    	{
+    		cout << name<<"	" << age  << endl;
+    	}
+    	private:
+    		int age;
+    	   string name;
+    };
+    class Teacher
+    {
+    public:
+    	Teacher(Person* _person) :person(_person) {}
+    	~Teacher() {};
+    	void print()
+    	{
+    		this->person->print();
+    	}
+    	private:
+    		Person* person;
+    		
+    };
+     
+    int main()
+    {
+    	Person p(40, "lisan");
+    	Teacher teacher(&p);
+    	teacher.print();
+    	system("pause");
+    	return 0;
+    }
+    
+    如上所示，就是在类Teacher初始化的时候直接将类对象传进来，而不是想继承一样，传参数，直接调用类的构造函数，这个是直接传的参数，就跟其他属性一样，直接将参数传进来，直接赋值过去。
+    ```
+
+  - 友元类
+
+    ```
+    友元类就是在类A中声明一个类B，那么就称类B是类A的友元类，这时类B的对象可以访问类A的一切成员,包括私有成员。如下所示:
+    #include<iostream>
+    #include<string>
+    using namespace std;
+     
+    class A
+    {
+    public:
+    	friend class B;
+    	A(int _age, string _name) :age(_age), name(_name) {}
+    	~A() {};
+    	void print_a()
+    	{
+    		cout << name << "	" << age << endl;
+    	}
+    private:
+    	int age;
+    	string name;
+    };
+    class B
+    {
+    public:
+    	B() {};
+    	~B() {};
+    	void print_b(A& a)
+    	{
+    		a.print_a();
+    	}
+    };
+     
+    int main()
+    {
+    	A a(20,"name");
+    	B b;
+    	b.print_b(a);
+    	system("pause");
+    	return 0;
+    }
+    
+    友元类是单向的，即类B是类A的友元类，但类A不是类B的友元类
+    友元类不能传递，即类B是类A的友元类，类C是类B的友元类，但类C不是类A的友元类
+    ```
+
+  - 前向声明
+
+    ```
+    使用前面两种方法，如果将两个类在不同的头文件中声明，则需要在第二个类中包含第一个类的头文件，但使用类的前向声明则不用使用#include"xxx"，具体实现如下：
+    代码段1：在person.h头文件
+    #pragma once
+    #ifndef _PERSON_H
+    #define _PERSON_H
+    #include <string>
+    #include <iostream>
+    class Person
+    {
+    public:
+    	Person(int _age, std::string _name) :age(_age), name(_name) {}
+    	~Person() {};
+    	void print() const
+    	{
+    		std::cout << name << "	" << age << std::endl;
+    	}
+    private:
+    	int age;
+    	std::string name;
+    };
+     
+    #endif
+     
+    代码段2：在teacher.h头文件中
+    #pragma once
+    #ifndef _TEACHER_H
+    #define _TEACHER_H
+    //#include "person.h"   //前两种方法
+     
+    class Person;  //类的前向声明
+    class Teacher
+    {
+    public:
+    	Teacher() {};
+    	~Teacher() {};
+    	void print(Person& person)
+    	{
+    		person.print();
+    	}	
+    };
+    #endif
+     
+    代码段3：主文件main.cpp
+    #include<iostream>
+    #include "person.h"
+    #include "teacher.h"
+    int main()
+    {
+    	Person p(40, "lisan");
+    	Teacher teacher;
+    	teacher.print(p);
+    	system("pause");
+    	return 0;
+    }
+    
+    类的前向声明只能用于定义指针、引用、以及用于函数形参的指针和引用前向声明的类是不完全的类型，因为只进行了声明而没有定义。
+    前向声明的作用：在预处理时，不需要包含#include"xxx",相对节约编译时间方便的解决两种类类型互相使用的问题。
+    ```
+
+  - 单例模式
+
+    ```
+    单例模式是程序设计模式中最常用的模式之一，其主要思想是将类的构造函数声明为私有的防止被外部函数实例化，内部保存一个private static的类指针保存唯一的实例，实例的实现由一个public的类方法代劳，该方法返回单例类唯一的实例。
+    采用单例模式的对象在进程结束才被释放。关于单例模式的详细内容大家可以去看单例模式的知识。下面是一个典型的单例例子：
+    #include<iostream>
+    #include<string>
+    using namespace std;
+     
+    class Singleton 
+    {
+    public:
+    	static Singleton* getInstance()
+    	{
+    		instance =  new Singleton();
+    		return instance;
+    	}
+    	~Singleton() {};
+    private:
+    	Singleton() {};
+    	static Singleton* instance;
+    };
+    下面看怎么在另一个类中使用单例模式实现成员函数的调用:
+    class Singleton
+    {
+    public:
+    	static Singleton* getInstance()
+    	{
+    		if (instance == nullptr)
+    		{
+    			instance = new Singleton();
+    			return instance;
+    		}
+    		else
+    			return  instance;
+    	}
+    	static void print_instance()
+    	{
+    		cout<<name <<" " <<age <<endl;
+    	}
+    	~Singleton() {};
+    private:
+    	Singleton() {};
+    	static Singleton* instance;
+    	static int age;
+    	static string name;
+    };
+     
+    int  Singleton::age = 20;
+    string Singleton::name = "lisan";
+    Singleton* Singleton::instance = nullptr;
+     
+    class A
+    {
+     
+    public:
+    	void print_a()
+    	{
+    		 Singleton::getInstance()->print_instance();
+    	}
+     
+    };
+    int main()
+    {
+    	A a;
+    	a.print_a();
+    	system("pause");
+        return 0;
+    }
+    ```
+
+    
+
 
 ##### 析构函数
 
