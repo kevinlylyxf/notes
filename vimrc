@@ -151,6 +151,7 @@ noremap t. :tlast<CR>
 
 " display the definition of the lable in the preview window
 " show definition directly
+" QuickFix
 noremap s[ <C-w>}
 " show definition after select use in multiple options
 noremap <LEADER>[ <C-w>g} 
