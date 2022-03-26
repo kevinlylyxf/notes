@@ -95,7 +95,7 @@ au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g
 " === Terminal Behaviors
 " ===
 tnoremap <C-N> <C-\><C-N>
-
+noremap \t :vertical term<CR>
 
 " ===
 " === fold Behaviors
