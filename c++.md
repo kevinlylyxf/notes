@@ -1866,6 +1866,41 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - static对象在编译的时候就放到了内存中，在全局静态区，跟运行的时候没什么关系，运行的时候只是使用他
 
+###### 侯捷static理解
+
+- c++对于定义在不同的编译单元内的non-local static对象的初始化相对次序并无明确定义，这是有原因的，因为决定他们的初始化次序相当困难，根本无解。其中的non-local static对象指的是该对象是global或位于namespace作用域内，抑或在class内或file作用域内被声明为static。
+
+- 幸运的是一个小小的设计便可完全消除这个问题。唯一需要做的是：将每个non-local static对象搬到自己的专属函数内，该对象在此函数内被声明为static，这些函数返回一个reference指向它所含的对象。然后用户调用这些函数而不直接指涉这些对象。换句话说，non-local static对象被local static对象替换了，这是单例设计模式的一个常见实现手法。
+
+- 这个手法的基础在于，c++保证函数内的local static对象会在”该函数被调用期间“”首次遇上该对象之定义式时“被初始化(这句话的含义是当第二次遇上时就不是初始化了，保证了这个对象的唯一性)，所以如果以函数调用（返回一个reference指向local static对象）替换直接访问non-local static对象，你就获得了保证，保证你所获得的那个reference将只想一个历经初始化的对象，如果你从未调用non-local static对象的仿真函数，就绝不会引发构造和析构成本，真正的non-local static对象可没这么便宜。
+
+  ```
+  class FileSystem{...};
+  
+  FileSystem &tfs(){
+  	static FileSystem fs;
+  	return fs;
+  }
+  class Directory{...};
+  Directory::Directory(params){
+  		...
+  		std::size_t disks = tfs().numDisks;
+  		...
+  }
+  Directory & tempDir(){
+  	static Directory td;
+  	return td;
+  }
+  ```
+
+  - 其中的tempDir和tfs是一个函数，并不是成员函数，成员函数定义时会带上类名的作用域。
+  - 这样做可以保证实例化一个全局的对象，这个对象是通过函数来访问的，而且这个static对象只会初始化一次。
+  - 上面这种是一个写法，在上面那种在一个类内声明一个static函数，类里面有一个静态类对象，然后一个static 函数来返回那个静态对象作用相同，只是不通的访问方法。当然那种也可以写成上面这种用类外的函数来访问的写法。
+
+- 说到底都是实例化一个全局唯一类，这样我们就可以访问这个使用，不用在用到类时一直新声明一个对象了。
+
+- 这些函数内含static对象使他们在多线程系统中带有不确定性，任何一种non-local static对象，无论是local或者non-local，在多线程环境下等待某事发生都会有麻烦，处理这个麻烦的一种做法是，在程序的单线程启动阶段手工调用所有reference-returning 函数，这可消除与初始化有关的竞速形式。
+
 ##### const成员变量和成员函数
 
 - const 成员变量的用法和普通 const 变量的用法相似，只需要在声明时加上 const 关键字。初始化 const 成员变量只有一种方法，就是通过构造函数的初始化列表
