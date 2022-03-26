@@ -2391,7 +2391,76 @@ int main(){
   这样这把锁也是锁的类里面定义的变量，对于变量a和变量b，是不会锁住的，因为类本身就是一个作用域，如果要把a和b也锁住，需要在类外面和ab同级的作用域内声明一把锁才行。
   ```
 
+- 多线程锁的理解，每一把锁锁的数据是自己定义的，并不是说加把锁就把当前作用域内所有的数据都加上锁了，正确的理解是lock和unlock之间要访问的当前作用域的数据才会被锁上，其他的并不会加锁
+
+  ```
+  class XBusRequestMessage
+  {
+  protected:
+  	HTOPIC m_policyTopic;
+  	HTOPIC m_auditorTopic;
+  	HTOPIC m_dbTopic;
+  	HTOPIC m_shareTopic;
+  	HTOPIC m_taskTopic;
+  	
+  	XMutex m_policyTopicLock;
+  	XMutex m_auditorTopicLock;
+  	XMutex m_dbTopicLock;
+  	XMutex m_shareTopicLock;
+  	XMutex m_taskTopicLock;
+  public:
+  	XBusRequestMessage();
+  	virtual ~XBusRequestMessage();
+  	
+  	// -- msgbus_free_buffer free resp
+  	int sendBusPolicy(HBUS bus, const char *sendJson, char ** resp);
+  	int sendBusAudit(HBUS bus, char *sendJson);
+  	int sendBusAuditQuery(HBUS bus, const char *sendJson, char ** resp);
+  	int sendBusDb(HBUS bus, char *sendJson, char ** resp);
+  	int sendBusTask(HBUS bus, const char *sendJson, char ** resp);
+  	int sendBroadcast(HBUS bus, char *sendJson);
+  };
   
+  
+  int XBusRequestMessage::sendBusPolicy(HBUS bus, const char *sendJson, char ** resp)
+  {
+  	int retval = -1;
+  	int error;
+  	int flag;
+  	m_policyTopicLock.Lock();
+  	if(!m_policyTopic){
+  		if(!bus){
+  			printf("XBusRequestMessage bus is NULL ...\n");
+  			goto DONE;
+  		}
+  		
+  		m_policyTopic = msgbus_open_topic(bus, __TOPIC_NAME_POLICY, &error);
+  		if(!m_policyTopic){
+  			printf("failed to open topic <%s>:%s\n", __TOPIC_NAME_POLICY, msgbus_get_error_string(error));
+  			goto DONE;
+  		}
+  	}
+  	
+  	flag = msgbus_topic_send_timeout(m_policyTopic, sendJson, 10, resp);
+  	if(0 != flag){
+  		printf("failed to send message to topic <%s>(%d):%s\n", __TOPIC_NAME_POLICY, flag, msgbus_get_error_string(flag));
+  	}
+  	if(__is_broken_error(flag)){
+  		if(m_policyTopic){
+  			msgbus_close_topic(m_policyTopic);
+  			m_policyTopic = NULL;
+  		}
+  		goto DONE;
+  	}
+  	
+  	retval = 0;
+  DONE:
+  	m_policyTopicLock.Unlock();
+  	return retval;
+  }
+  ```
+
+  - 此示例就是五个数据五把锁，各锁个的，互不影响，只有操作数据时，加锁，这个之间的数据才会被锁上，其他的并不会锁上
 
 - 注意理解在锁解锁的时候会有一个在内核态唤醒其他线程的过程，这个是内核做的事情，因为试图获取被锁锁定的资源的时候，内核就会把线程加入到一个队列中，如果这个锁被释放，就通知这些队列中的线程，这是内核态的设计及实现
 
