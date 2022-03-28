@@ -407,19 +407,84 @@
 
 #### 指针
 
+- 指针运算++是让当前指针指向下一个元素，如果指向的是数组，访问的是下一个元素的地址，但是如果我们将这个指针转换成void *，这样指针++就是往下移动一个字节的地址，指针占用8个字节，但是指针指向的是他指向内存的起始地址的下一个字节的位置，因为void *，指针就认为是一个字节，如果指向的是一个结构体数组，没有转换之前是移动一个结构体字节的地址，如果转换成void *之后我们可以将这个指针弄成void * 然后+结构体字节数的大小，和没转换前是一样的。
+
+  ```
+  typedef struct _sftp_log_header
+  {
+  	unsigned char flag;			/*0xA0（便携式运维网关日志）*/
+  	unsigned char reserve;		/*目前置为0x00*/
+  	unsigned char type;			/*同子类型编码组合确定具体日志类型*/
+  	unsigned char subtype;		/*同日志类型编码组合确定具体日志日志*/
+  	unsigned int length;		/*整个包长度，包含协议头*/
+  	unsigned char content[0];
+  }sftp_log_header;
+  
+  int SftpLogMgr::sendSftpLog(unsigned char type, unsigned char subtype, const char *content, const char *path)
+  {
+  	sftp_log_header header;
+  	struct timeval time;
+  	char remotepath[1024];
+  	unsigned int length = 0;
+  	int rc = -1;
+  	
+  	if (!m_logHandle || !content || !path)
+  		return -1;
+  	
+  	length = sizeof(header) + strlen(content);
+  	if (0 != applyBuffer(length)) {
+  		return -1;
+  	}
+  	
+  	memset(&header, 0, sizeof(header));
+  	header.flag = SFTP_LOG_FLAG;
+  	header.type = type;
+  	header.subtype = subtype;
+  	header.length = htonl(length);
+  	
+  	memcpy((void *)m_buffer, (const void *)&header, sizeof(header));
+  	memcpy((void *)m_buffer + sizeof(header), (const void *)content, strlen(content));
+  	
+  	gettimeofday(&time, NULL);
+  	
+  	if (SFTP_LOG_OPS_TYPE == type)
+  		snprintf(remotepath, sizeof(remotepath), "%s/xuji_opslog_%ld", path, (time.tv_sec*1000 + time.tv_usec/1000));
+  	else 
+  		snprintf(remotepath, sizeof(remotepath), "%s/xuji_alarmlog_%ld", path, (time.tv_sec*1000 + time.tv_usec/1000));
+  
+  	rc = sftp_cli_upload2(m_logHandle, (void *)m_buffer, length, (const char *)remotepath);
+  	return rc;
+  }
+  ```
+
+  
+
 - 字符串就是地址，地址就是字符串，在%s输出字符串时，可以只写上字符串，也可以只写字符串地址，不用&
+
 - 所谓指针，也就是内存的地址；所谓指针变量，也就是保存了内存地址的变量。
+
 - 我们将内存中字节的编号称为地址（Address）或[指针](http://c.biancheng.net/c/80/)（Pointer）。地址从 0 开始依次增加，对于 32 位环境，程序能够使用的内存为 4GB，最小的地址为 0，最大的地址为 0XFFFFFFFF。
+
 - C语言用变量来存储数据，用函数来定义一段可以重复使用的代码，它们最终都要放到内存中才能供 CPU 使用。
+
 - 数据和代码都以二进制的形式存储在内存中，计算机无法从格式上区分某块内存到底存储的是数据还是代码。当程序被加载到内存后，操作系统会给不同的内存块指定不同的权限，拥有读取和执行权限的内存块就是代码，而拥有读取和写入权限（也可能只有读取权限）的内存块就是数据。
+
 - CPU 只能通过地址来取得内存中的代码和数据，程序在执行过程中会告知 CPU 要执行的代码以及要读写的数据的地址。如果程序不小心出错，或者开发者有意为之，在 CPU 要写入数据时给它一个代码区域的地址，就会发生内存访问错误。这种内存访问错误会被硬件和操作系统拦截，强制程序崩溃，程序员没有挽救的机会。
+
 - CPU 访问内存时需要的是地址，而不是变量名和函数名！变量名和函数名只是地址的一种助记符，当源文件被编译和链接成可执行程序后，它们都会被替换成地址。编译和链接过程的一项重要任务就是找到这些名称所对应的地址。
+
 - 变量名和函数名为我们提供了方便，让我们在编写代码的过程中可以使用易于阅读和理解的英文字符串，不用直接面对二进制地址，那场景简直让人崩溃。需要注意的是，虽然变量名、函数名、字符串名和数组名在本质上是一样的，它们都是地址的助记符，但在编写代码的过程中，我们认为变量名表示的是数据本身，而函数名、字符串名和数组名表示的是代码块或数据块的首地址。
+
 - 数据在内存中的地址也称为指针，如果一个变量存储了一份数据的指针，我们就称它为指针变量。
+
 - 在C语言中，允许用一个变量来存放指针，这种变量称为指针变量。指针变量的值就是某份数据的地址，这样的一份数据可以是数组、字符串、函数，也可以是另外的一个普通变量或指针变量。
+
 - `*`是一个特殊符号，表明一个变量是指针变量，定义 p1、p2 时必须带`*`。而给 p1、p2 赋值时，因为已经知道了它是一个指针变量，就没必要多此一举再带上`*`，后边可以像使用普通变量一样来使用指针变量。也就是说，定义指针变量时必须带`*`，给指针变量赋值时不能带`*`。
+
 - `*`在不同的场景下有不同的作用：`*`可以用在指针变量的定义中，表明这是一个指针变量，以和普通变量区分开；使用指针变量时在前面加`*`表示获取指针指向的数据，或者说表示的是指针指向的数据本身。
+
 - 指针变量保存的是地址，而地址本质上是一个整数，所以指针变量可以进行部分运算，例如加法、减法、比较等。数组中的所有元素在内存中是连续排列的，如果一个指针指向了数组中的某个元素，那么加 1 就表示指向下一个元素，减 1 就表示指向上一个元素，这样指针的加减运算就具有了现实的意义
+
 - 一般只对数组进行指针运算p++，对普通变量一般不进行运算，因为会出错。对数组的指针++表示指向下一个数组元素，数组元素占用几个字节就跳几个字节。另外需要说明的是，不能对指针变量进行乘法、除法、取余等其他运算，除了会发生语法错误，也没有实际的含义。
 
 ##### 数组指针(指向数组的指针)
