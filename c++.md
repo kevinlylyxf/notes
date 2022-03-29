@@ -1909,6 +1909,17 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - 我们通常将 get 函数设置为常成员函数。读取成员变量的函数的名字通常以`get`开头，后跟成员变量的名字，所以通常将它们称为 get 函数。
 
+- 如果一个函数返回的是引用，即使是get也不能是const成员函数，因为引用可能会改变这个值，所以如果返回的是引用则不能设置为const成员函数
+
+  ```
+  string &getUsrId() const{
+  		return m_usrId;
+  	}
+  这种写法会报错，将const去掉就可以了
+  ```
+
+  
+
 - 常成员函数需要在声明和定义的时候在**函数头部的结尾**加上 const 关键字
 
   ```c
