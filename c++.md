@@ -4047,6 +4047,60 @@ stopwatch stopwatch::operator++(int n){
 
 #### 输入输出流
 
+- istream, ifstream, istringstream其都是使用>>操作符，表示从流中读取数据然后放到其他数据类型中，这就相当于从文件中读取4个字节，然后放到int中，以前c的做法是读取4个字节，现在c++的做法是直接定义一个int类型，然后从流中直接写入就行了，直接写进去四个字节，这个不需要额外的控制。
+
+  ```
+  basic_istream& operator>>( short& value );
+  basic_istream& operator>>( unsigned short& value );
+  basic_istream& operator>>( int& value );
+  basic_istream& operator>>( unsigned int& value );
+  basic_istream& operator>>( long& value );
+  basic_istream& operator>>( unsigned long& value );
+  basic_istream& operator>>( long long& value );
+  basic_istream& operator>>( unsigned long long& value );
+  basic_istream& operator>>( float& value );
+  basic_istream& operator>>( double& value );
+  basic_istream& operator>>( long double& value );
+  basic_istream& operator>>( bool& value );
+  basic_istream& operator>>( void*& value );
+  basic_istream& operator>>( std::ios_base& (*func)(std::ios_base&) );
+  basic_istream& operator>>( std::basic_ios<CharT,Traits>&
+                                  (*func)(std::basic_ios<CharT,Traits>&) );
+  basic_istream& operator>>( basic_istream& (*func)(basic_istream&) );	
+  basic_istream& operator>>( std::basic_streambuf<CharT,Traits>* sb );
+  ```
+
+  - 这样就简化了这个读的操作。从上面看到这个>>有很多类型的重载函数，可以从流中读取数据然后放到各种类型的数据中。
+  - 输入流就是用>>将各种流中的数据读取出来，然后放到指定的类型中。istream就是从键盘出入的流，ifstream就是读取的文件流，istringstream就是一些字符流。istream是从键盘获取流，其不用初始化，ifstream是读取文件的流，其需要初始化打开文件，istringstream是字符流，需要一些初始化，就是将string中的字符初始化到istringstream流中，这是其构造函数干的事情，这样就能得到这个istringstream流。然后从这些流中读取一些数据写进具体的类型中。
+
+- ostream, ofstream, ostringstream 使用<<操作符，表示将数据写入流中，其中数据可以是各种类型的，例如将int写入流中，将string写入流中，其中ostream表示输出流，其自己会输出到屏幕上，ofstream表示文件流，写进流中的数据会写进文件中，ostringstream表示字符流，数据会写进字符流中，替代snprintf拼写字符串。可以将int，string等各种数据写入流中，最后是一个完整的字符串
+
+  ```
+  basic_ostream& operator<<( short value );
+  basic_ostream& operator<<( unsigned short value );
+  basic_ostream& operator<<( int value );
+  basic_ostream& operator<<( unsigned int value );
+  basic_ostream& operator<<( long value );
+  basic_ostream& operator<<( long long value );
+  basic_ostream& operator<<( unsigned long long value );
+  basic_ostream& operator<<( float value );
+  basic_ostream& operator<<( double value );
+  basic_ostream& operator<<( long double value );
+  basic_ostream& operator<<( bool value );
+  basic_ostream& operator<<( const void* value );
+  basic_ostream& operator<<( const volatile void* value );
+  basic_ostream& operator<<( std::nullptr_t );
+  basic_ostream& operator<<( std::basic_streambuf<CharT, Traits>* sb );	
+  basic_ostream& operator<<(
+      std::ios_base& (*func)(std::ios_base&) );
+  basic_ostream& operator<<(
+      std::basic_ios<CharT,Traits>& (*func)(std::basic_ios<CharT,Traits>&) );	
+  basic_ostream& operator<<(
+      std::basic_ostream<CharT,Traits>& (*func)(std::basic_ostream<CharT,Traits>&) );
+  ```
+
+  
+
 - C++ 又可以称为“带类的 C”，即可以理解为 C++ 是 C 语言的基础上增加了面向对象（类和对象）
 
 - C 语言的这套 I/O 解决方案也适用于 C++ 程序，但 C++ 并没有“偷懒”，它自己独立开发了一套全新的 I/O 解决方案，其中就包含大家一直使用的 cin 和 cout。前面章节中，我们一直在用 cin 接收从键盘输入的数据，用 cout 向屏幕上输出数据（这 2 个过程又统称为“标准 I/O”）。除此之外，C++ 也对从文件中读取数据和向文件中写入数据做了支持（统称为“文件 I/O”）。
@@ -4063,6 +4117,9 @@ stopwatch stopwatch::operator++(int n){
   - ofstream：用于向文件中写入数据；
   - iostream：继承自 istream 和 ostream 类，因为该类的功能兼两者于一身，既能用于输入，也能用于输出；
   - fstream：兼 ifstream 和 ofstream 类功能于一身，既能读取文件中的数据，又能向文件中写入数据。
+  - istringstream：继承自istream，和ifstream一样都是继承自istream
+  - ostringstream：继承自ostream，和ofstream一样都是继承自ofstream
+  - stringstream：兼istringstream和ostringstream类功能于一身，继承自iostream，和fstream一样都是继承自iostream。
 
 - 在前面章节的学习中，只要涉及输入或者输出数据，我们立马想到的就是 cin 和 cout。其实，cin 就是 istream 类的对象，cout 是 ostream 类的对象，它们都声明在 <iostream> 头文件中，这也解释了“为什么在 C++ 程序中引入 <iostream> 就可以使用 cin 和 cout”（当然使用 cin 和 cout，还需要声明 std 命名空间）。
 

@@ -847,7 +847,68 @@ lseek - reposition read/write file offset
   5
   ```
 
+
+##### getline
+
+- ```
+  template< class CharT, class Traits, class Allocator >
+  std::basic_istream<CharT,Traits>& getline( std::basic_istream<CharT,Traits>& input,
+                                             std::basic_string<CharT,Traits,Allocator>& str,
+                                             CharT delim );
+  (1)	
+  template< class CharT, class Traits, class Allocator >
+  std::basic_istream<CharT,Traits>& getline( std::basic_istream<CharT,Traits>&& input,
+                                             std::basic_string<CharT,Traits,Allocator>& str,
+                                             CharT delim );
+  (1)	(since C++11)
+  template< class CharT, class Traits, class Allocator >
+  std::basic_istream<CharT,Traits>& getline( std::basic_istream<CharT,Traits>& input,
+                                             std::basic_string<CharT,Traits,Allocator>& str );
+  (2)	
+  template< class CharT, class Traits, class Allocator >
+  std::basic_istream<CharT,Traits>& getline( std::basic_istream<CharT,Traits>&& input,
+                                             std::basic_string<CharT,Traits,Allocator>& str );
+  (2)	(since C++11)
+  ```
+
+  - Parameters
+    - input -  the stream to get data from
+    - str - the string to put the data into
+    - delim - the delimiter character
+  - return value
+    - input
+
+- ```
+  string str,stemp;//str是读入的字符串，stemp是暂存分割开的小字符串
+  vector<string> v;
+  int main()
+  {
+      cin>>str;
+      stringstream ss(str);
   
+      while(getline(ss,stemp,'/'))//getline的第三个参数是终止字符，到当前字符终止
+      {
+          if(!stemp.empty()) v.push_back(stemp);
+      }
+  
+      for (auto i:v)
+          cout<<i<<endl;
+  }
+  ```
+
+  - stringstream的特点是，你读入了前面的一部分字符串，对应的字符串流中就会减去那一部分，所以可以使用while来一直循环读入，getline的第一个参数可以是stringstream类
+
+  - 上面这种也可是使用for循环来做
+
+    ```
+    std::istringstream input2;
+    input2.str("a;b;c;d");
+    for (std::string line; std::getline(input2, line, ';'); ) {
+        std::cout << line << '\n';
+    }
+    ```
+
+    - 上面这个for循环中，初始化了一个string变量，循环条件为getline函数是否有返回，如果input2这个流中一直有东西，其一直在向line中写入，以分号分割，当流中没有东西之后函数返回一个空，相当于跳出循环，这样就能循环得到以指定字符分割的字符串，然后存入到指定的vector中，这样就能分割出来了
 
 ### system
 
