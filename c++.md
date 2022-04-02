@@ -239,6 +239,79 @@
   }
   ```
 
+##### 闭包
+
+- 闭包有很多种定义，一种说法是，闭包是带有上下文的函数。说白了，就是有状态的函数。更直接一些，不就是个类吗？换了个名字而已。
+
+- 一个函数, 带上了一个状态, 就变成了闭包了。什么叫 "带上状态" 呢? 意思是这个闭包有属于自己的变量，这些个变量的值是创建闭包的时候设置的，并在调用闭包的时候，可以访问这些变量。
+
+- 函数是代码，状态是一组变量，将代码和一组变量捆绑，就形成了闭包，内部包含 static 变量的函数不是闭包，因为这个 static 变量不能捆绑。闭包的状态捆绑，必须发生在运行时。
+
+- 闭包的实现
+
+  - 重载operator()，因为闭包是一个函数 + 一个状态， 这个状态通过隐含的 this 指针传入，所以闭包必然是一个函数对象，因为成员变量就是极好的用于保存状态的工具，因此实现 operator() 运算符重载，该类的对象就能作为闭包使用。默认传入的 this 指针提供了访问成员变量的途径。
+
+    ```c++
+    #include <iostream>
+    using namespace std;
+    
+    class MyFunctor {
+    public:
+        MyFunctor(int tmp) : round(tmp) {}
+        int operator()(int tmp) { return tmp + round; }
+    private:
+        int round;
+    };
+    
+    int main() {
+        int round = 2;
+        MyFunctor f(round);    // 调用构造函数
+        cout << "result = " << f(1) << endl;    // operator()(int tmp)
+        return 0;
+    }
+    
+    result = 3
+    ```
+
+  - lambda表达式，C++11 里提供的 [lambda 表达式](https://msdn.microsoft.com/zh-cn/library/dd293608.aspx) 就是很好的语法糖，其本质和手写的函数对象没有区别。
+
+    ```c++
+    int main() {
+        int round = 2;
+        auto f = [=](int f) -> int { return f + round; } ;
+        cout << "result = " << f(1) << endl;
+        return 0;
+    }
+    
+    result = 3
+    ```
+
+  - std::bind，标准库提供的 [bind](https://blog.csdn.net/liukang325/article/details/53668046) 是更加强大的语法糖，将手写需要很多很多代码的闭包，浓缩到一行 bind 就可以搞定了。
+
+    ```c++
+    #include <iostream>
+    #include <functional>
+    using namespace std;
+    
+    int func(int tmp, int round) {
+        return tmp + round;
+    }
+    
+    int main()
+    {
+        using namespace std::placeholders;    // adds visibility of _1, _2, _3,...
+    
+        int round = 2;
+        std::function<int(int)> f = std::bind(func, _1, round);
+        cout << "result = " << f(1) << endl;
+        return 0;
+    }
+    
+    result = 3
+    ```
+
+    
+
 ##### 仿函数
 
 - 如果一个类将`()`运算符重载为成员函数，这个类就称为函数对象类，这个类的对象就是函数对象。函数对象是一个对象，但是使用的形式看起来像函数调用，实际上也执行了函数调用，因而得名。又名仿函数

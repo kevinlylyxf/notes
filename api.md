@@ -525,7 +525,7 @@ lseek - reposition read/write file offset
 
   - 在这里，f1和f2本质是一个对象，只不过重载了其函数调用操作符，所以使用的时候可以直接像函数一样调用。另外重载了赋值操作符，这样可以将可调用的函数实体赋值给它，其函数调用操作符重载函数里间接的调用赋值时传进来的调用实体。
 
-  ```
+  ```c++
   #include <iostream>
   #include <functional>
    
@@ -598,7 +598,7 @@ lseek - reposition read/write file offset
 
   - 用typedef给std:funtion起别名，得到一种函数对象类型，可以修饰函数的参数，表明该形参是一个回调函数，也可以作为类的成员，由外部传入，在类的成员函数里调用。
 
-    ```
+    ```c++
     typedef std::function<void(std::string)> CallBack;
     Class MessageProcessor {<!-- -->
     private:
@@ -615,7 +615,7 @@ lseek - reposition read/write file offset
 
   - std::bind函数将可调用对象(用法中所述6类)和可调用对象的参数进行绑定，返回新的可调用对象(std::function类型，参数列表可能改变)，返回的新的std::function可调用对象的参数列表根据bind函数实参中std::placeholders::_x从小到大对应的参数确定。
 
-    ```
+    ```c++
     #include <iostream>
     using namespace std;
     class A
@@ -678,7 +678,7 @@ lseek - reposition read/write file offset
 
 - bind绑定成员函数的作用
 
-  ```
+  ```c++
   #include <iostream>
   #include <functional>
   using namespace std;
