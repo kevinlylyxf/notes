@@ -189,7 +189,9 @@ inoremap <silent><C-h> <c-r>=execute('norm! h')<cr>
 inoremap <silent><C-l> <c-r>=execute('norm! l')<cr>
 inoremap <silent><C-j> <c-r>=execute('norm! j')<cr>
 inoremap <silent><C-k> <c-r>=execute('norm! k')<cr>
-inoremap <silent><C-a> <ESC>A 
+inoremap <silent><C-a> <ESC>A
+inoremap <silent><C-n> <c-r>=execute('norm! o')<cr> " new line after this current line
+
 
 
 " ===

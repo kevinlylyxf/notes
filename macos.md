@@ -125,3 +125,51 @@ alias unproxy='unset all_proxy && unset http_proxy && unset https_proxy'
   ```
 
 - 打开配置页面进行配置输入法
+
+
+##### vim
+
+- 安装nodejs和npm
+
+  ```
+  sudo pacman -S nodejs
+  sudo pacman -S npm
+  ```
+
+  - 临时使用配置源，不会影响到本地配置，在 npm install XXX 时加入--registry URL即可
+
+    ```
+    npm --registry https://registry.npm.taobao.org install express
+    ```
+
+  - 永久修改本地npm配置源
+
+    ```
+    npm config set registry https://registry.npm.taobao.org
+    ```
+
+  - 查看npm源地址有没有换成功：
+
+    ```
+    npm config get registry
+    ```
+
+  - 重置为官方源
+
+    ```
+    npm config set registry https://registry.npmjs.org/
+    ```
+
+- 安装clang
+
+  ```
+  sudo pacman -S clang
+  ```
+
+- 安装ripgrep，文本搜索神器
+
+  ```
+  sudo pacman -S ripgrep
+  ```
+
+  
