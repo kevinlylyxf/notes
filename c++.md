@@ -5570,7 +5570,7 @@ void dis_2(){
 
 - Lambda 表达式实际上是一个函数，只是它没有名字
 
-  ```
+  ```c++
   int a[4] = {11, 2, 33, 4};
   sort(a, a+4, [=](int x, int y) -> bool { return x%10 < y%10; } );
   for_each(a, a+4, [=](int x) { cout << x << " ";} );
@@ -5583,7 +5583,7 @@ void dis_2(){
 
 - 下面是用到了外部变量的Lambda表达式的程序
 
-  ```
+  ```c++
   #include <iostream>
   #include <algorithm>
   using namespace std;
@@ -5612,7 +5612,7 @@ void dis_2(){
   {
      函数体;
   };
-  因为是匿名函数lambda表达式一般用auto变量接收或直接使用，所以有最后的分号
+  因为是匿名函数lambda表达式一般用auto变量接收或直接使用，所以有最后的分号，当用auto接受lambda时需要分号，直接定义的时候不要分号。
   ```
 
   -  [外部变量方位方式说明符] [ ] 方括号用于向编译器表明当前是一个 lambda 表达式，其不能被省略。在方括号内部，可以注明当前 lambda 函数的函数体中可以使用哪些“外部变量”。所谓外部变量，指的是和当前 lambda 表达式位于同一作用域内的所有局部变量。
