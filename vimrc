@@ -192,7 +192,7 @@ inoremap <silent><C-k> <c-r>=execute('norm! k')<cr>
 inoremap <silent><C-a> <ESC>A
 
 " new line after this current line
-inoremap <silent><C-n> <c-r>=execute('norm! o')<cr> 
+inoremap <silent><C-n> <c-r>=execute('norm! o')<cr>
 
 
 
