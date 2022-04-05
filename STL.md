@@ -56,7 +56,7 @@
   对于std::vector<T>* Vec = new std::vector<T>();vec和其中的元素T都保存在堆上；
   对于std::vector<T*> vec;vec在栈上（stack），而其中的元素T保存在堆上（heap）；和第一种情况类似。
   
-  std::vector<T>和std::vector<T*>中元素T都是存储在栈上，而且std::vector<T>不用手动管理内存空间，而std::vector<T*>需要手动delete释放栈上的空间。但是push_back的时候std::vector<T>会比std::vector<T*>多一个拷贝构造的过程。
+  std::vector<T>和std::vector<T*>中元素T都是存储在栈上，而且std::vector<T>不用手动管理内存空间，而std::vector<T*>需要手动delete释放栈上的空间。但是push_back的时候std::vector<T>会比std::vector<T*>多一个拷贝构造的过程。如果是T*的话push_back()就是将这个指针放进去，如果是T的话就是将这个对象拷贝一份放进去。如果是T*的话，push_back存进去的指针是你自己申请的，所以需要你自己释放，如果是T的话就不需要自己释放了，因为其不是自己申请的，vector自己会维护。
   ```
 
   - 申请的类对象只是一个名字，我们通过这个不变的名字来找到具体的数据， 里面的数据都是维护在堆上的，我们不需要管理，这个类对象会进行精确的管理

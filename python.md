@@ -249,23 +249,30 @@ c1*c2:  (72.24-13.2j)
   - 在普通字符串或者长字符串的开头加上`r`前缀，就变成了原始字符串
 
     ```python
-    str1 = r'原始字符串内容'str2 = r"""原始字符串内容"""rstr = r'D:\Program Files\Python 3.8\python.exe'print(rstr)
+    str1 = r'原始字符串内容'
+    str2 = r"""原始字符串内容"""
+    rstr = r'D:\Program Files\Python 3.8\python.exe'
+    print(rstr)
     ```
-
+  
   - 如果普通格式的原始字符串中出现引号，程序同样需要对引号进行转义，否则 Python 照样无法对字符串的引号精确配对；但是和普通字符串不同的是，此时用于转义的反斜杠会变成字符串内容的一部分。
-
+  
     ```python
-    str1 = r'I\'m a great coder!'print(str1)I\'m a great coder!
+    str1 = r'I\'m a great coder!'
+    print(str1)
+    I\'m a great coder!
     ```
-
+  
     - 需要注意的是，Python 原始字符串中的反斜杠仍然会对引号进行转义，因此原始字符串的结尾处不能是反斜杠，否则字符串结尾处的引号会被转义，导致字符串不能正确结束。
-
+  
   - 在 Python 中有两种方式解决原始字符串中\这个问题：一种方式是改用长字符串的写法，不要使用原始字符串；另一种方式是单独书写反斜杠
-
+  
     - 例如想表示`D:\Program Files\Python 3.8\`，可以这样写：
-
+  
       ```python
-      str1 = r'D:\Program Files\Python 3.8' '\\'print(str1)我们先写了一个原始字符串r'D:\Program Files\Python 3.8'，紧接着又使用'\\'写了一个包含转义字符的普通字符串，Python 会自动将这两个字符串拼接在一起D:\Program Files\Python 3.8\
+      str1 = r'D:\Program Files\Python 3.8' '\\'
+      print(str1)
+      我们先写了一个原始字符串r'D:\Program Files\Python 3.8'，紧接着又使用'\\'写了一个包含转义字符的普通字符串，Python 会自动将这两个字符串拼接在一起D:\Program Files\Python 3.8\
       ```
 
 ##### bytes
@@ -289,8 +296,19 @@ c1*c2:  (72.24-13.2j)
   ```python
   #通过构造函数创建空 bytesb1 = bytes()
   #通过空字符串创建空 bytesb2 = b''
-  #通过b前缀将字符串转换成 bytesb3 = b'http://c.biancheng.net/python/'print("b3: ", b3)print(b3[3])print(b3[7:22])#为 bytes() 方法指定字符集b4 = bytes('C语言中文网8岁了', encoding='UTF-8')print("b4: ", b4)
-  #通过 encode() 方法将字符串转换成 bytesb5 = "C语言中文网8岁了".encode('UTF-8')print("b5: ", b5)b3:  b'http://c.biancheng.net/python/'112b'c.biancheng.net'b4:  b'C\xe8\xaf\xad\xe8\xa8\x80\xe4\xb8\xad\xe6\x96\x87\xe7\xbd\x918\xe5\xb2\x81\xe4\xba\x86'b5:  b'C\xe8\xaf\xad\xe8\xa8\x80\xe4\xb8\xad\xe6\x96\x87\xe7\xbd\x918\xe5\xb2\x81\xe4\xba\x86'
+  #通过b前缀将字符串转换成 bytesb3 = b'http://c.biancheng.net/python/'
+  print("b3: ", b3)
+  print(b3[3])
+  print(b3[7:22])
+  #为 bytes() 方法指定字符集
+  b4 = bytes('C语言中文网8岁了', encoding='UTF-8')
+  print("b4: ", b4)
+  #通过 encode() 方法将字符串转换成 
+  bytesb5 = "C语言中文网8岁了".encode('UTF-8')
+  print("b5: ", b5)
+  b3:  b'http://c.biancheng.net/python/'112b'c.biancheng.net'
+  b4:  b'C\xe8\xaf\xad\xe8\xa8\x80\xe4\xb8\xad\xe6\x96\x87\xe7\xbd\x918\xe5\xb2\x81\xe4\xba\x86'
+  b5:  b'C\xe8\xaf\xad\xe8\xa8\x80\xe4\xb8\xad\xe6\x96\x87\xe7\xbd\x918\xe5\xb2\x81\xe4\xba\x86'
   ```
 
   - 从运行结果可以发现，对于非 ASCII 字符，print 输出的是它的字符编码值（十六进制形式），而不是字符本身。非 ASCII 字符一般占用两个字节以上的内存，而 bytes 是按照单个字节来处理数据的，所以不能一次处理多个字节。
@@ -388,7 +406,8 @@ c1*c2:  (72.24-13.2j)
   ```python
   age = 8
   print("C语言中文网已经%d岁了！" % age)
-  输出结果  C语言中文网已经8岁了！在 print() 函数中，由引号包围的是格式化字符串，它相当于一个字符串模板，可以放置一些转换说明符（占位符）。本例的格式化字符串中包含一个%d说明符，它最终会被后面的 age 变量的值所替代。中间的%是一个分隔符，它前面是格式化字符串，后面是要输出的表达式。格式化字符串中也可以包含多个转换说明符，这个时候也得提供多个表达式，用以替换对应的转换说明符；多个表达式必须使用小括号( )包围起来。
+  输出结果  C语言中文网已经8岁了！
+  在 print() 函数中，由引号包围的是格式化字符串，它相当于一个字符串模板，可以放置一些转换说明符（占位符）。本例的格式化字符串中包含一个%d说明符，它最终会被后面的 age 变量的值所替代。中间的%是一个分隔符，它前面是格式化字符串，后面是要输出的表达式。格式化字符串中也可以包含多个转换说明符，这个时候也得提供多个表达式，用以替换对应的转换说明符；多个表达式必须使用小括号( )包围起来。
   name = "C语言中文网"
   age = 8
   url = "http://c.biancheng.net/"
@@ -457,7 +476,10 @@ c1*c2:  (72.24-13.2j)
   - 精度值需要放在最小宽度之后，中间用点号`.`隔开；也可以不写最小宽度，只写精度。具体格式如下：
 
     ```python
-    %m.nf%.nfm 表示最小宽度，n 表示输出精度，.是必须存在的。f = 3.141592653# 最小宽度为8，小数点后保留3位print("%8.3f" % f)# 最小宽度为8，小数点后保留3位，左边补0print("%08.3f" % f)# 最小宽度为8，小数点后保留3位，左边补0，带符号print("%+08.3f" % f)   3.1420003.142+003.142
+    %m.nf%.nfm 表示最小宽度，n 表示输出精度，.是必须存在的。f = 3.141592653
+    # 最小宽度为8，小数点后保留3位print("%8.3f" % f)
+    # 最小宽度为8，小数点后保留3位，左边补0print("%08.3f" % f)
+    # 最小宽度为8，小数点后保留3位，左边补0，带符号print("%+08.3f" % f)   3.1420003.142+003.142
     ```
 
 
