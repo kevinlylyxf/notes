@@ -1218,7 +1218,7 @@ c1*c2:  (72.24-13.2j)
   ```python
   >>> a = ['a', 'b', 'c']
   >>> b = [1, 2, 3]
-  >>> for i in zip(a, b):...     
+  >>> for i in zip(a, b):...
   		print(i)...('a', 1)('b', 2)('c', 3)
   ```
 
@@ -1250,20 +1250,28 @@ c1*c2:  (72.24-13.2j)
 
 - _的用法，当一些元素不用时，用`_`表示是更好的写法，可以让读代码的人知道这个元素是不要的
 
-  ```
-  >>> person = ('Bob', 20, 50, (11, 20, 2000))>>> name, *_, (*_, year) = person>>> name'Bob'>>> year2000
+  ```python
+  >>> person = ('Bob', 20, 50, (11, 20, 2000))
+  >>> name, *_, (*_, year) = person
+  >>> name'Bob'
+  >>> year2000
   ```
 
 - 多变量同时赋值，之前赋值符号右侧都是可迭代对象，其实左侧也可以是多个变量
 
-  ```
-  >>> a, b = 1, 2>>> a1>>> b2>>> a = 1, 2>>> a(1, 2)下面的语法是错误的*a = 1, 2  //如果只有一个参数，编译器会当作字符串，不能作为元组处理，可以在后面加一个逗号来表示元组a, b, c = 1, 2  可以这样写*a, = 1, 2
+  ```python
+  >>> a, b = 1, 2
+  >>> a1
+  >>> b2
+  >>> a = 1, 2
+  >>> a(1, 2)下面的语法是错误的*a = 1, 2  //如果只有一个参数，编译器会当作字符串，不能作为元组处理，可以在后面加一个逗号来表示元组a, b, c = 1, 2  可以这样写*a, = 1, 2
   ```
 
 - *之可变参数，函数定义时，我们使用`*`的可变参数，其实也是压包解包过程
 
   ```
-  >>> def myfun(*num):...     print(num)...>>> myfun(1,2,5,6)(1, 2, 5, 6)
+  >>> def myfun(*num):...     print(num)...
+  >>> myfun(1,2,5,6)(1, 2, 5, 6)
   ```
 
   - 参数用`*num`表示，`num`变量就可以当成元组调用了。其实这个过程相当于`*num, = 1,2,5,6`
@@ -1271,7 +1279,8 @@ c1*c2:  (72.24-13.2j)
 - *之关键字参数
 
   ```
-  >>> def myfun(**kw):...     print(kw)...>>> myfun(name = "Bob", age = 20, weight = 50){'weight': 50, 'name': 'Bob', 'age': 20}
+  >>> def myfun(**kw):...     print(kw)...
+  >>> myfun(name = "Bob", age = 20, weight = 50){'weight': 50, 'name': 'Bob', 'age': 20}
   ```
 
   - 键值对传入`**kw`，`kw`就可以表示相应字典。`**`的用法只在函数定义中使用，不能这样使用
@@ -1285,19 +1294,22 @@ c1*c2:  (72.24-13.2j)
   - 函数传入实参时，可变参数(`*`)之前的参数不能指定参数名
 
     ```
-    >>> def myfun(a, *b):...     print(a)...     print(b)...>>> myfun(a=1, 2,3,4)  File "<stdin>", line 1SyntaxError: positional argument follows keyword argument>>> myfun(1, 2,3,4)1(2, 3, 4)
+    >>> def myfun(a, *b):...     print(a)...     print(b)...
+    >>> myfun(a=1, 2,3,4)  File "<stdin>", line 1SyntaxError: positional argument follows keyword argument>>> myfun(1, 2,3,4)1(2, 3, 4)
     ```
 
   - 函数传入实参时，可变参数(`*`)之后的参数必须指定参数名，否则就会被归到可变参数之中
 
     ```
-    >>> def myfun(a, *b, c=None):...     print(a)...     print(b)...     print(c)...>>> myfun(1, 2,3,4)1(2, 3, 4)None>>> myfun(1, 2,3,c=4)1(2, 3)4
+    >>> def myfun(a, *b, c=None):...     print(a)...     print(b)...     print(c)...
+    >>> myfun(1, 2,3,4)1(2, 3, 4)None>>> myfun(1, 2,3,c=4)1(2, 3)4
     ```
 
   - 关键字参数都只能作为最后一个参数，前面的参数按照位置赋值还是名称赋值都可以
 
     ```
-    >>> def myfun(a, *b, c, **d):...     print(a)...     print(b)...     print(c)...     print(d)...>>> myfun(1, 2, 3, c= 4, m = 5, n = 6)1(2, 3)4{'n': 6, 'm': 5}
+    >>> def myfun(a, *b, c, **d):...     print(a)...     print(b)...     print(c)...     print(d)...
+    >>> myfun(1, 2, 3, c= 4, m = 5, n = 6)1(2, 3)4{'n': 6, 'm': 5}
     ```
 
   - 可变参数与关键词参数共同使用以表示任意参数，下面是这一点在装饰器当中的使用
@@ -1311,17 +1323,29 @@ c1*c2:  (72.24-13.2j)
 
 - 解包作为参数传入函数中
 
-  ```
-  def myfun(a, b):    print(a + b)列表元组的解包   >>> n = [1, 2]>>> myfun(*n)3>>> m = (1, 2)>>> myfun(*m)3字典的解包>>> mydict = {'a':1, 'b': 2}>>> myfun(**mydict)3>>> myfun(*mydict)ba应用>>> bob = {'name': 'Bob', 'age': 30}>>> "{name}'s age is {age}".format(**bob)"Bob's age is 30"
+  ```python
+  def myfun(a, b):    print(a + b)列表元组的解包   
+  >>> n = [1, 2]
+  >>> myfun(*n)3
+  >>> m = (1, 2)
+  >>> myfun(*m)3字典的解包
+  >>> mydict = {'a':1, 'b': 2}
+  >>> myfun(**mydict)3
+  >>> myfun(*mydict)ba应用
+  >>> bob = {'name': 'Bob', 'age': 30}
+  >>> "{name}'s age is {age}".format(**bob)"Bob's age is 30"
   ```
 
 - 多返回值函数
 
+  ```python
+  def myfun(a, b):    return a + 1, b + 2
+  >>> m, n = myfun(1, 2)
+  >>> m2
+  >>> n4
+  >>> p = myfun(1, 2)
+  >>> p(2, 4)
   ```
-  def myfun(a, b):    return a + 1, b + 2>>> m, n = myfun(1, 2)>>> m2>>> n4>>> p = myfun(1, 2)>>> p(2, 4)
-  ```
-
-  
 
 - 其实在python中元组解包不仅仅只限于元组，只要是可迭代的如列表、元组、字典、字符串、range()等，都是可以的
 

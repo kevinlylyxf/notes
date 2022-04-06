@@ -172,4 +172,10 @@ alias unproxy='unset all_proxy && unset http_proxy && unset https_proxy'
   sudo pacman -S ripgrep
   ```
 
+- 安装universal-ctags
+
+  ```
+  sudo pacman -S universal-ctags
+  ```
+
   
