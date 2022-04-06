@@ -126,6 +126,92 @@ alias unproxy='unset all_proxy && unset http_proxy && unset https_proxy'
 
 - 打开配置页面进行配置输入法
 
+##### python
+
+- 安装tkinter，运行idle3时报错无法导入tkinter
+
+  ```
+  sudo pacman -S tk
+  ```
+
+- 安装pip
+
+  ```
+  sudo pacman -S python-pip   #此时安装的是python3的pip，pip版本跟python版本挂钩，python是3.10版本的，pip也是3.10版本的，如果想安装其他版本的pip，需要先安装其他版本的python，然后安装对应的pip版本，这样通过pip下载的py包就会放到对应版本的site-packages目录里面
+  ```
+
+  - 官网上寻找安装方法，打开python官网，点击最上面一行pypl，打开的界面上搜寻pip，点进去就能看到pip的介绍，然后可以看到安装方法。
+
+###### 安装不同版本的python
+
+- 在manjaro中启用AUR，启用过程在添加/删除软件->三个点->首选项->第三方->启用AUR支持
+
+  - 在软件仓库中搜索python版本，例如python3.6搜寻python36，此时就能看到搜索结果，如果搜寻到，使用yay安装
+
+    ```
+    yay -S python36
+    ```
+
+  - 其是编译安装的，要注意提前安装make，gcc等工具
+
+- 源码安装python
+
+  - python官网下载源码tar.gz或者tar.xz文件，或者wget、curl下载源码
+
+  - 解压缩文件
+
+    ```
+    tar -zxvf  gz文件
+    tar -Jxvf  xz文件
+    ```
+
+  - 进入解压缩后的文件夹
+
+    ```
+    cd Python-3.8.13
+    ```
+
+  - 配置安装路径
+
+    ```
+    ./configure --prefix=/usr/lib/python3.8
+    ```
+
+    - manjaro下所有的都安装在/usr/lib下，其他版本的安装路径应该也在这里，最好看一下和其他版本的放在一起，容易管理。
+
+  - 编译和安装
+
+    ```
+    make && make install
+    ```
+
+  - 添加环境变量
+
+    - 因为yay和pacman安装的python，其可执行程序都放在了/usr/bin下面，这样就不用自己管理配置环境变量了，因为/usr/bin就在PATH下，但是用源码安装的python可执行程序并没有放到/usr/bin下面。而是在/usr/lib/python3.8/bin下面，即自己配置的安装路径里面，这样就需要将环境变量添加上，这样才能找到可执行程序。
+
+      ```
+      export PATH=$PATH:/usr/lib/python3.8/bin
+      ```
+
+      - 这样是在此次终端中有效，如果在所有终端中有效，就需要将上面这句话放到配置文件中。~/.zshrc
+
+- 为不同版本的python安装对应版本的pip
+
+  ```
+  python3.6 -m ensurepip --upgrade
+  ```
+
+  - 其中python是哪个版本的，前面就写python几点几
+
+  - 这样使用pip就可以使用对应版本的pip3.6，使用pip3.6安装的py包放在python3.6目录里面，这样就隔离了不同版本的影响
+
+    ```
+    /usr/lib/python3.6/site-packages/numpy
+    ```
+
+  - 到时候使用import引入包，使用不同的python解释器去解释，就能区分开不同版本的包。
+
+  - 注意，系统自己安装的python版本，例如我用的manjaro安装的是python3.10，其python安装在/usr/lib/python3.10里面，但是其通过pip安装的包在/home/lyl/.local/lib/python3.10/site-packages里面，这是系统自带的安装的，如果我们安装了其他版本的python，其都是在/usr/lib里面以不同版本的python来做目录区分的。例如上面的python3.6，但是源码安装的python在manjaro下也是在/home下，yay安装的在/usr/lib下，这个到时候使用的时候直接用find查找一下看一下具体在哪里就可以了，没有固定的具体的位置，不是死的。
 
 ##### vim
 
