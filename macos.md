@@ -179,6 +179,22 @@ alias unproxy='unset all_proxy && unset http_proxy && unset https_proxy'
 
     - manjaro下所有的都安装在/usr/lib下，其他版本的安装路径应该也在这里，最好看一下和其他版本的放在一起，容易管理。
 
+    - manjaro下lib64和lib目录是一个，软连接过去的，其他的linux版本lib和lib64是不同的，manjaro有一个lib32目录是存的32位的，其他的linux 发行版没有lib32目录，lib目录就是32位的，这个有些区别
+
+      ```shel
+      ls -l                                                      
+      总用量 312
+      drwxr-xr-x   6 root root  90112  4月  6 17:04 bin
+      drwxr-xr-x 506 root root  36864  4月  6 16:46 include
+      drwxr-xr-x 240 root root 159744  4月  6 17:50 lib
+      drwxr-xr-x   2 root root   4096  3月 14 17:39 lib32
+      lrwxrwxrwx   1 root root      3 12月 18 23:21 lib64 -> lib
+      drwxr-xr-x  11 root root   4096  3月 14 17:32 local
+      lrwxrwxrwx   1 root root      3 12月 18 23:21 sbin -> bin
+      drwxr-xr-x 278 root root  12288  4月  6 16:41 share
+      drwxr-xr-x   2 root root   4096 12月 18 23:21 src
+      ```
+
   - 编译和安装
 
     ```

@@ -1696,8 +1696,97 @@ c1*c2:  (72.24-13.2j)
     'http://c.biancheng.net/shell/'
     s 本身就是一个字符串，但是我们依然使用 str() 和 repr() 对它进行了转换。从运行结果可以看出，str() 保留了字符串最原始的样子，而 repr() 使用引号将字符串包围起来，这就是 Python 字符串的表达式形式。
     ```
+  
+    ```python
+    >>> number = 123456789
+    >>> type(str(number))
+    <class 'str'>
+    >>> type(repr(number))
+    <class 'str'>
+    >>> print(repr(number))
+    123456789
+    >>> print(str(number))
+    123456789
     
+    两个函数返回的类型是相同的，值也是相同的。
+    
+    >>> print(str('123456789'))
+    123456789
+    >>> print(repr('123456789'))
+    '123456789'
+    
+    但当我们把一个字符串传给 str() 函数再打印到终端的时候，输出的字符不带引号。而将一个字符串传给 repr() 函数再打印到终端的时候，输出的字符带有引号。
+    造成这两种输出形式不同的原因在于：
+    print 语句结合 str() 函数实际上是调用了对象的 __str__ 方法来输出结果。而 print 结合 repr() 实际上是调用对象的 __repr__ 方法输出结果。下例中我们用 str 对象直接调用这两个方法，输出结果的形式与前一个例子保持一致。
+    >>> print('123456789'.__repr__())
+    '123456789'
+    >>> print('123456789'.__str__())
+    123456789
+    ```
+  
     - 在 Python 交互式编程环境中输入一个表达式（变量、加减乘除、逻辑运算等）时，Python 会自动使用 repr() 函数处理该表达式。
+  
+  - 将字符串在转换为字符串
+  
+    ```python
+    >>> repr('abd')  #repr转换后是在'abd'的外层又加了一层引号
+    "'abd'"
+    >>> str('abd')   #str转换后还是原来的值
+    'abd'
+    >>> str('abd') == 'abd'
+    True
+    >>> repr('abd') == 'abd'
+    False
+    >>> len(repr('abd'))  #repr转换后的字符串和str转换后的字符串个数都是不一样的
+    5
+    >>> len(str('abd'))
+    3
+    ```
+  
+  - 将整形转换为字符串
+  
+    ```python
+    >>> a = 123  #int类型
+    >>> type(a)
+    <class 'int'>
+    >>> str(a)
+    '123'
+    >>> type(str(a))
+    <class 'str'>
+    >>> print(str(a))  #print输出时会去掉引号，但是仍然是str类型
+    123
+    >>> repr(a)
+    '123'
+    >>> type(repr(a))
+    <class 'str'>
+    >>> print(repr(a))
+    123
+    >>> len(repr(a))  #转换后的数据都是'123'，所以长度是3
+    3
+    >>> len(str(a))   #转换后的数据都是'123'，所以长度是3
+    3
+    ```
+  
+  - 命令行下print和直接输出的对比，每个类都有默认的`__repr__, __str__`方法，在命令行下用print 实例时调用的是类的str方法，直接调用的是类的repr方法；在文件模式下没有print的话是不会有输出值的，自己定义一个类A，验证以上结论：
+  
+    ```python
+    >>> class A():
+    ...     def __repr__(self):
+    ...         return 'repr'
+    ...     def __str__(self):
+    ...         return 'str'
+    ...
+    >>> a = A()
+    >>> a    #直接输出调用的是repr方法
+    repr
+    >>> print(a)    #print调用的是str方法
+    str
+    ```
+  
+  - 总结
+  
+    - 尽管str(),repr()在特性和功能方面都非常相似，事实上repr()返回的是一个对象的“官方”字符串表示，也就是说绝大多数情况下可以通过求值运算（使用内建函数eval()）重新得到该对象，但str()则有所不同。str()致力于生成一个对象的可读性好的字符串表示，它的返回结果通常无法用于eval()求值，但很适合用于print语句输出。需要再次提醒的是，并不是所有repr()返回的字符串都能够用 eval()内建函数得到原来的对象。
+    - 也就是说 repr() 输出对 Python比较友好，而str()的输出对用户比较友好。
 
 ###### 截取字符串
 
@@ -2155,7 +2244,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 除了数字，while 循环还常用来遍历列表、元组和字符串，因为它们都支持通过下标索引获取指定位置的元素
 
-  ```
+  ```python
   my_char="http://c.biancheng.net/python/"
   i = 0;
   while i<len(my_char):
@@ -2189,7 +2278,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 在使用 for 循环时，最基本的应用就是进行数值循环。比如说，想要实现从 1 到 100 的累加
 
-  ```
+  ```python
   print("计算 1+2+...+100 的结果为：")
   #保存累加结果的变量
   result = 0
@@ -2291,7 +2380,11 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
     - 直接使用 for 循环遍历生成器对象，可以获得各个元素
 
       ```
-      a = (x for x in range(1,10))for i in a:    print(i,end=' ')print(tuple(a))1 2 3 4 5 6 7 8 9 ()
+      a = (x for x in range(1,10))
+      for i in a:    
+      	print(i,end=' ')
+      	print(tuple(a))
+      	1 2 3 4 5 6 7 8 9 ()
       ```
 
     - 使用 `__next__()` 方法遍历生成器对象，也可以获得各个元素
@@ -2340,7 +2433,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 其中 iterable,... 表示多个列表、元组、字典、集合、字符串，甚至还可以为 range() 区间。
 
-    ```
+    ```python
     my_list = [11,12,13]
     my_tuple = (21,22,23)
     print([x for x in zip(my_list,my_tuple)])
@@ -2359,8 +2452,11 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   
   - 对于 zip() 函数返回的 zip 对象，既可以像上面程序那样，通过遍历提取其存储的元组，也可以向下面程序这样，通过调用 list() 函数将 zip() 对象强制转换成列表：
   
-    ```
-    my_list = [11,12,13]my_tuple = (21,22,23)print(list(zip(my_list,my_tuple)))
+    ```python
+    my_list = [11,12,13]
+    my_tuple = (21,22,23)
+    print(list(zip(my_list,my_tuple)))
+    [(11, 21), (12, 22), (13, 23)]
     ```
 
 ###### reversed函数
@@ -2373,8 +2469,16 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - seq 可以是列表，元素，字符串以及 range() 生成的区间列表。
 
-  ```
-  #将列表进行逆序print([x for x in reversed([1,2,3,4,5])])#将元组进行逆序print([x for x in reversed((1,2,3,4,5))])#将字符串进行逆序print([x for x in reversed("abcdefg")])#将 range() 生成的区间列表进行逆序print([x for x in reversed(range(10))])[5, 4, 3, 2, 1][5, 4, 3, 2, 1]['g', 'f', 'e', 'd', 'c', 'b', 'a'][9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+  ```python
+  #将列表进行逆序
+  print([x for x in reversed([1,2,3,4,5])])
+  #将元组进行逆序print([x for x in reversed((1,2,3,4,5))])
+  #将字符串进行逆序print([x for x in reversed("abcdefg")])
+  #将 range() 生成的区间列表进行逆序print([x for x in reversed(range(10))])
+  [5, 4, 3, 2, 1]
+  [5, 4, 3, 2, 1]
+  ['g', 'f', 'e', 'd', 'c', 'b', 'a']
+  [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
   ```
 
 - 除了使用列表推导式的方式，还可以使用 list() 函数，将 reversed() 函数逆序返回的迭代器，直接转换成列表
@@ -2395,8 +2499,26 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - iterable 表示指定的序列，key 参数可以自定义排序规则；reverse 参数指定以升序（False，默认）还是降序（True）进行排序。sorted() 函数会返回一个排好序的列表。
 
-    ```
-    #对列表进行排序a = [5,3,4,2,1]print(sorted(a))#对元组进行排序a = (5,4,3,1,2)print(sorted(a))#字典默认按照key进行排序a = {4:1,\     5:2,\     3:3,\     2:6,\     1:8}print(sorted(a.items()))#对集合进行排序a = {1,5,3,2,4}print(sorted(a))#对字符串进行排序a = "51423"print(sorted(a))[1, 2, 3, 4, 5][1, 2, 3, 4, 5][(1, 8), (2, 6), (3, 3), (4, 1), (5, 2)][1, 2, 3, 4, 5]['1', '2', '3', '4', '5']
+    ```python
+    #对列表进行排序
+    a = [5,3,4,2,1]
+    print(sorted(a))
+    #对元组进行排序
+    a = (5,4,3,1,2)
+    print(sorted(a))
+    #字典默认按照key进行排序
+    a = {4:1,\     5:2,\     3:3,\     2:6,\     1:8}
+    print(sorted(a.items()))
+    #对集合进行排序
+    a = {1,5,3,2,4}
+    print(sorted(a))
+    #对字符串进行排序
+    a = "51423"
+    print(sorted(a))
+    [1, 2, 3, 4, 5]
+    [1, 2, 3, 4, 5]
+    [(1, 8), (2, 6), (3, 3), (4, 1), (5, 2)]
+    [1, 2, 3, 4, 5]['1', '2', '3', '4', '5']
     ```
 
 - 使用 sorted() 函数对序列进行排序， 并不会在原序列的基础进行修改，而是会重新生成一个排好序的列表。
@@ -2415,11 +2537,13 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 通过调用 Python 的 help() 内置函数或者 `__doc__` 属性，我们可以查看某个函数的使用说明文档。事实上，无论是 Python 提供给我们的函数，还是自定义的函数，其说明文档都需要设计该函数的程序员自己编写。其实，函数的说明文档，本质就是一段字符串，只不过作为说明文档，字符串的放置位置是有讲究的，函数的说明文档通常位于函数内部、所有代码的最前面。
 
-  ```
+  ```python
   #定义一个比较字符串大小的函数
   def str_max(str1,str2):
   	'''    比较 2 个字符串的大小    '''    
-  	str = str1 if str1 > str2 else str2    return strhelp(str_max)
+  	str = str1 if str1 > str2 else str2    
+  	return str
+  help(str_max)
   #print(str_max.__doc__)
   Help on function str_max in module __main__:str_max(str1, str2)    比较 2 个字符串的大小
   ```
@@ -2427,7 +2551,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   - 上面程序中，还可以使用 `__doc__` 属性来获取 str_max() 函数的说明文档，即使用最后一行的输出语句，其输出结果为
 
     ```
-      比较 2 个字符串的大小
+    比较 2 个字符串的大小
     ```
 
 - [Python](http://c.biancheng.net/python/) 中，根据实际参数的类型不同，函数参数的传递方式可分为 2 种，分别为值传递和引用（地址）传递：
@@ -2780,7 +2904,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - vars() 函数也是 Python 内置函数，其功能是返回一个指定 object 对象范围内所有变量组成的字典。如果不传入object 参数，vars() 和 locals() 的作用完全相同。
 
-    ```
+    ```python
     #全局变量
     Pyname = "Python教程"
     Pyadd = "http://c.biancheng.net/python/"
@@ -2883,7 +3007,8 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   #调用全局函数
   new_indef = outdef()
   调用全局函数中的局部函数
-  new_indef()调用局部函数
+  new_indef()
+  调用局部函数
   ```
 
   - 以上面程序中的 outdef() 和 indef() 为例，如果 outdef() 不将 indef 作为返回值，则 indef() 只能在 outdef() 函数内部使用；反之，则 indef() 函数既可以在 outdef() 函数内部使用，也可以在 outdef() 函数的作用域，也就是全局范围内使用。
@@ -2905,7 +3030,7 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
   UnboundLocalError: local variable 'name' referenced before assignment
   ```
 
-  - 由于这里的 name 变量也是局部变量，因此前面章节讲解的 globals() 函数或者 globals 关键字，并不适用于解决此问题。这里可以使用 Python 提供的 nonlocal 关键字。
+  - 由于这里的 name 变量也是局部变量，因此前面章节讲解的 globals() 函数或者 global 关键字，并不适用于解决此问题。这里可以使用 Python 提供的 nonlocal 关键字。
 
     ```python
     #全局函数
