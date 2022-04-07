@@ -3200,15 +3200,16 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
   - 对于单行函数，使用 lambda 表达式可以省去定义函数的过程，让代码更加简洁；
   - 对于不需要多次复用的函数，使用 lambda 表达式可以在用完之后立即释放，提高程序执行的性能。
+  - lambda没有return语句，上面这种定义方法是正确的，因为python中的lambda是单行函数，相当于返回值，直接就使用了
 
 ###### eval()和exec()
 
 - eval() 和 exec() 函数的功能是相似的，都可以执行一个字符串形式的 Python 代码（代码以字符串的形式提供），相当于一个 Python 的解释器。二者不同之处在于，eval() 执行完要返回结果，而 exec() 执行完不返回结果
 
   ```
-  eval(source, globals=None, locals=None, /)
+  eval(expression, globals=None, locals=None, /)
   
-  exec(source, globals=None, locals=None, /)
+  exec(expression, globals=None, locals=None, /)
   ```
 
   - 二者的语法格式除了函数名，其他都相同，其中各个参数的具体含义如下：
@@ -3232,8 +3233,10 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
     - 上面的代码是在作用域 dic 下执行了一句 a = 4 的代码。可以看出，exec() 之前 dic 中的 key 只有一个 b。执行完 exec() 之后，系统在 dic 中生成了两个新的 key，分别是 a 和 `__builtins__`。其中，a 为执行语句生成的变量，系统将其放到指定的作用域字典里；`__builtins__` 是系统加入的内置 key。
 
-    - locals参数的用法就很简单了
+      - 这样就可以指定在某一个作用域内执行命令，如果没有eval这样的函数的时候，这种执行就是全局的，不会在某一个作用域内
 
+    - locals参数的用法就很简单了
+    
       ```
       a=10
       b=20
@@ -3275,10 +3278,54 @@ print("货币形式：{:,d}".format(1000000))#科学计数法表示print("科学
 
 - 应用场景
 
+  - python3中input将接受的结果存为字符串，一般来说，可以使用eval实现表达式的还原，并且实现表达式的计算，比如下面使用eval直接完成了表达式的还原与计算
+
+    ```
+    >>> s = input("输入一个表达式")
+    输入一个表达式：1+3+4+4*3
+    >>> print(eval(s))
+    20
+    ```
+
+  - 具体类型转换使用
+
+    ```python
+    #1.eval无参实现字符串转化
+    s = '1+2+3*5-2'
+    print(eval(s))  #16
+     
+    #2.字符串中有变量也可以
+    x = 1
+    print(eval('x+2'))  #3
+     
+    #3.字符串转字典
+    print(eval("{'name':'linux','age':18}"))
+    #输出结果：{'name':'linux','age':18}
+     
+    #4.eval传递全局变量参数,注意字典里的:age中的age没有带引号，说明它是个变量，而不是字符串。
+    #这里两个参数都是全局的
+    print(eval("{'name':'linux','age':age}",{"age":1822}))
+    #输出结果：{'name': 'linux', 'age': 1822}
+    print(eval("{'name':'linux','age':age}",{"age":1822},{"age":1823}))
+    #输出结果：{'name': 'linux', 'age': 1823}
+     
+    #eval传递本地变量，既有global和local时，变量值先从local中查找。
+    age=18
+    print(eval("{'name':'linux','age':age}",{"age":1822},locals()))
+    #输出结果：{'name': 'linux', 'age': 18}
+    print("-----------------")
+     
+    print(eval("{'name':'linux','age':age}"))
+    ```
+
+    
+
   - 在使用 Python 开发服务端程序时，这两个函数应用得非常广泛。例如，客户端向服务端发送一段字符串代码，服务端无需关心具体的内容，直接跳过 eval() 或 exec() 来执行，这样的设计会使服务端与客户端的耦合度更低，系统更易扩展。
+
   - 另外，如果读者以后接触 [TensorFlow](http://c.biancheng.net/tensorflow/) 框架，就会发现该框架中的静态图就是类似这个原理实现的：
     - TensorFlow 中先将张量定义在一个静态图里，这就相当将键值对添加到字典里一样；
     - TensorFlow 中通过 session 和张量的 eval() 函数来进行具体值的运算，就当于使用 eval() 函数进行具体值的运算一样。
+
   - 需要注意的是，在使用 eval() 或是 exec() 来处理请求代码时，函数 eval() 和 exec() 常常会被黑客利用，成为可以执行系统级命令的入口点，进而来攻击网站。解决方法是：通过设置其命名空间里的可执行函数，来限制 eval() 和 exec() 的执行范围。
 
 - 使用 exec() 和 eval() 函数时，一定要记住，它们的第一个参数是字符串，而字符串的内容一定要是可执行的代码。
