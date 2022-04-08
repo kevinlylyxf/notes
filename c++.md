@@ -4174,7 +4174,35 @@ stopwatch stopwatch::operator++(int n){
       std::basic_ostream<CharT,Traits>& (*func)(std::basic_ostream<CharT,Traits>&) );
   ```
 
-  
+  - 在我们规定第一个字节是0xA0的时候，如果使用stringstream流写入的时候
+
+    ```
+    ::std::stringstream stm;
+    stm.str("");
+    stm << 0xA0;
+    cout << "size = " << stm.str().size() << endl;
+    cout << stm.str() << endl;
+    结果
+    3
+    160
+    相当于将0xA0=160当成三个字符直接写进去了，并不是占用一个字节
+    ```
+
+  - 正确的写法如下
+
+    ```
+    ::std::stringstream stm;
+    stm.str("");
+    stm << (char)0xA0;
+    cout << "size = " << stm.str().size() << endl;
+    cout << stm.str() << endl;
+    结果
+    1
+    一个不知道什么的字符
+    ```
+
+    - 将这个数据强转为char类型，此时占用一个字节
+    - 如果写入的不是一个字节，是int类型，例如int值为123456，int占用4个字节，因为最后拼写完的是一个字符串，此时写进流中的是6个字节，相当于将这个整数拼写为字符串了，并不能逆向读取4个字节，然后转成int，这样是错误的
 
 - C++ 又可以称为“带类的 C”，即可以理解为 C++ 是 C 语言的基础上增加了面向对象（类和对象）
 
