@@ -1595,6 +1595,15 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
   - 在使用epoll时会创建一个epoll实例，然后用epoll_ctl函数将自己需要关注的事件注册到epoll实例中，epoll_wait函数会返回就绪的我们关注的事件，如果事ET模式就自己删除了，LT模式下不会自己删除
   - ET模式下每次write或read需要循环write或read直到返回EAGAIN错误。以读操作为例，这是因为ET模式只在socket描述符状态发生变化时才触发事件，如果不一次把socket内核缓冲区的数据读完，会导致socket内核缓冲区中即使还有一部分数据，该socket的可读事件也不会被触发。根据上面的讨论，若ET模式下使用阻塞IO，则程序一定会阻塞在最后一次write或read操作，因此说ET模式下一定要使用非阻塞IO。
 
+### IPC进程间通信
+
+- ipcs/ipcrm命令 是linux/uinx上提供关于一些进程间通信方式的信息，包括共享内存，消息队列，信号
+- 多进程间通信常用的技术手段包括共享内存、消息队列、信号量等等，Linux系统下自带的ipcs命令是一个极好的工具，可以帮助我们查看当前系统下以上三项的使用情况，从而利于定位多进程通信中出现的通信问题。
+
+##### 共享内存
+
+- 
+
 ### 设计模式
 
 #### 创建型模式
