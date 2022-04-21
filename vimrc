@@ -220,6 +220,9 @@ noremap <LEADER>h <C-w>h
 noremap <LEADER>l <C-w>l
 noremap <LEADER>o <C-w>o
 
+" new windows form buffers
+noremap <LEADER>n :vertical ball<CR>
+
 " Disable the default s key
 noremap s <nop>
 
