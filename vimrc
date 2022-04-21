@@ -273,8 +273,14 @@ noremap bk :bprevious<CR>
 noremap b, :bfirst<CR>
 noremap b. :blast<CR>
 
+" select buffer
+noremap \b :Buffers<CR>
+
 " new windows form buffers
 noremap <LEADER>n :vertical ball<CR>
+
+" close all buffers except the current buffer
+noremap bo :%bd | e#<CR>
 
 
 " ===
@@ -282,9 +288,6 @@ noremap <LEADER>n :vertical ball<CR>
 " ===
 " find and replace
 noremap \s :%s//g<left><left>
-
-" select buffer
-noremap \b :Buffers<CR>
 
 " select file
 noremap \f :Files<CR>

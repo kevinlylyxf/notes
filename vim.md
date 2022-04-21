@@ -1622,6 +1622,34 @@
 - 可以使用`:bdelete filename`，`:bdelete 3`或`:3 bdelete`命令来删除一个缓冲区。也可以使用`:1,3 bdelete`命令来删除指定范围的缓冲区。所删除缓冲区引用的文件名，也将会随之从缓冲区列表中删除。
 - 如果缓冲区被改动过，那么该命令将失败。如果使用了!选项的`:bdelete! filename`命令，强制删除缓冲区，那么在缓冲区中的所有改动都会被放弃。
 
+###### 删除所有缓冲区
+
+```
+%bdelete       " delete all buffers
+可以简写为%bd
+```
+
+- 上述命令为删除所有的缓冲区
+
+```
+e[dit] [++opt] [+cmd] #[count]
+                        Edit the [count]th buffer (as shown by |:files|).
+                        This command does the same as [count] CTRL-^.  But ":e
+                        #" doesn't work if the alternate buffer doesn't have a
+                        file name, while CTRL-^ still works then.
+                        Also see |++opt| and |+cmd|.
+```
+
+- 上述命令edit表明e #后面跟具体的数字表示编辑第几个buffer，e#和e #作用一样，加不加空格都是一样的，如果e#不加数字表示是当前的buffer
+- 在vim中｜字符是用来在一条语句里面执行多个命令的，所以我们可以将多条语句写成一行。这个不要跟c语言中的或扯上关系，两个是不同的东西。
+
+```
+%bd | e#
+```
+
+- 工作流程为：关闭所有打开的缓冲区，然后重新打开我当前所在的缓冲区. 在 Vim 中， `|` 将命令的执行链接在一起。
+- 上述命令可以直接在命令行下执行是正确的，目前来看在键映射的情况下会出问题。
+
 ###### 卸载缓冲区
 
 - 命令`:bunload`会从内存中卸载一个缓冲区，所有为这个缓冲区打开的窗口也会关闭。但是这个文件名仍然会存在于缓冲区列表中。如果缓冲区被改动过，那么该命令将失败。你也可以使用!选项的`:bunload!`命令，强制卸载缓冲区，但所有的改动也将会丢失。
