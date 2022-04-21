@@ -220,8 +220,6 @@ noremap <LEADER>h <C-w>h
 noremap <LEADER>l <C-w>l
 noremap <LEADER>o <C-w>o
 
-" new windows form buffers
-noremap <LEADER>n :vertical ball<CR>
 
 " Disable the default s key
 noremap s <nop>
@@ -275,11 +273,24 @@ noremap bk :bprevious<CR>
 noremap b, :bfirst<CR>
 noremap b. :blast<CR>
 
+" new windows form buffers
+noremap <LEADER>n :vertical ball<CR>
+
+
 " ===
 " === Other useful stuff
 " ===
 " find and replace
 noremap \s :%s//g<left><left>
+
+" select buffer
+noremap \b :Buffers<CR>
+
+" select file
+noremap \f :Files<CR>
+
+" rg(ripgrep) search result
+noremap \r :Rg<CR>
 
 
 " ===
