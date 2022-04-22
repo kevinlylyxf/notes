@@ -155,11 +155,11 @@ noremap t. :tlast<CR>
 noremap s[ <C-w>}
 " show definition after select use in multiple options
 noremap <LEADER>[ <C-w>g} 
-noremap xj :ptnext<CR>
-noremap xk :ptprevious<CR>
-noremap x, :ptfirst<CR>
-noremap x. :ptlast<CR>
-noremap xn <C-w>z   " close preview window
+noremap <LEADER>xj :ptnext<CR>
+noremap <LEADER>xk :ptprevious<CR>
+noremap <LEADER>x, :ptfirst<CR>
+noremap <LEADER>x. :ptlast<CR>
+noremap <LEADER>xn <C-w>z   " close preview window
 
 " ===
 " === Cursor Movement
@@ -219,6 +219,8 @@ noremap <LEADER>j <C-w>j
 noremap <LEADER>h <C-w>h
 noremap <LEADER>l <C-w>l
 noremap <LEADER>o <C-w>o
+" new window
+noremap <LEADER>n <C-w>v
 
 
 " Disable the default s key
@@ -277,10 +279,10 @@ noremap b. :blast<CR>
 noremap \b :Buffers<CR>
 
 " new windows form buffers
-noremap <LEADER>n :vertical ball<CR>
+noremap <LEADER>v :vertical ball<CR>
 
 " close all buffers except the current buffer
-noremap bo :%bd \| e#<CR>
+noremap bo :%bd \| e# \| bd#<CR>
 
 
 " ===
