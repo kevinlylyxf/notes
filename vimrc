@@ -340,6 +340,9 @@ Plug 'preservim/nerdcommenter'
 " undo tree
 Plug 'mbbill/undotree'
 
+" Editor Enhancement
+Plug 'jiangmiao/auto-pairs'
+
 call plug#end()
 
 " ===
