@@ -144,10 +144,10 @@ noremap s] <C-w>]   " new window jump
 " jump after select use in multiple options
 " g] preview multiple under the screen after select in this window
 noremap <LEADER>] <C-w>g] " preview multiple under the screen after select jump to new window
-noremap tj :tnext<CR>
-noremap tk :tprevious<CR>
-noremap t, :tfirst<CR>
-noremap t. :tlast<CR>
+noremap <LEADER>tj :tnext<CR>
+noremap <LEADER>tk :tprevious<CR>
+noremap <LEADER>t, :tfirst<CR>
+noremap <LEADER>t. :tlast<CR>
 
 " display the definition of the lable in the preview window
 " show definition directly
@@ -220,7 +220,7 @@ noremap <LEADER>h <C-w>h
 noremap <LEADER>l <C-w>l
 noremap <LEADER>o <C-w>o
 " new window
-noremap <LEADER>n <C-w>v
+noremap <LEADER>n :vnew<CR>
 
 
 " Disable the default s key
@@ -258,11 +258,11 @@ noremap <LEADER>q <C-w>j:q<CR>
 noremap ti :tabe<CR>
 noremap tI :tab split<CR>
 " Move around tabs with tn and ti
-noremap tu :-tabnext<CR>
-noremap tn :+tabnext<CR>
+noremap tj :-tabnext<CR>
+noremap tk :+tabnext<CR>
 " Move the tabs with tmn and tmi
-noremap tmu :-tabmove<CR>
-noremap tmn :+tabmove<CR>
+noremap th :-tabmove<CR>
+noremap tl :+tabmove<CR>
 
 
 " ===
@@ -279,7 +279,7 @@ noremap b. :blast<CR>
 noremap \b :Buffers<CR>
 
 " new windows form buffers
-noremap <LEADER>v :vertical ball<CR>
+noremap <LEADER>vb :vertical ball<CR>
 
 " close all buffers except the current buffer
 noremap bo :%bd \| e# \| bd#<CR>
