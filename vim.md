@@ -5493,6 +5493,11 @@ noremap bo :%bd \| e# \| bd#<cr>
 
 ## vim插件
 
+#### coc-nvim
+
+- CocList自带fuzzy模糊匹配，我们可以在里面进行搜索，wildmenu和CocList没有关系
+- 如果我们使用CocCommand来查看命令按tap就是我们匹配的那些命令此时只能使用tap来选择或者手打，如果使用coclist commands来查看就是可以模糊匹配这些命令，此时就可以输入关键字来匹配。
+
 #### Vim-surround
 
 - 插件对(), [], {}, <>, ‘’, “”，标记语言xml html 有效，其中xml中前后的标记用t代表
