@@ -184,15 +184,15 @@ noremap <silent> B 5b
 " ===
 " === Insert Mode Cursor Movement
 " ===
-inoremap <silent><M-e> <c-r>=execute('norm! e')<cr>
-inoremap <silent><M-h> <c-r>=execute('norm! h')<cr>
-inoremap <silent><M-l> <c-r>=execute('norm! l')<cr>
-inoremap <silent><M-j> <c-r>=execute('norm! j')<cr>
-inoremap <silent><M-k> <c-r>=execute('norm! k')<cr>
-inoremap <silent><M-a> <ESC>A
+inoremap <silent><C-e> <c-r>=execute('norm! e')<cr>
+inoremap <silent><C-h> <c-r>=execute('norm! h')<cr>
+inoremap <silent><C-l> <c-r>=execute('norm! l')<cr>
+inoremap <silent><C-j> <c-r>=execute('norm! j')<cr>
+inoremap <silent><C-k> <c-r>=execute('norm! k')<cr>
+inoremap <silent><C-a> <ESC>A
 
 " new line after this current line
-inoremap <silent><M-n> <c-r>=execute('norm! o')<cr>
+inoremap <silent><C-n> <c-r>=execute('norm! o')<cr>
 
 
 
@@ -340,6 +340,9 @@ Plug 'preservim/nerdcommenter'
 " undo tree
 Plug 'mbbill/undotree'
 
+" snippets
+Plug 'honza/vim-snippets'
+
 " Editor Enhancement
 " This plugin conflicts with <C-> in inoremap, inoremap all changed to <M->
 Plug 'jiangmiao/auto-pairs'
@@ -448,6 +451,12 @@ omap ac <Plug>(coc-classobj-a)
 " Switch between source/header
 noremap hc :CocCommand clangd.switchSourceHeader<CR>
 
+" coc-snippets
+" Use <C-j> for jump to next placeholder, it's default of coc.nvim
+let g:coc_snippet_next = '<c-j>'
+
+" Use <C-k> for jump to previous placeholder, it's default of coc.nvim
+let g:coc_snippet_prev = '<c-k>'
 
 
 " ===
