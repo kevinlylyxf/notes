@@ -5500,7 +5500,15 @@ noremap bo :%bd \| e# \| bd#<cr>
 
 ###### coc-snippets
 
-- 
+```
+" Use <C-j> for jump to next placeholder, it's default of coc.nvim
+let g:coc_snippet_next = '<c-j>'
+
+" Use <C-k> for jump to previous placeholder, it's default of coc.nvim
+let g:coc_snippet_prev = '<c-k>'
+```
+
+- 代码片段会有几个占位符来进行我们主要代码的编写，我们使用<c-j>来跳转到下一个<c-k>跳转到上一个。
 
 #### Vim-surround
 

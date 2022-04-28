@@ -185,7 +185,7 @@ noremap <silent> B 5b
 " === Insert Mode Cursor Movement
 " ===
 inoremap <silent><C-e> <c-r>=execute('norm! e')<cr>
-inoremap <silent><C-h> <c-r>=execute('norm! h')<cr>
+inoremap <silent><C-u> <c-r>=execute('norm! h')<cr>
 inoremap <silent><C-l> <c-r>=execute('norm! l')<cr>
 inoremap <silent><C-j> <c-r>=execute('norm! j')<cr>
 inoremap <silent><C-k> <c-r>=execute('norm! k')<cr>
@@ -344,7 +344,6 @@ Plug 'mbbill/undotree'
 Plug 'honza/vim-snippets'
 
 " Editor Enhancement
-" This plugin conflicts with <C-> in inoremap, inoremap all changed to <M->
 Plug 'jiangmiao/auto-pairs'
 
 call plug#end()
