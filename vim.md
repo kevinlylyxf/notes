@@ -5594,6 +5594,11 @@ let g:coc_snippet_prev = '<c-k>'
 
 ## Tmux
 
+- tmux官网说的主要使用
+  - Protect running programs on a remote server from connection drops by running them inside tmux.通过在 tmux 中运行它们来保护远程服务器上正在运行的程序免受连接中断的影响。
+  - Allow programs running on a remote server to be accessed from multiple different local computers.允许从多个不同的本地计算机访问远程服务器上运行的程序。意思是我们可以换一个电脑来连接
+  - Work with multiple programs and shells together in one terminal, a bit like a window manager.在一个终端中同时处理多个程序和 shell，有点像窗口管理器。
+
 #### Tmux作用
 
 - 命令行的典型使用方式是，打开一个终端窗口（terminal window，以下简称"窗口"），在里面输入命令。用户与计算机的这种临时的交互，称为一次"会话"（session） 。
@@ -5630,6 +5635,16 @@ let g:coc_snippet_prev = '<c-k>'
 - 从这里看tmux可以用在服务器端，类似于上面，自己的电脑要断网的时候在服务器上执行tmux分离，然后连上网之后在重新连接会话就可以了，对于用户端来说主要就是作为会话的保存和记录以及多屏显示的功能。
 - 因为我们远程连接服务器，也相当于是在服务器上开启了一个终端，也是在终端上执行命令，这时候我们就可以在服务器上安装一个tmux，然后通过在终端上执行tmux来保存分离会话，当我们自己的电脑断网之后我们就可以在次联网的时候远程连接到主机，因为还是那个服务器，我们就可以执行tmux 来重新连接会话。如果不是这样的话，每次我们远程连接都是一个全新的终端，以前的东西都不能记录和保存了。
 - 以前理解的错误，将远程登录理解错了，以前将这种连接当成网络的连接了类似于C/S，但是这个tmux用的是ssh远程连接，然后相当于在一个终端上执行命令，此时就有了终端复用的概念，如果断网之后还可以重新连接，就不用重新弄，还可以用之前的会话。
+- Tmuxs 是一款优秀的终端复用工具，使用它最直观的好处就是，通过一个终端登录远程主机并运行tmux后，在其中可以开启多个控制台而无需再“浪费”多余的终端来连接这台远程主机。意思和上面类似，就是我们远程登录服务器之后，执行tmux命令，我们就可以在复用终端了，要不然需要重新连接重新登录，重新连接一个终端操作，这样很不方便。
+
+#### Tmux重要概念
+
+- 使用 Tmux 的时候千万不要去背指令，所有的指令都可以在 `.tmux.conf` 配置文件中绑定自己顺手的快捷键，也可以配置开启鼠标。这个是我的配置文件：https://github.com/zuorn/tmux.conf
+- 在Tmux逻辑中，需要分清楚Server > Session > Window > Pane这个大小和层级顺序是极其重要的，直接关系到工作效率：
+  - Server：是整个tmux的后台服务。有时候更改配置不生效，就要使用tmux kill-server来重启tmux。
+  - Session：是tmux的所有会话。我之前就错把这个session当成窗口用，造成了很多不便里。一般只要保存一个session就足够了。
+  - Window：相当于一个工作区，包含很多分屏，可以针对每种任务分一个Window。如下载一个Window，编程一个window。
+  - Pane：是在Window里面的小分屏。最常用也最好用
 
 #### 常用操作指令及快捷键
 
@@ -5685,9 +5700,15 @@ let g:coc_snippet_prev = '<c-k>'
 指  令：tmux select-pane -R
 快捷键：Ctrl+b 方向键右
 
+#关闭整个tmux服务器：
+$ tmux kill-server
 ```
 
-#### 系统操作
+#### Tmux常用内部命令
+
+- 所谓内部命令，就是进入Tmux后，并按下前缀键后的命令，一般前缀键为Ctrl+b. 虽然ctrl和b离得很远但是不建议改前缀键，因为别的键也不见得方便好记不冲突。还是记忆默认的比较可靠。
+
+##### 系统操作
 
 ```
 ?	列出所有快捷键；按q返回
@@ -5698,10 +5719,11 @@ r	强制重绘未脱离的会话
 s	选择并切换会话；在同时开启了多个会话时使用
 :	进入命令行模式；此时可以输入支持的命令，例如kill-server可以关闭服务器
 [	进入复制模式；此时的操作与vi/emacs相同，按q/Esc退出
+]	粘贴复制模式中复制的文本
 ~	列出提示信息缓存；其中包含了之前tmux返回的各种提示信息
 ```
 
-#### 窗口操作
+##### 窗口操作
 
 ```
 c	创建新窗口
@@ -5713,26 +5735,27 @@ l	在前后两个窗口间互相切换
 w	通过窗口列表切换窗口
 ,	重命名当前窗口；这样便于识别
 .	修改当前窗口编号；相当于窗口重新排序
-f	在所有窗口中查找指定文本
+f	快速定位到窗口（输入关键字匹配窗口名称）
 ```
 
-#### 面板操作
+##### 面板操作
 
 ```
 ”	        将当前面板平分为上下两块
 %	        将当前面板平分为左右两块
 x	        关闭当前面板
+z			平铺当前窗格（注意：平铺的是当前选中的窗格）(再次 Ctrl+b z 则恢复)
 !	        将当前面板置于新窗口；即新建一个窗口，其中仅包含当前面板
 Ctrl+方向键	以1个单元格为单位移动边缘以调整当前面板大小
 Alt+方向键	以5个单元格为单位移动边缘以调整当前面板大小
-Space	        在预置的面板布局中循环切换；依次包括even-horizontal、even-vertical、main-horizontal、main-vertical、tiled
+Space	    在预置的面板布局中循环切换；依次包括even-horizontal、even-vertical、main-horizontal、main-vertical、				tiled，意思是类似于vim中的水平和垂直切换窗口，按空格键就可以在水平和垂直切换。
 q	        显示面板编号
 o	        在当前窗口中选择下一面板
-方向键	        移动光标以选择面板
+方向键	      移动光标以选择面板
 {	        向前置换当前面板
 }	        向后置换当前面板
-Alt+o	        逆时针旋转当前窗口的面板
-Ctrl+o	        顺时针旋转当前窗口的面板
+Alt+o	    逆时针旋转当前窗口的面板
+Ctrl+o	    顺时针旋转当前窗口的面板
 ```
 
 #### 其他命令
@@ -5753,6 +5776,64 @@ $ tmux source-file ~/.tmux.conf
 # 在tmux.conf里加一句：
 set -g mouse on 
 ```
+
+#### Tmux配置
+
+- [Tmux官方手册](https://github.com/tmux/tmux/wiki/Getting-Started)
+
+##### Key bindings
+
+- tmux key bindings are changed using the `bind-key` and `unbind-key` commands. Each key binding in tmux belongs to a named key table. There are four default key tables:
+
+  - The `root` table contains key bindings for keys pressed without the prefix key.
+  - The `prefix` table contains key bindings for keys pressed after the prefix key, like those mentioned so far in this document.
+  - The `copy-mode` table contains key bindings for keys used in copy mode with *emacs(1)*-style keys.
+  - The `copy-mode-vi` table contains key bindings for keys used in copy mode with *vi(1)*-style keys.
+
+- All the key bindings or those for a single table can be listed with the `list-keys` command. By default, this shows the keys as a series of `bind-key` commands. The `-T` flag gives the key table to show and the `-N` flag shows the key help, like the `C-b ?` key binding.
+
+  - For example to list only keys in the `prefix` table:
+
+    ```
+    $ tmux lsk -Tprefix
+    bind-key    -T prefix C-b     send-prefix
+    bind-key    -T prefix C-o     rotate-window
+    ...
+    
+    $ tmux lsk -Tprefix -N
+    C-b     Send the prefix key
+    C-o     Rotate through the panes
+    ...
+    ```
+
+- `bind-key` commands can be used to set a key binding, either interactively or most commonly from the configuration file. Like `list-keys`, `bind-key` has a `-T` flag for the key table to use. If `-T` is not given, the key is put in the `prefix` table; the `-n` flag is a shorthand for `-Troot` to use the `root` table.
+
+- 上面的意思是说键可以映射到四个空间中，每一个空间都有特定的作用，我们可以使用-T来指定空间，如果不指定就是在prefix空间中，-n是在root空间中。
+
+- 如果我们在不知道键映射具体的命令的时候可以使用上面的命令查看，然后在映射到其他的键上。
+
+- 一般我们在看其他人的配置的时候都用的bind，其实bind就是bind-key的简写，功能都是一样的。`bind` 命令可以绑定多条命令，各命令间用 `\;` 分开，而key-bind一般是一条写一行。而且bind一般是省略-T来指定空间的，其一般都在prefix空间中
+
+  ```
+  bind r source-file ~/.tmux.conf \; display "Reloaded!"
+  ```
+
+- 我们在绑定键的时候会看到bind -r，这里的 `-r` 开关是 repeatable 可重复的意思，表示只需按一次 PREFIX, 后面可多次连续按绑定键。默认的间隔时间是 500 毫秒，可以设置 `repeat-time` 来修改。
+
+  ```
+  bind -r C-h select-window -t :-
+  bind -r C-l select-window -t :+
+  ```
+
+  - 注意此处的-r是选项，上面的r是按键绑定
+
+##### 会话和窗口的配置
+
+- `set` 命令是针对会话的配置命令，而针对窗口的配置命令是 `set-window-option`，或者简写为 `setw`。由于窗格是窗口中的事物，要将窗格的默认编号也设置成从1 开始，应该用 `setw` 命令：
+
+  ```
+  setw -g pane-base-index 1
+  ```
 
 ## curl
 
