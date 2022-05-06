@@ -5840,6 +5840,85 @@ set -g mouse on
   setw -g pane-base-index 1
   ```
 
+  - -g表示对所有的生效，包括窗口、pane、session等
+
+## ranger
+
+- 所有的快捷键都在rc.conf中有具体的映射规则，在我们不知道的时候直接打开文件看映射就可以了
+- 配置文件
+  - `ranger` uses 4 main configuration files:
+    - `rc.conf` is used for setting various options and binding keys to functions.
+    - `rifle.conf` decides which program to use for opening a file.
+    - `scope.sh` is a shell script used to generate previews for various file types.
+    - `commands.py` contains various functions' implementation, written in Python, used to modify `ranger's` behavior, and implement your own [Custom Commands](https://github.com/ranger/ranger/wiki/Custom-Commands).
+  - rc.conf是各种快捷键的映射
+  - rifle.conf是决定使用哪个程序打开文件。在一些编辑器的设置中，例如vim设置，文件浏览的设置都是在这个里面设置的。
+
+##### 基础的快捷键
+
+- `dU` 显示文件有多大
+- `g` for navigation and tabs，一般快速切换目录都是先按g然后有导航条，然后进入到里面
+- `F7`创建一个文件夹
+- `zh`显示隐藏文件夹
+- `o` for sort，排序，其中可以按大小，按时间排序什么的
+- `/`类似于vim中的搜索，可以在当前目录下面快速跳转到一些文件下，n和N和vim下一样跳转到下一个和上一个
+-  `i` display_file，用来全屏预览文件，然后在按一次就会退出。
+- `r` for :open_with command，表示以什么命令打开文件，可以用python来运行文件，用默认的编辑器来打开等，可以输入数字选择
+- `map ] move_parent 1; map [ move_parent -1`左右中括号表示在父文件夹中移动，就不用先移动到父文件夹在移动。
+- `map H history_go -1; map L history_go 1`H和L表示在历史移动文件夹记录中移动文件夹。
+- `y`用来复制一些东西yp表示复制文件的路径，yn复制文件名，这些在按y之后都有导航提示。
+- `S`在ranger中进入到一些目录中，此时我们想退出ranger在终端中进入ranger的那个文件夹，此时我们按大写的S就可以进入到目录中
+
+##### 一些映射
+
+```
+map :  console                                                                                               map ;  console                                                                                               map !  console shell%space                                                                                   map @  console -p6 shell  %%s                                                                               map #  console shell -p%space                                                                               map s  console shell%space                                                                                   map r  chain draw_possible_programs; console open_with%space                                                 map f  console find%space                                                                                   map cd console cd%space
+```
+
+- 上面这些都是默认的配置，在~/.config/ranger/rc.conf中
+
+- console表示进入到ranger的命令行，后面的shell表示一个shell命令%space会打出来一个空格，直接在后面输入命令就可以。
+
+  - 例如用vim创建一个文件就可以这样映射
+
+    ```
+    map V console shell vim%space
+    ```
+
+    - 这样按V的时候就可以输入文件名直接创建一个文件。
+
+```
+map cw console rename%space                                                                                 map a  rename_append                                                                                         map A  eval fm.open_console('rename ' + fm.thisfile.relative_path.replace("%", "%%"))                       map I  eval fm.open_console('rename ' + fm.thisfile.relative_path.replace("%", "%%"), position=7)
+```
+
+- 上面这组映射是重命名文件名的一组映射，cw是重新命名，a表示在原有的名字上加一些东西，其他的类似
+
+```
+# Tagging / Marking                                                                                         map t       tag_toggle                                                                                       map ut      tag_remove                                                                                       map "<any>  tag_toggle tag=%any                                                                             map <Space> mark_files toggle=True                                                                           map v       mark_files all=True toggle=True                                                             
+map uv      mark_files all=True val=False                                                                   map V       toggle_visual_mode                                                                           
+map uV      toggle_visual_mode reverse=True
+```
+
+- 空格键表示为选中文件，在按一次表示取消选中文件。v表示全部选中，选中之后我们可以进行一些操作，例如压缩文件。
+
+##### 一些功能
+
+- bulkrename
+  - `ranger` supports bulk file renaming with the `:bulkrename` command. Mark the files that you want to rename and call `:bulkrename`. It should open a file containing a list of these files in your text editor (determined with `rifle`). You may freely change the names in that file. When you are done, save the file and close the editor. `ranger` will show you a preview of what will happen in a few moments.
+  - ranger 支持使用 :bulkrename 命令批量文件重命名。标记要重命名的文件并调用 :bulkrename。它应该在您的文本编辑器中打开一个包含这些文件列表的文件（由ranger确定）。您可以自由更改该文件中的名称。完成后，保存文件并关闭编辑器。 ranger 将向您展示稍后将发生的事情的预览。
+  - 上面说的意思是我们可以选中文件，用空格选中或者v全选什么的，然后输入：bulkrename，然后这些文件名会进入到文本编辑器中，我们可以在vim中很方便的修改一些文件名，然后退出就会全部修改了。当然bulkrename也可以映射，但是官方配置文件中没有映射。
+- 压缩和解压缩
+- 任务管理器
+- 下载youtobe视频
+
+##### ranger配置
+
+- ranger --copy-config=all，生成默认的配置文件。
+- set vcs_aware true，设置为true表示可以让git的文件修改与否的状态以文件后面的图标显示出来
+- fzf的配置和映射，以脚本的形式。先在command.py中写入官方给的脚本，然后在rc.conf中配置一下键映射。
+- 图标的配置，以插件的形式安装。在git上ranger仓库中的wiki都有说明
+- 图片的预览
+
 ## curl
 
 - curl 是常用的命令行工具，用来请求 Web 服务器。它的名字就是客户端（client）的 URL 工具的意思。
