@@ -474,7 +474,7 @@ nnoremap gy :Goyo<CR>
 " ===
 " === vista.vim
 " ===
-noremap <LEADER>v :Vista!!<CR>
+noremap <LEADER>V :Vista!!<CR>
 let g:vista_default_executive = 'coc'
 let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
 let g:vista_fzf_preview = ['right:50%']
