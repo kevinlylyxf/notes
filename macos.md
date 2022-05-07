@@ -280,4 +280,46 @@ alias unproxy='unset all_proxy && unset http_proxy && unset https_proxy'
   sudo pacman -S universal-ctags
   ```
 
+
+##### 快捷键
+
+- super键就是win键。
+
+- 快速打开终端在gnome下没有设置，自己设置快捷键Ctrl+Alt+t
+
+  ```
+  其中命令为gnome-terminal，bin目录下有这个程序，是打开一个终端
+  ```
+
+
+###### 多任务和多窗口
+
+- manjaro下有多任务（工作空间）的概念，类似于mac下可以设置窗口放到哪个任务里面，这样我们可以切换任务来达到操作不同窗口的概念。
+  - 多任务的设置在设置->多任务->工作空间，里面有一个动态工作空间和固定数量的工作空间可以设置
+  - 快捷键为super+数字键1234，来切换不同的任务，shift+super+数字键1234，来将窗口移动到不同的任务。这些在设置->键盘里面都可以设置。super+PgDn来切换到下一个任务，super+PgUp切换到上一个任务；shift+super+上下左右来将窗口切换到不同的显示器。除了上面shift+super+数字键将窗口移动到固定的任务，还可以直接将窗口向左向右切换到任务shift+super+PgDn，shift+super+PgUp，这样就不用切换到固定的任务了，因为在设置为动态工作空间下任务是不固定的。
   
+- 多窗口的概念就是在一个任务上可以打开多个窗口，其中的快捷键为
+  - super+左右来切换窗口分屏到左侧和右侧，super+q来关闭窗口，super+f用来切换全屏状态。这种是对于所有的窗口来说的。还有对于终端terminal来说的如下面
+  
+  - 在终端下有特殊的设置，我们可以来操作终端，这只是对终端有效
+  
+    ```
+    新建窗口 shift+ctrl+n
+    关闭窗口 shift+ctrl+q
+    新建标签页 shift+ctrl+t
+    关闭标签页 shift+ctrl+w
+    复制 shift+ctrl+c
+    粘贴 shift+ctrl+v
+    ```
+  
+    ```
+    切换到上一个标签页 ctrl+PgUp
+    切换到下一个标签页 ctrl+PgDn
+    移动标签页到左端 shift+ctrl+PgUp
+    移动标签页到右端 shift+ctrl+PgDn
+    切换到标签页1 Alt+1
+    切换到标签页2 Alt+2
+    ...... Alt+数字键
+    ```
+  
+    

@@ -433,3 +433,26 @@ echo ${str##*aa}  #结果为 @@@
   - 当shell脚本具有可执行权限时，用`sh filename`与`./filename`执行脚本是没有区别得。`./filename`是因为当前目录没有在PATH中，所有”.”是用来表示当前目录的。
   - `sh filename` 重新建立一个子shell，在子shell中执行脚本里面的语句，该子shell继承父shell的环境变量，但子shell新建的、改变的变量不会被带回父shell，除非使用export。
   - `source filename`：这个命令其实只是简单地读取脚本里面的语句依次在当前shell里面执行，没有建立新的子shell。那么脚本里面所有新建、改变变量的语句都会保存在当前shell里面。
+
+##### netstat
+
+- Linux netstat 命令用于显示网络状态。利用 netstat 指令可让你得知整个 Linux 系统的网络情况。
+
+  ```
+  -a或--all 显示所有连线中的Socket。
+  -n或--numeric 直接使用IP地址，而不通过域名服务器。拒绝显示别名，能显示数字的全部转化成数字。
+  -p或--programs 显示正在使用Socket的程序识别码和程序名称。
+  -t或--tcp 显示TCP传输协议的连线状况。
+  -u或--udp 显示UDP传输协议的连线状况。
+  -i或--interfaces 显示网络界面信息表单。即网卡列表
+  -x或--unix 此参数的效果和指定"-A unix"参数相同。即本地套接字连接
+  <Socket>={-t|--tcp} {-u|--udp} {-U|--udplite} {-S|--sctp} {-w|--raw}
+             {-x|--unix} --ax25 --ipx --netrom
+  ```
+
+- 从整体上看，netstat的输出结果可以分为两个部分：
+
+  - 一个是Active Internet connections，称为有源TCP连接，其中"Recv-Q"和"Send-Q"指的是接收队列和发送队列，这些数字一般都应该是0。如果不是则表示软件包正在队列中堆积，这种情况非常少见。
+  - 另一个是Active UNIX domain sockets，称为有源Unix域套接口(和网络套接字一样，但是只能用于本机通信，性能可以提高一倍)。RefCnt表示连接到本套接口上的进程号，即连接到本套接字的进程数量。这个列表下proto都是unix表示本地通信。
+
+- 一般使用netstat -anp来查看某个进程查看的端口什么的。
