@@ -73,11 +73,395 @@ echo ${str##*aa}  #结果为 @@@
 - exit  用来退出当前shell进程并返回一个退出状态，使用$?可以接受这个状态
 ---
 [shell正则表达式分为基本的和扩展的](https://man.linuxde.net/docs/shell_regex.html)
+
 - shell中的cd命令是有继承的，cd之后下一条命令可以直接用cd进来的目录，就不用填写绝对路径了。makefile里面的cd不行，必须得写在一行。而且shell中的变量不能和环境变量重名。
 - shell调用函数时只需要写函数名就可以不用(),但是定义函数时需要写上()
 - shell脚本是用来执行命令行程序的，所以在命令行能弄的脚本里面都能弄，包括可执行程序。脚本里面可以调用外面的程序来运行。
 
 ------
+
+#### shell脚本使用
+
+##### 后台启动服务&与nohup
+
+###### &
+
+- 单个的&符号通常可以发现在一个bash命令的行尾：
+
+  ```
+  ./myscript.py &
+  ```
+
+  - 其作用是令该命令转到后台执行。对于这样的命令，系统会创建一个sub-shell来运行这个命令。同时，在执行该行命令的shell环境中，这个命令会立刻返回0并且继续下面的shell命令的执行。除此之外，在执行这个命令之后，terminal上会输出创建的sub-shell的线程ID（PID）。
+
+  ```
+  $ ./myscript.py &
+  [1] 1337
+  ```
+
+  - 注意按照这种方法分支出去的sub-shell的stdout会仍然关联到其parent-shell，也就是说你在当前的terminal中仍然可以发现这个后台进程的stdout输出。所有的到stdout的输出都能打印出来，即使在后台运行。如果不需要打印，需要重定向。
+
+- 通过`&`分支出去的sub-shell的PID被存储在一个特殊的变量`$!`中，
+
+  ```
+  $ echo $!
+  1337
+  ```
+
+- 你也可以通过`jobs`命令来检查`sub-shell`的信息
+
+  ```
+  $ jobs
+  [1]+  Running                 ./myscript.py &
+  ```
+
+- 对于sub-shell，你可以通过`fg`命令将其拉回当前的terminal。
+
+- 如果有多个命令需要放到后台运行，可以采用如下方式：
+
+  ```
+  ./script.py & ./script2.py & ./script3.py & 
+  ```
+
+  - 在这个例子中，三个脚本会同时开始运行，且拥有各自独立的sub-shell环境。在shell脚本中，这个方法常常被用来利用计算机的多核性能来加速执行。
+  - 如果你想创建个完全和当前的shell独立的后台进程（而不是想上面提到的用`&`创建的，和当前shell的stdout关联的方法），可以使用`nohup`命令。
+
+- 有时候在shell命令中可能看到这样的写法：
+
+  ```
+  some_command > /dev/null 2>&1
+  ```
+
+  - 尽管我将输出重定向到 /dev/null，但它仍打印在终端中。这是因为我们没有将错误输出重定向到 /dev/null，所以为了也重定向错误输出，需要添加 2>&1：
+  - 这里前面的`> /dev/null`好理解，代表将`stdout`导向到`/dev/null`，而后者代表将`stderr`重定向到`stdout`，或者说`stderr`的输出等同于`stdout`。由于`stdout`已经被重定向到`/dev/null`，那么这意味着`stderr`也被重定向到了这个位置。1是系统默认代表`stdout`的值，2代表`stderr`。
+  - 1 ：表示stdout标准输出，系统默认值是1，所以">/dev/null"等同于"1>/dev/null"
+  - & ：表示等同于的意思，2>&1，表示2的输出重定向等同于1
+  - 1 > /dev/null 2>&1 语句含义：
+    - 1 > /dev/null ： 首先表示标准输出重定向到空设备文件，也就是不输出任何信息到终端，说白了就是不显示任何信息
+    - 2>&1 ：接着，标准错误输出重定向（等同于）标准输出，因为之前标准输出已经重定向到了空设备文件，所以标准错误输出也重定向到空设备文件。
+  - 实例解析
+    - cmd >a  2>a和cmd >a 2>&1为什么不同？
+    - 这个命令的理解是标准输出到a文件了，然后2>&1说明标准错误输出到标准输出，也就是a文件
+    - cmd >a 2>a ：stdout和stderr都直接送往文件 a ，a文件会被打开两遍，由此导致stdout和stderr互相覆盖。
+    - cmd >a 2>&1 ：stdout直接送往文件a ，stderr是继承了FD1的管道之后，再被送往文件a 。a文件只被打开一遍，就是FD1将其打开。
+    - cmd >a 2>a 相当于使用了FD1、FD2两个互相竞争使用文件 a 的管道；
+    - cmd >a 2>&1 只使用了一个管道FD1，但已经包括了stdout和stderr。
+    - 从IO效率上来讲，cmd >a 2>&1的效率更高。
+
+###### nohup
+
+- **nohup** 英文全称 no hang up（不挂起），用于在系统后台不挂断地运行命令，退出终端不会影响程序的运行。
+
+- 上面的&命令在终端退出后进程就会消失，nohup命令终端退出后进程不会退出。
+
+- **nohup** 命令，在默认情况下（非重定向时），会输出一个名叫 nohup.out 的文件到当前目录下，如果当前目录的 nohup.out 文件不可写，输出重定向到 **$HOME/nohup.out** 文件中。
+
+  ```
+  nohup Command [ Arg … ] [　& ]
+  ```
+
+  - command： 要执行的命令
+  - Arg 一些参数，可以指定输出文件
+  - & 让命令在后台执行，终端退出后命令仍旧执行
+  - 在终端如果看到以下输出说明运行成功：appending output to nohup.out
+
+##### shell交互输入自动化
+
+- **Shell 交互输入自动化**，我们知道命令可以接受命令行参数。Linux也支持很多交互式应用程序，如`passwd`和`ssh`。
+  - ssh登录之后需要输入账户和密码等信息，交互自动化可以让脚本自动完成。此时需要一些手段
+
+###### 预备知识
+
+- 观察交互式输入的顺序。参照上面的代码，我们可以将涉及的步骤描述如下：
+
+  ```
+  notes[Return]docx[Return]
+  ```
+
+- 输入`notes`，按回车键，然后输入`docx`，再按回车键。这一系列操作可以被转换成下列字符串：
+
+  ```
+  "notes\ndocx\n"
+  ```
+
+- 按下回车键时会发送`\n`。添加`\n`后，就生成了发送给`stdin`的字符串。
+
+- 通过发送与用户输入等效的字符串，我们就可以实现在交互过程中自动发送输入。
+
+###### 工作原理
+
+- 先写一个读取交互式输入的脚本，然后用这个脚本做自动化演示：
+
+  ```
+  #!/bin/bash
+  # backup.sh
+  # 使用后缀备份文件。不备份以~开头的临时文件
+  read -p " What folder should be backed up: " folder
+  read -p " What type of files should be backed up: " suffix
+  find $folder -name "*.$suffix" -a ! -name '~*' -exec cp {} \
+      $BACKUP/$LOGNAME/$folder
+  echo "Backed up files from $folder to $BACKUP/$LOGNAME/$folder"
+  ```
+
+- 按照下面的方法向脚本发送自动输入：
+
+  ```
+  $ echo -e "notes\ndocx\n" | ./backup.sh
+  Backed up files from notes to /BackupDrive/MyName/notes
+  ```
+
+- 像这样的交互式脚本自动化能够在开发和调试过程中节省大量输入。另外还可以确保每次测试都相同，不会出现由于输入错误导致的bug假象。
+
+- 我们用`echo -e`来生成输入序列。`-e`选项表明`echo`会解释转义序列。如果输入内容比较多，可以用单独的输入文件结合重定向操作符来提供输入：
+
+  ```
+  $ echo -e "notes\ndocx\n" > input.data
+  $ cat input.data
+  notes
+  docx
+  ```
+
+- 你也可以选择手动构造输入文件，不使用`echo`命令：
+
+  ```
+  $ ./interactive.sh < input.data
+  ```
+
+  - 这种方法是从文件中导入交互式输入数据。
+
+- 如果你是一名逆向工程师，那可能免不了要同缓冲区溢出攻击打交道。要实施攻击，我们需要将十六进制形式的`shellcode`（例如`\xeb\x1a\x5e\x31\xc0\x88\x46`）进行重定向。这些字符没法直接输入，因为键盘上并没有其对应的按键。因此，我们需要使用：
+
+  ```
+  echo -e "\xeb\x1a\x5e\x31\xc0\x88\x46"
+  ```
+
+  - 这条命令会将这串字节序列重定向到有缺陷的可执行文件中。
+
+- `echo`命令和重定向可以实现交互式输入的自动化。但这种技术存在问题，因为输入内容没有经过验证，我们认定目标应用总是以相同的顺序接收数据。但如果程序要求的输入顺序不同，或是对某些输入内容不做要求，那就要出岔子了。
+
+- `expect`程序能够执行复杂的交互操作并适应目标应用的变化。该程序在世界范围内被广泛用于控制硬件测试、验证软件构建、查询路由器统计信息等。
+
+- `expect`有3个主要命令，如下表所示：
+
+  |   命令   |          描述          |
+  | :------: | :--------------------: |
+  | `spawn`  |    运行新的目标应用    |
+  | `expect` | 关注目标应用发送的模式 |
+  |  `send`  |  向目标应用发送字符串  |
+
+- 下面的例子会先执行备份脚本，然后查找模式`*folder*`或`*file*`，以此确定备份脚本是否要求输入目录名或文件名并作出相应的回应。如果重写备份脚本，要求先输入备份文件类型，后输入备份目录，这个自动化脚本依然能够应对。
+
+  ```
+  #!/usr/bin/expect
+  #文件名: automate_expect.tcl
+  spawn ./backup .sh
+  expect {
+    "*folder*" {
+       send "notes\n"
+       exp_continue
+     }
+    "*type*" {
+       send "docx\n"
+       exp_continue
+    }
+  }
+  ```
+
+  - `spawn`命令的参数是需要自动化运行的应用程序及其参数。
+  - `expect`命令接受一组模式以及匹配模式时要执行的操作。操作需要放入花括号中。
+  - `send`命令是要发送的信息。和`echo -n -e`类似，`send`不会自动添加换行符，也能够理解转义字符。echo -n表示不换行。
+  - expect表示匹配的模式，就是在让你输入密码的时候会在终端里面打印一些信息，此时匹配的就是这些信息，当匹配到这个信息时输入密码，匹配到其他的时候输入其他的，这样就没有顺序了，输入的交换顺序也能使用，这个是基于匹配的。expect表示需要等待的消息。
+
+##### shell中EOF的使用
+
+- EOF是End Of File的缩写，表示自定义终止符。既然自定义，那么EOF就不是固定的，可以随意设置别名，意思是把内容当作标准输入传给程序，Linux中按Ctrl-d就代表EOF。
+
+- 在Shell中我们通常将EOF与 << 结合使用，表示后续的输入作为子命令或子Shell的输入，直到遇到EOF为止，再返回到主调Shell。回顾一下< <的用法，当shell看到< <的时候，它就会知道下一个词是一个分界符。在该分界符以后的内容都被当作输入，直到shell又看到该分界符(位于单独的一行)。这个分界符可以是你所定义的任何字符串。
+
+- 第一个EOF必须以重定向字符<<开始，第二个EOF必须顶格写，否则会报错。
+
+- 通过cat配合重定向能够生成文件并追加操作，在它之前先回顾几个特殊符号：
+
+  ```
+  <   :输入重定向
+  >   :输出重定向
+  >>  :输出重定向,进行追加,不会覆盖之前内容
+  <<  :标准输入来自命令行的一对分隔号的中间内容
+  ```
+
+  ```
+  [root@localhost ~]# cat <<EOF   //运行后会出现输入提示符">"
+  > Hello
+  > wolrd
+  > EOF
+  输入结束后，在终端显示以下内容：
+  Hello
+  wolrd
+  ```
+
+- 向文件file1.txt中输入内容
+
+  ```
+  [root@localhost ~]# cat >file1.txt <<EOF
+  > aaa
+  > bbb
+  > ccc
+  > EOF
+  
+  [root@localhost ~]# cat file1.txt 
+  aaa
+  bbb
+  ccc
+  ```
+
+- 追加内容至file1.txt中
+
+  ```
+  [root@localhost ~]# cat >>file1.txt <<EOF
+  > 111
+  > 222
+  > 333
+  > EOF
+  
+  [root@localhost ~]# cat file1.txt 
+  aaa
+  bbb
+  ccc
+  111
+  222
+  333
+  ```
+
+- 覆盖file1.txt
+
+  ```
+  [root@localhost ~]# cat >file1.txt <<EOF
+  > Hello wolrd
+  > EOF
+  
+  [root@localhost ~]# cat file1.txt 
+  Hello wolrd
+  ```
+
+- 自定义EOF
+
+  ```
+  [root@localhost ~]# cat >file1.txt <<FFF
+  > test
+  > hello
+  > FFF
+  
+  [root@localhost ~]# cat file1.txt 
+  test
+  hello
+  ```
+
+- 编写一个脚本，生成mysql配置文件
+
+  ```
+  [root@localhost ~]# vim /root/test.sh
+  #!/bin/bash
+  cat >/root/EOF/my.cnf <<EOF
+  [client]
+  port=3306
+  socket=/usr/local/mysql/var/mysql.sock
+  basedir=/usr/local/msyql/
+  datadir=/data/mysql/data
+  pid-file=/data/mysql/data/mysql.pid
+  user=mysql
+  server-id=1
+  log_bin=mysql-bin
+  EOF
+  
+  [root@localhost ~]# cat /root/EOF/my.cnf    //查看生成的mysql配置文件
+  [client]
+  port=3306
+  socket=/usr/local/mysql/var/mysql.sock
+  basedir=/usr/local/msyql/
+  datadir=/data/mysql/data
+  pid-file=/data/mysql/data/mysql.pid
+  user=mysql
+  server-id=1
+  log_bin=mysql-bin
+  ```
+
+  - 这样我们可以通过脚本来向文件中写入数据，来进行一些配置文件的输入。
+
+- git上人家配置nginx例子
+
+  ```
+  #!/bin/bash
+  
+  MY_SOFTS_DIR="/usr/local/mysofts"
+  NGINX_VERSION=nginx-1.16.0
+  OPENSSL_VERSION=openssl-1.1.1b
+  
+  yum install -y gcc gcc-c++
+  yum install -y zlib*
+  yum install -y pcre pcre-devel
+  
+  rm -rf $NGINX_VERSION $NGINX_VERSION.*
+  rm -rf $OPENSSL_VERSION $OPENSSL_VERSION.*
+  rm -rf /usr/bin/pod2man
+  mkdir -p $MY_SOFTS_DIR
+  
+  cd /tmp
+  wget http://nginx.org/download/$NGINX_VERSION.tar.gz
+  tar -zxvf $NGINX_VERSION.tar.gz 
+  
+  wget https://www.openssl.org/source/$OPENSSL_VERSION.tar.gz
+  tar -zxvf $OPENSSL_VERSION.tar.gz
+  
+  cd $NGINX_VERSION
+  ./configure --prefix=$MY_SOFTS_DIR/nginx --with-http_v2_module --with-http_stub_status_module --with-http_ssl_module --with-stream --with-openssl=../$OPENSSL_VERSION
+  make && make install
+  
+  rm -rf /etc/init.d/nginx
+  cat >> /etc/init.d/nginx <<EOF
+  #!/bin/bash
+  # Startup script for the nginx Web Server
+  # chkconfig: - 85 15
+  # description: nginx is a World Wide Web server. It is used to serve
+  NGINX=${MY_SOFTS_DIR}/nginx/sbin/nginx
+  start()
+  {
+      \$NGINX
+      echo "nginx启动成功!"
+  }
+  stop()
+  {
+      PID=\$(ps -ef | grep "nginx" | grep -v grep | awk '{print \$2}')
+      kill -9 \${PID}
+      echo "nginx已关闭!"
+  }
+  restart()
+  {
+      PID=\$(ps -ef | grep "nginx" | grep -v grep | awk '{print \$2}')
+      kill -9 \${PID}	
+      $NGINX
+      echo "nginx重启成功!"
+  }
+  case \$1 in
+  "start") start
+  	;;
+  "stop") stop
+  	;;
+  "restart") restart
+  	;;
+  *) echo "请输入正确的操作参数start|stop|restart"
+  	;;
+  esac
+  EOF
+  chkconfig --add /etc/init.d/nginx
+  chmod 755 /etc/init.d/nginx
+  chkconfig --add nginx
+  chkconfig --level 345 nginx on
+  service nginx start
+  
+  echo "==========安装完毕！============"
+  ```
+
+  - 上面将/etc/init.d/nginx删除，然后使用cat和EOF重新向/etc/init.d/nginx中写入东西，相当于重新配置
 
 #### Linux常用命令
 
@@ -456,3 +840,92 @@ echo ${str##*aa}  #结果为 @@@
   - 另一个是Active UNIX domain sockets，称为有源Unix域套接口(和网络套接字一样，但是只能用于本机通信，性能可以提高一倍)。RefCnt表示连接到本套接口上的进程号，即连接到本套接字的进程数量。这个列表下proto都是unix表示本地通信。
 
 - 一般使用netstat -anp来查看某个进程查看的端口什么的。
+
+
+##### find
+
+- Linux find 命令用来在指定目录下查找文件。任何位于参数之前的字符串都将被视为欲查找的目录名。如果使用该命令时，不设置任何参数，则 find 命令将在当前目录下查找子目录与文件。并且将查找到的子目录和文件全部进行显示。
+
+  ```
+  find   path   -option   [   -print ]   [ -exec   -ok   command ]   {} \;
+  ```
+
+- -print： find命令将匹配的文件输出到标准输出。
+
+- -exec： find命令对匹配的文件执行该参数所给出的shell命令。相应命令的形式为'command' {} \;，注意{}和\;之间的空格。其中使用-exec时后面的{} 和\;一定要有，否则不能正常执行。
+
+- -ok： 和-exec的作用相同，只不过以一种更为安全的模式来执行该参数所给出的shell命令，在执行每一个命令之前，都会给出提示，让用户来确定是否执行。
+
+- find 根据下列规则判断 path 和 expression，在命令列上第一个 - ( ) , ! 之前的部份为 path，之后的是 expression。如果 path 是空字串则使用目前路径，如果 expression 是空字串则使用 -print 为预设 expression。
+
+- expression 中可使用的选项有二三十个之多，在此只介绍最常用的部份。
+
+  - -mount, -xdev : 只检查和指定目录在同一个文件系统下的文件，避免列出其它文件系统中的文件
+  - -amin n : 在过去 n 分钟内被读取过
+  - -anewer file : 比文件 file 更晚被读取过的文件
+  - -atime n : 在过去 n 天内被读取过的文件
+  - -cmin n : 在过去 n 分钟内被修改过
+  - -cnewer file :比文件 file 更新的文件
+  - -ctime n : 在过去 n 天内创建的文件
+  - -mtime n : 在过去 n 天内修改过的文件
+  - -empty : 空的文件-gid n or -group name : gid 是 n 或是 group 名称是 name
+  - -ipath p, -path p : 路径名称符合 p 的文件，ipath 会忽略大小写
+  - -name name, -iname name : 文件名称符合 name 的文件。iname 会忽略大小写
+  - -size n : 文件大小 是 n 单位，b 代表 512 位元组的区块，c 表示字元数，k 表示 kilo bytes，w 是二个位元组。
+  - -type c : 文件类型是 c 的文件。
+    - d: 目录
+    - c: 字型装置文件
+    - b: 区块装置文件
+    - p: 具名贮列
+    - f: 一般文件
+    - l: 符号连结
+    - s: socket
+
+- find命令中也有与或非，用来控制匹配条件等等。
+
+  ```
+  		! expr True if expr is false.  This character will also usually need protection from interpretation by the shell.
+  
+         -not expr
+                Same as ! expr, but not POSIX compliant.
+  
+         expr1 expr2
+                Two expressions in a row are taken to be joined with an implied -a; expr2 is not evaluated if expr1 is false.
+  
+         expr1 -a expr2
+                Same as expr1 expr2.
+  
+         expr1 -and expr2
+                Same as expr1 expr2, but not POSIX compliant.
+  
+         expr1 -o expr2
+                Or; expr2 is not evaluated if expr1 is true.
+  
+         expr1 -or expr2
+                Same as expr1 -o expr2, but not POSIX compliant.
+  
+         expr1 , expr2
+                List; both expr1 and expr2 are always evaluated.  The value of expr1 is discarded; the value of the list is the value of expr2.  The comma operator can  be
+                useful  for searching for several different types of thing, but traversing the filesystem hierarchy only once.  The -fprintf action can be used to list the
+                various matched items into several different output files.
+  
+  ```
+
+  - 上面说明find可以用的与或非的符号，还有逗号运算符，逗号运算符中两个expr都是会被执行的
+
+    ```
+    read -p " What folder should be backed up: " folder
+    read -p " What type of files should be backed up: " suffix
+    find $folder -name "*.$suffix" -a ! -name '~*' -exec cp {} \
+        $BACKUP/$LOGNAME/$folder
+    echo "Backed up files from $folder to $BACKUP/$LOGNAME/$folder"
+    ```
+
+  - 其中-a表示与，也可以没有
+
+  - ！表示非，！-name表示不取以~开头的备份文件，-exec就是对查找到的文件执行命令。
+
+##### expect
+
+- expect工具在日常的运维中非常有用，可以用在多机器服务重启、远程copy、多机器日志查看、ftp文件操作、telnet等多种场景。shell中有些操作会受限于密码输入的人工操作，expect工具可以代替人工来完成一些交互性工作。
+  - 意思是执行一些命令之后在需要输入一些东西时，需要重复的人工输入，每次运行都需要输入，此时可以使用expect来交互完成，就不需要输入密码这类重复输入的东西了。
