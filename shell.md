@@ -463,6 +463,191 @@ echo ${str##*aa}  #结果为 @@@
 
   - 上面将/etc/init.d/nginx删除，然后使用cat和EOF重新向/etc/init.d/nginx中写入东西，相当于重新配置
 
+- 除了向一个文件写入东西，我们也可以在当前shell中向一个命令写入东西，表示这个命令要执行的东西，例如expect，在终端中输入expect就会进入交互界面，此时我们输入的东西会被expect执行，所以我们可以使用<<和EOF在shell脚本中给expect输入东西，然后expect就会执行这个命令。
+
+  ```
+  #!/bin/bash
+  echo "123"
+  /usr/bin/expect <<EOF　　#利用here document的expect代码嵌套
+  
+  spawn ssh root@172.16.11.99
+  expect "*password:"
+  send "rootzhang\r"
+  expect "*#"
+  send "touch zhangjiacai\r"
+  expect "*#"
+  send "exit\r"
+  expect eof　　#捕获结束
+  
+  EOF  
+  ```
+
+##### while read line
+
+- 在shell脚本中，我们经常看到以下的一种结构：
+
+  ```
+  while read line
+  
+  do
+  
+         …
+  
+  done < file
+  ```
+
+  - read通过输入重定向，把file的第一行所有的内容赋值给变量line，循环体内的命令一般包含对变量line的处理；然后循环处理file的第二行、第三行。。。一直到file的最后一行。
+
+  - 这种结构还有另外的写法
+
+    ```
+    cat file | while read line
+    do
+    	...
+    done
+    ```
+
+    - 用cat读取文件，然后通过管道输入到while循环中，这样也是一行一行的处理。
+
+  - 上面这两种结构都是基于另一个文件作为输入的。
+
+  - 如果是基于当前文件中变量的话，读取当前文件变量的内容，并不是读取另一个文件内容话，结果如下
+
+    ```
+    #!/bin/bash
+    date=`date +%Y%m%d`
+    datatime=${yesterday}
+    yesterday=`date +%Y%m%d -d "1 days ago"`
+    
+    echo '$date'
+    echo '====='$datatime
+    echo '-----'$yesterday
+     
+     
+    IPS="10.1.1.10 3001
+    10.1.1.10 3003
+    10.1.1.11 3001
+    10.1.1.13 3002
+    10.1.1.13 3004
+    10.1.1.14 3002"
+     
+    echo "======while test========"
+    i=0
+     
+    echo $IPS | while read line
+    do
+       echo $(($i+1))
+       echo $line
+    done
+     
+    echo "=======for test========"
+    n=0
+    for ip in $IPS
+    do
+       n=$(($n+1))
+       echo $ip
+       echo $n
+    done
+    
+    ======while test========
+    1
+    10.1.1.10 3001 10.1.1.10 3003 10.1.1.11 3001 10.1.1.13 3002 10.1.1.13 3004 10.1.1.14 3002
+    =======for test========
+    10.1.1.10
+    1
+    3001
+    2
+    10.1.1.10
+    3
+    3003
+    4
+    10.1.1.11
+    5
+    3001
+    6
+    10.1.1.13
+    7
+    3002
+    8
+    10.1.1.13
+    9
+    3004
+    10
+    10.1.1.14
+    11
+    3002
+    12
+    ```
+
+- for是每次读取文件中一个以空格为分割符的字符串
+
+  - 通过上面的例子可以看出，如果是当前脚本文件中的变化的话，while read line会一次性全部读取，如果是其他文件读入的话会一行一行的读入，进入到循环中。
+
+- for循环总是按空格来分割读取的，不管是当前文件中的变量，还是其他文件中的内容。如果读取其他文件中的内容的时候，for循环如下写法
+
+  ```
+  #!/bin/bash
+  
+  for i in `cat /home/admin/timeout_login.txt`
+  do
+  
+      /usr/bin/expect << EOF
+      spawn /usr/bin/ssh -t -p 22022 admin@$i "sudo su -"
+  
+      expect {
+          "yes/no" { send "yes\r" }
+      }   
+  
+      expect {
+          "password:" { send "xxo1#qaz\r" }
+      }
+      
+      expect {
+          "*password*:" { send "xx1#qaz\r" }
+      }
+  
+      expect "*]#"
+      send "df -Th\r"
+      expect "*]#"
+      send "exit\r"
+      expect eof
+  
+  EOF
+  done
+  ```
+
+  - in后面不能直接写文件的名字，需要用cat来读取文件的内容来输入到循环中，cat这内容需要用引号包起来或者使用$()，表示使用这个命令的结果作为内容。
+
+- 实例
+
+  - 计算文档a.txt中每一行中出现的数字个数并且要计算一下整个文档中一共出现了几个数字。例如a.txt内容如下：
+
+    ```
+    12aa*lkjskdj
+    alskdflkskdjflkjj
+    ```
+
+  - 脚本如下
+
+    ```
+    #!/bin/bash
+    sum=0
+    while read line
+    do
+    line_n=`echo $line|sed 's/[^0-9]//g'|wc -L`
+    echo $line_n
+    sum=$[$sum+$line_n]
+    done < $1
+    echo "sum:$sum"
+    
+    输出结果应该为：
+    2
+    0
+    sum:2
+    ```
+
+    
+
 #### Linux常用命令
 
 ##### xargs
@@ -928,4 +1113,263 @@ echo ${str##*aa}  #结果为 @@@
 ##### expect
 
 - expect工具在日常的运维中非常有用，可以用在多机器服务重启、远程copy、多机器日志查看、ftp文件操作、telnet等多种场景。shell中有些操作会受限于密码输入的人工操作，expect工具可以代替人工来完成一些交互性工作。
-  - 意思是执行一些命令之后在需要输入一些东西时，需要重复的人工输入，每次运行都需要输入，此时可以使用expect来交互完成，就不需要输入密码这类重复输入的东西了。
+  - 意思是执行一些命令之后在需要输入一些东西时，需要重复的人工输入，每次运行都需要输入，此时可以使用expect来交互完成，就不需要输入密码这类重复输入的东西了。这些密码是提前写在expect脚本中的，不用自己在去输入。
+
+- expect自动交互流程：
+
+  - spawn启动指定进程---expect获取指定关键字---send向指定程序发送指定字符---执行完成退出.
+
+- expect常用命令总结
+
+  ```
+  spawn               交互程序开始后面跟命令或者指定程序
+  expect              获取匹配信息匹配成功则执行expect后面的程序动作
+  send exp_send       用于发送指定的字符串信息，exp_send是send的alise
+  exp_continue        在expect中多次匹配就需要用到
+  send_user           用来打印输出 相当于shell中的echo
+  exit                退出expect脚本
+  eof                 expect执行结束 退出，一般要写成expect eof，与spawn对应，表示捕捉终端输出信息终止，结束交互。
+  set                 定义变量
+  puts                输出变量
+  interact			执行完成后保持交互状态，把控制权交给控制台，这个时候就可以手工操作了。如果没有这一句登录完成后会退出，而不是留在远程终端上。
+  set timeout         设置超时时间 set timeout -1,表示不设置超时时间，set timeout 300 表示超时时间设置为300秒
+  ```
+
+  - 转义字符\r是回车
+
+  - spawn命令就是用来启动新的进程的。spawn后的send和expect命令都是和spawn打开的进程进行交互的。
+
+  - send命令接收一个字符串参数，并将该参数发送到进程。（有点像here document）
+
+  - expect通常是用来等待一个进程的反馈，expect可以接收一个字符串参数，也可以接收正则表达式参数。和上文的send命令结合，实现简单的交互式。
+
+    - expect中的命令send可以和expect写在一行，但是命令send等必须要用{}括起来，expect和send也可以分两行来写，这样就可以不用写括号了，expect也可以多分支匹配，这样就像下面这样。
+
+    - 单一分支模式语法：
+
+      - expect "hi" {send "You said hi"}　　#匹配到hi后，会输出"you said hi"给进程，作为标准输入
+
+    - 多分支模式语法：匹配到hi，hello，bye任意一个字符串时，执行相应的输出。
+
+      ```
+      expect {
+      　　"hi" { send "You said hi\n"; exp_continue}
+      　　"hello" { send "Hello yourself\n"; exp_continue}
+      　　"bye" { send "That was unexpected\n"}
+      }
+      ```
+
+  - interact：利用spawn、expect、send自动化完成部分操作。如果想在适当的时候干预这个过程---就用到了interact（互相影响 互相作用）比如下载完ftp文件时，仍然可以停留在ftp命令行状态，以便手动的执行后续命令。interact可以达到这些目的，在自动登录ftp后，允许用户交互。
+
+    ```
+    spawn ftp 172.16.1.1
+    expect "Name"
+    send "ftp\r"
+    expect "Password:"
+    send "123456\r"
+    interact　　//留在ftp中手动执行后续命令操作
+    ```
+
+    - 执行完成后保持交互状态，把控制权交给控制台，这个时候就可以手工操作了；
+    - 如果没有这一句登录完成后会退出，而不是留在远程终端上。
+
+- shell脚本中执行expect命令
+
+  - 如果需要在shell脚本中嵌套expect代码，可以使用expect -c "expect代码"
+
+    ```
+    expect -c "
+    　　spawn ssh $user_name@$ip_addr df -P
+    　　expect {
+    　　　　\"*(yes/no)?\" {send \"yes\r\" ; exp_continue}
+    　　　　\"*password:\" {send \"$user_pwd\r\" ; exp_continue}
+    　　　　#退出
+    　　}
+    "
+    ```
+
+    - 在expect -c里面的代码，双引号要用\转义字符。expect -c执行的代码要用双引号包围。
+
+  - 使用here document的嵌套调用
+
+    ```
+    #!/bin/bash
+    echo "123"
+    /usr/bin/expect <<EOF　　#利用here document的expect代码嵌套
+    
+    spawn ssh root@172.16.11.99
+    expect "*password:"
+    send "rootzhang\r"
+    expect "*#"
+    send "touch zhangjiacai\r"
+    expect "*#"
+    send "exit\r"
+    expect eof　　#捕获结束
+    
+    EOF  
+    ```
+
+    - 这个在上面的shell中EOF有介绍，这个是在shell脚本中执行expect代码。
+
+###### 示例
+
+- ssh登录远程主机执行命令,执行方法 expect 1.sh 或者 ./1.sh
+
+  ```
+  #!/usr/bin/expect
+  
+  spawn ssh saneri@192.168.56.103 df -Th
+  expect "*password"
+  send "123456\n"
+  expect eof
+  ```
+
+  - 此时登录执行df -Th命令后就会退出。如果不退出需要使用interact，此处是expect脚本，解释器是expect
+
+- ssh远程登录主机执行命令，在shell脚本中执行expect命令,执行方法sh 2.sh、bash 2.sh 或./2.sh都可以执行.
+
+  ```
+  #!/bin/bash
+  
+  passwd='123456'
+  
+  /usr/bin/expect <<-EOF
+  
+  set time 30
+  spawn ssh saneri@192.168.56.103 df -Th
+  expect {
+  "*yes/no" { send "yes\r"; exp_continue }
+  "*password:" { send "$passwd\r" }
+  }
+  expect eof
+  EOF
+  ```
+
+  - 此处是shell脚本，解释器是bash，然后在shell脚本中嵌套执行expect
+
+- 创建ssh key，将id_rsa和id_rsa.pub文件分发到各台主机上面。
+
+  ```
+  1.创建主机配置文件
+  
+  [root@localhost script]# cat host 
+  192.168.1.10 root 123456
+  192.168.1.20 root 123456
+  192.168.1.30 root 123456
+  
+  [root@localhost script]# ls
+  copykey.sh  hosts
+  2.编写copykey.sh脚本,自动生成密钥并分发key.
+  [root@localhost script]# vim copykey.sh
+  
+  #!/bin/bash
+  
+  # 判断id_rsa密钥文件是否存在
+  if [ ! -f ~/.ssh/id_rsa ];then
+   ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+  else
+   echo "id_rsa has created ..."
+  fi
+  
+  #分发到各个节点,这里分发到host文件中的主机中.
+  while read line
+    do
+      user=`echo $line | cut -d " " -f 2`
+      ip=`echo $line | cut -d " " -f 1`
+      passwd=`echo $line | cut -d " " -f 3`
+      
+      expect <<EOF
+        set timeout 10
+        spawn ssh-copy-id $user@$ip
+        expect {
+          "yes/no" { send "yes\n";exp_continue }
+          "password" { send "$passwd\n" }
+        }
+       expect "password" { send "$passwd\n" }
+  EOF
+    done <  hosts
+  ```
+
+- 使用普通用户登录远程主机，并通过sudo到root权限，通过for循环批量在远程主机执行命令.
+
+  ```
+  cat timeout_login.txt 
+  10.0.1.8
+  10.0.1.34
+  10.0.1.88
+  10.0.1.76
+  10.0.1.2
+  10.0.1.3
+  ```
+
+  ```
+  #!/bin/bash
+  
+  for i in `cat /home/admin/timeout_login.txt`
+  do
+  
+      /usr/bin/expect << EOF
+      spawn /usr/bin/ssh -t -p 22022 admin@$i "sudo su -"
+  
+      expect {
+          "yes/no" { send "yes\r" }
+      }   
+  
+      expect {
+          "password:" { send "xxo1#qaz\r" }
+      }
+      
+      expect {
+          "*password*:" { send "xx1#qaz\r" }
+      }
+  
+      expect "*]#"
+      send "df -Th\r"
+      expect "*]#"
+      send "exit\r"
+      expect eof
+  
+  EOF
+  done
+  ```
+
+- 90上scp自动拷贝到服务器的expect
+
+  ```
+  #!/bin/sh
+  INSTALLER_NAME_HEAD="tc-agent-v1.0-"
+  INSTALLER_NAME=${INSTALLER_NAME_HEAD}`date "+%Y%m%d_%H%M%S"`.tar.gz
+  PACKAGE_DIR=trust_terminal_package
+  
+  rm  ${INSTALLER_NAME_HEAD}*
+  
+  echo "build package...."
+  tar zcf ${INSTALLER_NAME} $PACKAGE_DIR
+  
+  echo "build package <${INSTALLER_NAME}> successfully!"
+  SCP_DST_DIR=root@192.168.104.7:/shared/package/tc-agent/
+  ./expect_scp ${INSTALLER_NAME} $SCP_DST_DIR
+  echo "scp successfully!"
+  
+  #!/usr/bin/expect
+  set src_file [lindex $argv 0]
+  set dst [lindex $argv 1]
+  set timeout -1
+  set password "Youqi123456"
+  
+  spawn scp $src_file $dst
+  expect {
+   "(yes/no)?" {
+     send "yes\n"
+     expect "*assword:" { send "$password\n"}
+    }
+    "*assword:" {
+     send "$password\n"
+    }
+  }
+  expect "100%"
+  expect eof
+  ```
+
+  - 上面是两个脚本，shell脚本调用expect脚本。
+  -  set 赋值，set host [lindex $argv 0] 就是将参数0赋值给变量host，其中，[] 括起命令，执行括号内命令后返回结果，lindex是取列表中的某个参数，$argv则是参数列表。
