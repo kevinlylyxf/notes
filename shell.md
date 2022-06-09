@@ -1472,6 +1472,97 @@ echo ${str##*aa}  #结果为 @@@
 
   - 你看，使用 expr 进行数学计算是多么的麻烦呀，需要注意各种细节，我奉劝大家还是省省心，老老实实用 (())、let 或者 $[] 吧。
 
+##### bc
+
+- Bash Shell 内置了对整数运算的支持，但是并不支持浮点运算，而 Linux bc 命令可以很方便的进行浮点运算，当然整数运算也不再话下。
+
+- bc 甚至可以称得上是一种编程语言了，它支持变量、数组、输入输出、分支结构、循环结构、函数等基本的编程元素
+
+- bc命令的一些选项
+
+- | 选项                | 说明                  |
+  | ------------------- | --------------------- |
+  | -h \| --help        | 帮助信息              |
+  | -v \| --version     | 显示命令版本信息      |
+  | -l \| --mathlib     | 使用标准数学库        |
+  | -i \| --interactive | 强制交互              |
+  | -w \| --warn        | 显示 POSIX 的警告信息 |
+  | -s \| --standard    | 使用 POSIX 标准来处理 |
+  | -q \| --quiet       | 不显示欢迎信息        |
+
+- bc 有四个内置变量，我们在计算时会经常用到，如下表所示：
+
+  | 变量名      | 作 用                                                        |
+  | ----------- | ------------------------------------------------------------ |
+  | scale       | 指定精度，也即小数点后的位数；默认为 0，也即不使用小数部分。 |
+  | ibase       | 指定输入的数字的进制，默认为十进制。                         |
+  | obase       | 指定输出的数字的进制，默认为十进制。                         |
+  | last 或者 . | 表示最近打印的数字                                           |
+
+- bc 还有一些内置函数，如下表所示：
+
+  | 函数名  | 作用                               |
+  | ------- | ---------------------------------- |
+  | s(x)    | 计算 x 的正弦值，x 是弧度值。      |
+  | c(x)    | 计算 x 的余弦值，x 是弧度值。      |
+  | a(x)    | 计算 x 的反正切值，返回弧度值。    |
+  | l(x)    | 计算 x 的自然对数。                |
+  | e(x)    | 求 e 的 x 次方。                   |
+  | j(n, x) | 贝塞尔函数，计算从 n 到 x 的阶数。 |
+
+  - 要想使用这些数学函数，在输入 bc 命令时需要使用`-l`选项，表示启用数学库
+
+- 在前边的例子中，我们基本上是一行一个表达式，这样看起来更加舒服；如果你愿意，也可以将多个表达式放在一行，只要用分号`;`隔开就行
+
+###### shell中使用bc
+
+- 在 Shell 脚本中，我们可以借助管道或者输入重定向来使用 bc 计算器。
+
+  - 管道是 Linux 进程间的一种通信机制，它可以将前一个命令（进程）的输出作为下一个命令（进程）的输入，两个命令之间使用竖线`|`分隔。
+  - 通常情况下，一个命令从终端获得用户输入的内容，如果让它从其他地方（比如文件）获得输入，那么就需要重定向。
+
+- 如果读者希望直接输出 bc 的计算结果，那么可以使用下面的形式：
+
+  ```
+  echo "expression" | bc
+  ```
+
+  - `expression`就是希望计算的数学表达式，它必须符合 bc 的语法，上面我们已经进行了介绍。在 expression 中，还可以使用 Shell 脚本中的变量。
+
+- 使用下面的形式可以将 bc 的计算结果赋值给 Shell 变量：
+
+  ```
+  variable=$(echo "expression" | bc)
+  
+  variable 就是变量名。
+  ```
+
+- 进制转换实例
+
+  ```
+  #十进制转十六进制
+  [mozhiyan@localhost ~]$ m=31
+  [mozhiyan@localhost ~]$ n=$(echo "obase=16;$m"|bc)
+  [mozhiyan@localhost ~]$ echo $n
+  1F
+  #十六进制转十进制
+  [mozhiyan@localhost ~]$ m=1E
+  [mozhiyan@localhost ~]$ n=$(echo "obase=10;ibase=16;$m"|bc)
+  [mozhiyan@localhost ~]$ echo $n
+  30
+  ```
+
+- 借助输入重定向使用 bc 计算器
+
+  ```
+  variable=$(bc << EOF
+  expressions
+  EOF
+  )
+  ```
+
+  - 其中，`variable`是 Shell 变量名，`express`是要计算的数学表达式（可以换行，和进入 bc 以后的书写形式一样），`EOF`是数学表达式的开始和结束标识（你也可以换成其它的名字，比如 aaa、bbb 等）。
+
 #### 特殊变量
 
 ##### 特殊字符
@@ -2684,9 +2775,1357 @@ done
   
   ```
 
+
+#### I/O重定向
+
+- 输出重定向
+
+  - 输出重定向是指命令的结果不再输出到显示器上，而是输出到其它地方，一般是文件中。这样做的最大好处就是把命令的结果保存起来，当我们需要的时候可以随时查询。Bash 支持的输出重定向符号如下表所示。
+
+    
+
+    | 类 型                      | 符 号                                                        | 作 用                                                        |
+    | -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+    | 标准输出重定向             | command >file                                                | 以覆盖的方式，把 command 的正确输出结果输出到 file 文件中。  |
+    | command >>file             | 以追加的方式，把 command 的正确输出结果输出到 file 文件中。  |                                                              |
+    | 标准错误输出重定向         | command 2>file                                               | 以覆盖的方式，把 command 的错误信息输出到 file 文件中。      |
+    | command 2>>file            | 以追加的方式，把 command 的错误信息输出到 file 文件中。      |                                                              |
+    | 正确输出和错误信息同时保存 | command >file 2>&1                                           | 以覆盖的方式，把正确输出和错误信息同时保存到同一个文件（file）中。 |
+    | command >>file 2>&1        | 以追加的方式，把正确输出和错误信息同时保存到同一个文件（file）中。 |                                                              |
+    | command >file1 2>file2     | 以覆盖的方式，把正确的输出结果输出到 file1 文件中，把错误信息输出到 file2 文件中。 |                                                              |
+    | command >>file1 2>>file2   | 以追加的方式，把正确的输出结果输出到 file1 文件中，把错误信息输出到 file2 文件中。 |                                                              |
+    | command >file 2>file       | 【**不推荐**】这两种写法会导致 file 被打开两次，引起资源竞争，所以 stdout 和 stderr 会互相覆盖，我们将在《[结合Linux文件描述符谈重定向，彻底理解重定向的本质](http://c.biancheng.net/view/vip_3241.html)》一节中深入剖析。 |                                                              |
+    | command >>file 2>>file     |                                                              |                                                              |
+
+- 输入重定向
+
+  - 输入重定向就是改变输入的方向，不再使用键盘作为命令输入的来源，而是使用文件作为命令的输入。
+
+    | 符号                  | 说明                                                         |
+    | --------------------- | ------------------------------------------------------------ |
+    | command <file         | 将 file 文件中的内容作为 command 的输入。                    |
+    | command <<END         | 从标准输入（键盘）中读取数据，直到遇见分界符 END 才停止（分界符可以是任意的字符串，用户自己定义）。 |
+    | command <file1 >file2 | 将 file1 作为 command 的输入，并将 command 的处理结果输出到 file2。 |
+
+  - 和输出重定向类似，输入重定向的完整写法是`fd<file`，其中 fd 表示文件描述符，如果不写，默认为 0，也就是标准输入文件。
+
+  - 实例
+
+    ```
+    统计文档中有多少行文字。
+    wc -l <readme.txt  #输入重定向
+    ```
+
+    ```
+    #!/bin/bash
+    
+    while read str; do
+        echo $str
+    done <readme.txt
+    
+    这种写法叫做代码块重定向，也就是把一组命令同时重定向到一个文件
+    ```
+
+    ```
+    统计用户在终端输入的文本的行数。
+    [c.biancheng.net]$ wc -l <<END
+    > 123
+    > 789
+    > abc
+    > xyz
+    > END
+    4
+    wc 命令会一直等待用输入，直到遇见分界符 END 才结束读取。
+    ```
+
+##### 文件描述符
+
+- 前面提到，`>`是输出重定向符号，`<`是输入重定向符号；更准确地说，它们应该叫做文件描述符操作符。> 和 < 通过修改文件描述符改变了文件指针的指向，所以能够实现重定向的功能。
+
+  | 分类       | 用法                                                         | 说明                                                         |
+  | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+  | 输出       | n>filename                                                   | 以输出的方式打开文件 filename，并绑定到文件描述符 n。n 可以不写，默认为 1，也即标准输出文件。 |
+  | n>&m       | 用文件描述符 m 修改文件描述符 n，或者说用文件描述符 m 的内容覆盖文件描述符 n，结果就是 n 和 m 都代表了同一个文件，因为 n 和 m 的文件指针都指向了同一个文件。  因为使用的是`>`，所以 n 和 m 只能用作命令的输出文件。n 可以不写，默认为 1。 |                                                              |
+  | n>&-       | 关闭文件描述符 n 及其代表的文件。n 可以不写，默认为 1。      |                                                              |
+  | &>filename | 将正确输出结果和错误信息全部重定向到 filename。              |                                                              |
+  | 输入       | n<filename                                                   | 以输入的方式打开文件 filename，并绑定到文件描述符 n。n 可以不写，默认为 0，也即标准输入文件。 |
+  | n<&m       | 类似于 n>&m，但是因为使用的是`<`，所以 n 和 m 只能用作命令的输入文件。n 可以不写，默认为 0。 |                                                              |
+  | n<&-       | 关闭文件描述符 n 及其代表的文件。n 可以不写，默认为 0。      |                                                              |
+  | 输入和输出 | n<>filename                                                  | 同时以输入和输出的方式打开文件 filename，并绑定到文件描述符 n，相当于 n>filename 和 n<filename 的总和。。n 可以不写，默认为 0。 |
+
+- 文件描述符 10 只用了一次，我们在末尾最好将它关闭，这是一个好习惯。
+
+  ```
+  echo "C语言中文网" 10>log.txt >&10 10>&-
+  ```
+
+  - 有些文件描述符不是很常用的，用完可以关掉，0、1、2除外。
+
+##### exec命令操作文件描述符
+
+- exec 是 [Shell 内置命令](http://c.biancheng.net/view/1136.html)，它有两种用法，一种是执行 Shell 命令，一种是操作文件描述符。本节只讲解后面一种，前面一种请大家自行学习。
+
+- 使用 exec 命令可以永久性地重定向，后续命令的输入输出方向也被确定了，直到再次遇到 exec 命令才会改变重定向的方向；换句话说，一次重定向，永久有效。
+
+- 难道说我们以前使用的重定向都是临时的吗？是的！前面使用的重定向都是临时的，它们只对当前的命令有效，对后面的命令无效。
+
+- 有些脚本文件的输出内容很多，我们不希望直接输出到显示器上，或者我们需要把输出内容备份到文件中，方便以后检索，按照以前的思路，必须在每个命令后面都使用一次重定向，写起来非常麻烦。如果以后想修改重定向的方向，那工作量也是不小的。
+
+- exec 命令就是为解决这种困境而生的，它可以让重定向对当前 Shell 进程中的所有命令有效，它的用法为：
+
+  ```
+  exec 文件描述符操作
+  ```
+
+  ```
+  [mozhiyan@localhost ~]$ echo "重定向未发生"
+  重定向未发生
+  [mozhiyan@localhost ~]$ exec >log.txt
+  [mozhiyan@localhost ~]$ echo "c.biancheng.net"
+  [mozhiyan@localhost ~]$ echo "C语言中文网"
+  [mozhiyan@localhost ~]$ exec >&2
+  [mozhiyan@localhost ~]$ echo "重定向已恢复"
+  重定向已恢复
+  [mozhiyan@localhost ~]$ cat log.txt
+  c.biancheng.net
+  C语言中文网
+  ```
+
+  - `exec >log.txt`将当前 Shell 进程的所有标准输出重定向到 log.txt 文件，它等价于`exec 1>log.txt`。
+  - 后面的两个 echo 命令都没有在显示器上输出，而是输出到了 log.txt 文件。
+  - `exec >&2`用来恢复重定向，让标准输出重新回到显示器，它等价于`exec 1>&2`。2 是标准错误输出的文件描述符，它也是输出到显示器，并且没有遭到破坏，我们用 2 来覆盖 1，就能修复 1，让 1 重新指向显示器。
+  - 接下来的 echo 命令将结果输出到显示器上，证明`exec >&2`奏效了。
+  - 最后我们用 cat 命令来查看 log.txt 文件的内容，发现就是中间两个 echo 命令的输出。
+
+- 以输出重定向为例，手动恢复的方法有两种：
+
+  - /dev/tty 文件代表的就是显示器，将标准输出重定向到 /dev/tty 即可，也就是 exec >/dev/tty。
+  - 如果还有别的文件描述符指向了显示器，那么也可以别的文件描述符来恢复标号为 1 的文件描述符，例如 exec >&2。注意，如果文件描述符 2 也被重定向了，那么这种方式就无效了。
+
+- 输入重定向的例子
+
+  ```
+  #!/bin/bash
+  exec 6<&0  #先将0号文件描述符保存
+  exec <nums.txt  #输入重定向
+  sum=0
+  while read n; do
+      ((sum += n))
+  done
+  echo "sum=$sum"
+  exec 0<&6 6<&-  #恢复输入重定向，并关闭文件描述符6
+  read -p "请输入名字、网址和年龄：" name url age
+  echo "$name已经$age岁了，它的网址是 $url"
+  ```
+
+##### shell组命令
+
+- 所谓组命令，就是将多个命令划分为一组，或者看成一个整体。
+
+- Shell 组命令的写法有两种：
+
+  ```
+  { command1; command2; command3; . . . }
+  (command1; command2; command3;. . . )
+  ```
+
+  - 两种写法的区别在于：由花括号`{}`包围起来的组命名在当前 Shell 进程中执行，而由小括号`()`包围起来的组命令会创建一个子 Shell，所有命令都在子 Shell 中执行。
+  - 对于第一种写法，花括号和命令之间必须有一个空格，并且最后一个命令必须用一个分号或者一个换行符结束。
+  - 子 Shell 就是一个子进程，是通过当前 Shell 进程创建的一个新进程。但是子 Shell 和一般的子进程（比如`bash ./test.sh`创建的子进程）还是有差别的，我们将在《[子Shell和子进程](http://c.biancheng.net/view/vip_3248.html)》一节中深入讲解，读者暂时把子 Shell 和子进程等价起来就行。
+
+- 组命令可以将多条命令的输出结果合并在一起，在使用重定向和管道时会特别方便。
+
+- 例如，下面的代码将多个命令的输出重定向到 out.txt：
+
+  ```
+  ls -l > out.txt  #>表示覆盖
+  echo "http://c.biancheng.net/shell/" >> out.txt  #>>表示追加
+  cat readme.txt >> out.txt
+  ```
+
+  - 本段代码共使用了三次重定向。
+
+- 借助组命令，我们可以将以上三条命令合并在一起，简化成一次重定向：
+
+  ```
+  { ls -l; echo "http://c.biancheng.net/shell/"; cat readme.txt; } > out.txt
+  ```
+
+  - 或者写作：
+
+  ```
+  (ls -l; echo "http://c.biancheng.net/shell/"; cat readme.txt) > out.txt
+  ```
+
+  - 使用组命令技术，我们节省了一些打字时间。
+
+- 类似的道理，我们也可以将组命令和管道结合起来：
+
+  ```
+  { ls -l; echo "http://c.biancheng.net/shell/"; cat readme.txt; } | lpr
+  ```
+
+  - 这里我们把三个命令的输出结果合并在一起，并把它们用管道输送给命令 lpr 的输入，以便产生一个打印报告。
+
+- 两种组命令的对比
+
+  - 虽然两种 Shell 组命令形式看起来相似，它们都能用在重定向中合并输出结果，但两者之间有一个很重要的不同：由`{}`包围的组命令在当前 Shell 进程中执行，由`()`包围的组命令会创建一个子Shell，所有命令都会在这个子 Shell 中执行。
+  - 在子 Shell 中执行意味着，运行环境被复制给了一个新的 shell 进程，当这个子 Shell 退出时，新的进程也会被销毁，环境副本也会消失，所以在子 Shell 环境中的任何更改都会消失（包括给变量赋值）。因此，在大多数情况下，除非脚本要求一个子 Shell，否则使用`{}`比使用`()`更受欢迎，并且`{}`的进行速度更快，占用的内存更少。
+
+##### 代码块重定向
+
+- 所谓代码块，就是由多条语句组成的一个整体；for、while、until 循环，或者 if...else、case...in 选择结构，或者由`{ }`包围的命令都可以称为代码块。
+
+- 将重定向命令放在代码块的结尾处，就可以对代码块中的所有命令实施重定向。
+
+- 使用 while 循环不断读取 nums.txt 中的数字，计算它们的总和。
+
+  ```
+  #!/bin/bash
+  sum=0
+  while read n; do
+      ((sum += n))
+  done <nums.txt  #输入重定向
+  echo "sum=$sum"
+  ```
+
+- 对`{}`包围的代码使用重定向。
+
+  ```
+  #!/bin/bash
+  {
+      echo "C语言中文网";
+      echo "http://c.biancheng.net";
+      echo "7"
+  } >log.txt  #输出重定向
+  {
+      read name;
+      read url;
+      read age
+  } <log.txt  #输入重定向
+  echo "$name已经$age岁了，它的网址是 $url"
+  ```
+
+##### Here Document
+
+- Shell 还有一种特殊形式的重定向叫做“Here Document”，目前没有统一的翻译，你可以将它理解为“嵌入文档”“内嵌文档”“立即文档”。
+
+- 所谓文档，就是命令需要处理的数据或者字符串；所谓嵌入，就是把数据和代码放在一起，而不是分开存放（比如将数据放在一个单独的文件中）。有时候命令需要处理的数据量很小，将它放在一个单独的文件中有点“大动干戈”，不如直接放在代码中来得方便。
+
+- Here Document 的基本用法为：
+
+  ```
+  command <<END
+    document
+  END
+  ```
+
+  - `command`是 Shell 命令，`<<END`是开始标志，`END`是结束标志，`document`是输入的文档（也就是一行一行的字符串）。
+  - 这种写法告诉 Shell 把 document 部分作为命令需要处理的数据，直到遇见终止符`END`为止（终止符`END`不会被读取）。
+  - 注意，终止符`END`必须独占一行，并且要定顶格写。
+
+- cat 命令一般是从文件中读取内容，并将内容输出到显示器上，借助 Here Document，cat 命令可以从键盘上读取内容。
+
+  ```
+  [mozhiyan@localhost ~]$ cat <<END
+  > Shell教程
+  > http://c.biancheng.net/shell/
+  > 已经进行了三次改版
+  > END
+  Shell教程
+  http://c.biancheng.net/shell/
+  已经进行了三次改版
+  ```
+
+- 在脚本文件中使用 Here Document，并将 document 中的内容转换为大写。
+
+  ```
+  #!/bin/bash
+  #在脚本文件中使用立即文档
+  tr a-z A-Z <<END
+  one two three
+  Here Document
+  END
+  ```
+
+- 忽略制表符
+
+  - 默认情况下，行首的制表符也被当做正文的一部分。
+
+  ```
+  #!/bin/bash
+  cat <<END
+      Shell教程
+      http://c.biancheng.net/shell/
+      已经进行了三次改版
+  END
+  ```
+
+  - 这里的制表符仅仅是为了格式对齐，我们并不希望它作为正文的一部分，为了达到这个目的，你可以在`<<`和`END`之间增加`-`，请看下面的代码：
+
+  ```
+  #!/bin/bash
+  #增加了减号-
+  cat <<-END
+      Shell教程
+      http://c.biancheng.net/shell/
+      已经进行了三次改版
+  END
+  ```
+
+- 忽略命令替换
+
+  - 默认情况下，正文中出现的变量和命令也会被求值或运行，Shell 会先将它们替换以后再交给 command，请看下面的例子：
+
+    ```
+    [mozhiyan@localhost ~]$ name=C语言中文网
+    [mozhiyan@localhost ~]$ url=http://c.biancheng.net
+    [mozhiyan@localhost ~]$ age=7
+    [mozhiyan@localhost ~]$ cat <<END
+    > ${name}已经${age}岁了，它的网址是 ${url}
+    > END
+    C语言中文网已经7岁了，它的网址是 http://c.biancheng.net
+    ```
+
+  - 你可以将分界符用单引号或者双引号包围起来使 Shell 替换失效：
+
+    ```
+    [mozhiyan@localhost ~]$ name=C语言中文网
+    [mozhiyan@localhost ~]$ url=http://c.biancheng.net
+    [mozhiyan@localhost ~]$ age=7
+    [mozhiyan@localhost ~]$ cat <<'END'  #使用单引号包围
+    > ${name}已经${age}岁了，它的网址是 ${url}
+    > END
+    ${name}已经${age}岁了，它的网址是 ${url}
+    ```
+
+##### Here String
+
+- Here String 是 [Here Document](http://c.biancheng.net/view/vip_3244.html) 的一个变种，它的用法如下：
+
+  ```
+  command <<< string
+  ```
+
+- command 是 Shell 命令，string 是字符串（它只是一个普通的字符串，并没有什么特别之处）。
+
+  - 这种写法告诉 Shell 把 string 部分作为命令需要处理的数据。例如，将小写字符串转换为大写：
+
+  ```
+  [mozhiyan@localhost ~]$ tr a-z A-Z <<< one
+  ONE
+  ```
+
+- Here String 对于这种发送较短的数据到进程是非常方便的，它比 Here Document 更加简洁。
+
+- 一个单词不需要使用引号包围，但如果 string 中带有空格，则必须使用双引号或者单引号包围，如下所示：
+
+  ```
+  [mozhiyan@localhost ~]$ tr a-z A-Z <<< "one two three"
+  ONE TWO THREE
+  ```
+
+- 双引号和单引号是有区别的，双引号会解析其中的变量（当然不写引号也会解析），单引号不会，请看下面的代码：
+
+  ```
+  [mozhiyan@localhost ~]$ var=two
+  [mozhiyan@localhost ~]$ tr a-z A-Z <<<"one $var there"
+  ONE TWO THERE
+  [mozhiyan@localhost ~]$ tr a-z A-Z <<<'one $var there'
+  ONE $VAR THERE
+  [mozhiyan@localhost ~]$ tr a-z A-Z <<<one${var}there
+  ONETWOTHERE
+  ```
+
+- 有了引号的包围，Here String 还可以接收多行字符串作为命令的输入，如下所示：
+
+  ```
+  [mozhiyan@localhost ~]$ tr a-z A-Z <<<"one two there
+  > four five six
+  > seven eight"
+  ONE TWO THERE
+  FOUR FIVE SIX
+  SEVEN EIGHT
+  ```
+
+- 与 Here Document 相比，Here String 通常是相当方便的，特别是发送变量内容（而不是文件）到像 grep 或者 sed 这样的过滤程序时。
+
+#### 函数
+
+- Shell 函数的本质是一段可以重复使用的脚本代码，这段代码被提前编写好了，放在了指定的位置，使用时直接调取即可。
+
+- Shell 函数定义的语法格式如下：
+
+  ```
+  function name() {
+    statements
+    [return value]
+  }
+  ```
+
+  - `function`是 Shell 中的关键字，专门用来定义函数；
+  - `name`是函数名；
+  - `statements`是函数要执行的代码，也就是一组语句；
+  - `return value`表示函数的返回值，其中 return 是 Shell 关键字，专门用在函数中返回一个值；这一部分可以写也可以不写。
+
+- 如果你嫌麻烦，函数定义时也可以不写 function 关键字：
+
+  ```
+  name() {
+    statements
+    [return value]
+  }
+  ```
+
+  - 如果写了 function 关键字，也可以省略函数名后面的小括号：
+
+  ```
+  function name {
+    statements
+    [return value]
+  }
+  ```
+
+##### 函数调用
+
+- 调用 Shell 函数时可以给它传递参数，也可以不传递。如果不传递参数，直接给出函数名字即可：
+
+  ```
+  name
+  ```
+
+  - 如果传递参数，那么多个参数之间以空格分隔：
+
+  ```
+  name param1 param2 param3
+  ```
+
+  - 不管是哪种形式，函数名字后面都不需要带括号。
+
+  - 和其它编程语言不同的是，Shell 函数在定义时不能指明参数，但是在调用时却可以传递参数，并且给它传递什么参数它就接收什么参数。
+
+  - Shell 也不限制定义和调用的顺序，你可以将定义放在调用的前面，也可以反过来，将定义放在调用的后面。
+
+- 定义一个函数，计算所有参数的和：
+
+  ```
+  #!/bin/bash
+  function getsum(){
+      local sum=0
+      for n in $@
+      do
+           ((sum+=n))
+      done
+      return $sum
+  }
+  getsum 10 20 55 15  #调用函数并传递参数
+  echo $?
+  ```
+
+  - `$@`表示函数的所有参数，`$?`表示函数的退出状态（返回值）。
+
+##### 函数返回值
+
+- 在 C++、Java、C#、Python 等大部分编程语言中，返回值是指函数被调用之后，执行函数体中的代码所得到的结果，这个结果就通过 return 语句返回。
+
+- 但是 Shell 中的返回值表示的是函数的退出状态：返回值为 0 表示函数执行成功了，返回值为非 0 表示函数执行失败（出错）了。if、while、for 等语句都是根据函数的退出状态来判断条件是否成立。
+
+- Shell 函数的返回值只能是一个介于 0~255 之间的整数，其中只有 0 表示成功，其它值都表示失败。
+
+- 函数执行失败时，可以根据返回值（退出状态）来判断具体出现了什么错误，比如一个打开文件的函数，我们可以指定 1 表示文件不存在，2 表示文件没有读取权限，3 表示文件类型不对。
+
+- 如果函数体中没有 return 语句，那么使用默认的退出状态，也就是最后一条命令的退出状态。如果这就是你想要的，那么更加严谨的写法为：
+
+  ```
+  return $?
+  ```
+
+  - `$?`是一个特殊变量，用来获取上一个命令的退出状态，或者上一个函数的返回值，请猛击《[Shell $?](http://c.biancheng.net/view/808.html)》了解更多。
+
+###### 如何得到函数的返回结果
+
+- 有人可能会疑惑，既然 return 表示退出状态，那么该如何得到函数的处理结果呢？比如，我定义了一个函数，计算从 m 加到 n 的和，最终得到的结果该如何返回呢？
+
+- 这个问题有两种解决方案：
+
+  - 一种是借助全局变量，将得到的结果赋值给全局变量；
+  - 一种是在函数内部使用 echo、printf 命令将结果输出，在函数外部使用`$()`或者````捕获结果。
+
+- 下面我们具体来定义一个函数 getsum，计算从 m 加到 n 的和，并使用以上两种解决方案。
+
+  ```
+  将函数处理结果赋值给一个全局变量。
+  #!/bin/bash
+  sum=0  #全局变量
+  function getsum(){
+      for((i=$1; i<=$2; i++)); do
+          ((sum+=i))  #改变全局变量
+      done
+      return $?  #返回上一条命令的退出状态
+  }
+  read m
+  read n
+  if getsum $m $n; then
+      echo "The sum is $sum"  #输出全局变量
+  else
+      echo "Error!"
+  fi
+  这种方案的弊端是：定义函数的同时还得额外定义一个全局变量，如果我们仅仅知道函数的名字，但是不知道全局变量的名字，那么也是无法获取结果的。
+  
+  在函数内部使用 echo 输出结果。
+  #!/bin/bash
+  function getsum(){
+      local sum=0  #局部变量
+      for((i=$1; i<=$2; i++)); do
+          ((sum+=i))
+      done
+     
+      echo $sum
+      return $?
+  }
+  read m
+  read n
+  total=$(getsum $m $n)
+  echo "The sum is $total"
+  #也可以省略 total 变量，直接写成下面的形式
+  #echo "The sum is "$(getsum $m $n)
+  ```
+
+  - 这种方案的弊端是：如果不使用`$()`，而是直接调用函数，那么就会将结果直接输出到终端上，不过这貌似也无所谓，所以我推荐这种方案。
+
+- 总起来说，虽然C语言、C++、Java 等其它编程语言中的返回值用起来更加方便，但是 Shell 中的返回值有它独特的用途，所以不要带着传统的编程思维来看待 Shell 函数的返回值。
+
+#### read命令
+
+- read 是 [Shell 内置命令](http://c.biancheng.net/view/1136.html)，用来从标准输入中读取数据并赋值给变量。如果没有进行重定向，默认就是从键盘读取用户输入的数据；如果进行了重定向，那么可以从文件中读取数据。
+
+- read 命令的用法为：
+
+  ```
+  read [-options] [variables]
+  ```
+
+  - `options`表示选项，如下表所示；`variables`表示用来存储数据的变量，可以有一个，也可以有多个。
+
+  - `options`和`variables`都是可选的，如果没有提供变量名，那么读取的数据将存放到环境变量 REPLY 中。
+
+    | 选项         | 说明                                                         |
+    | ------------ | ------------------------------------------------------------ |
+    | -a array     | 把读取的数据赋值给数组 array，从下标 0 开始。                |
+    | -d delimiter | 用字符串 delimiter 指定读取结束的位置，而不是一个换行符（读取到的数据不包括 delimiter）。 |
+    | -e           | 在获取用户输入的时候，对功能键进行编码转换，不会直接显式功能键对应的字符。 |
+    | -n num       | 读取 num 个字符，而不是整行字符。                            |
+    | -p prompt    | 显示提示信息，提示内容为 prompt。                            |
+    | -r           | 原样读取（Raw mode），不把反斜杠字符解释为转义字符。         |
+    | -s           | 静默模式（Silent mode），不会在屏幕上显示输入的字符。当输入密码和其它确认信息的时候，这是很有必要的。 |
+    | -t seconds   | 设置超时时间，单位为秒。如果用户没有在指定时间内输入完成，那么 read 将会返回一个非 0 的退出状态，表示读取失败。 |
+    | -u fd        | 使用文件描述符 fd 作为输入源，而不是标准输入，类似于重定向。 |
+
+- 实例
+
+  ```
+  使用 read 命令给多个变量赋值。
+  #!/bin/bash
+  read -p "Enter some information > " name url age
+  echo "网站名字：$name"
+  echo "网址：$url"
+  echo "年龄：$age"
+  注意，必须在一行内输入所有的值，不能换行，否则只能给第一个变量赋值，后续变量都会赋值失败。
+  本例还使用了-p选项，该选项会用一段文本来提示用户输入。
+  
+  只读取一个字符。
+  #!/bin/bash
+  read -n 1 -p "Enter a char > " char
+  printf "\n"  #换行
+  echo $char
+  -n 1表示只读取一个字符。运行脚本后，只要用户输入一个字符，立即读取结束，不用等待用户按下回车键。
+  printf "\n"语句用来达到换行的效果，否则 echo 的输出结果会和用户输入的内容位于同一行，不容易区分。
+  
+  
+  在指定时间内输入密码。
+  #!/bin/bash
+  if
+      read -t 20 -sp "Enter password in 20 seconds(once) > " pass1 && printf "\n" &&  #第一次输入密码
+      read -t 20 -sp "Enter password in 20 seconds(again)> " pass2 && printf "\n" &&  #第二次输入密码
+      [ $pass1 == $pass2 ]  #判断两次输入的密码是否相等
+  then
+      echo "Valid password"
+  else
+      echo "Invalid password"
+  fi
+  这段代码中，我们使用&&组合了多个命令，这些命令会依次执行，并且从整体上作为 if 语句的判断条件，只要其中一个命令执行失败（退出状态为非 0 值），整个判断条件就失败了，后续的命令也就没有必要执行了。
+  ```
+
   
 
+#### 进程替换
+
+- 进程替换和命令替换非常相似。[命令替换](http://c.biancheng.net/view/1164.html)是把一个命令的输出结果赋值给另一个变量，例如`dir_files=`ls -l``或`date_time=$(date)`；而进程替换则是把一个命令的输出结果传递给另一个（组）命令。
+
+- 为了说明进程替换的必要性，我们先来看一个使用管道的例子：
+
+  ```
+  echo "http://c.biancheng.net/shell/" | readecho $REPLY
+  ```
+
+  - 以上代码输出结果总是为空，因为 echo 命令在父 Shell 中执行，而 read 命令在子 Shell 中执行，当 read 执行结束时，子 Shell 被销毁，REPLY 变量也就消失了。管道中的命令总是在子 Shell 中执行的，任何给变量赋值的命令都会遭遇到这个问题。
+  - 使用 read 读取数据时，如果没有提供变量名，那么读取到的数据将存放到环境变量 REPLY 中，这一点已在《[Shell read](http://c.biancheng.net/view/2991.html)》中讲到。
+
+- 幸运的是，Shell 提供了一种“特异功能”，叫做进程替换，它可以用来解决这种麻烦。
+
+- Shell 进程替换有两种写法，一种用来产生标准输出，借助输入重定向，它的输出结果可以作为另一个命令的输入：
+
+  ```
+  <(commands)
+  ```
+
+  - 另一种用来接受标准输入，借助输出重定向，它可以接收另一个命令的输出结果：
+
+  ```
+  >(commands)
+  ```
+
+  - commands 是一组命令列表，多个命令之间以分号`;`分隔。注意，`<`或`>`与圆括号之间是没有空格的。
+
+- 例如，为了解决上面遇到的问题，我们可以像下面这样使用进程替换：
+
+  ```
+  read < <(echo "http://c.biancheng.net/shell/")
+  echo $REPLY
+  ```
+
+  - 整体上来看，Shell 把`echo "http://c.biancheng.net/shell/"`的输出结果作为 read 的输入。`<()`用来捕获 echo 命令的输出结果，`<`用来将该结果重定向到 read。
+  - 注意，两个`<`之间是有空格的，第一个`<`表示输入重定向，第二个`<`和`()`连在一起表示进程替换。
+  - 本例中的 read 命令和第二个 echo 命令都在当前 Shell 进程中运行，读取的数据也会保存到当前进程的 REPLY 变量，大家都在一个进程中，所以使用 echo 能够成功输出。
+  - 而在前面的例子中我们使用了管道，echo 命令在父进程中运行，read 命令在子进程中运行，读取的数据也保存在子进程的 REPLY 变量中，echo 命令和 REPLY 变量不在一个进程中，而子进程的环境变量对父进程是不可见的，所以读取失败。
+
+- 再来看一个进程替换用作「接受标准输入」的例子：
+
+  ```
+  echo "C语言中文网" > >(read; echo "你好，$REPLY")
+  
+  运行结果：
+  你好，C语言中文网
+  
+  因为使用了重定向，read 命令从`echo "C语言中文网"`的输出结果中读取数据。
+  ```
+
+###### shell进程替换本质
+
+- 为了能够在不同进程之间传递数据，实际上进程替换会跟系统中的文件关联起来，这个文件的名字为`/dev/fd/n`（n 是一个整数）。该文件会作为参数传递给`()`中的命令，`()`中的命令对该文件是读取还是写入取决于进程替换格式是`<`还是`>`：
+
+  - 如果是`>()`，那么该文件会给`()`中的命令提供输入；借助输出重定向，要输入的内容可以从其它命令而来。
+  - 如果是`<()`，那么该文件会接收`()`中命令的输出结果；借助输入重定向，可以将该文件的内容作为其它命令的输入。
+
+- 使用 echo 命令可以查看进程替换对应的文件名：
+
+  ```
+  [c.biancheng.net]$ echo >(true)
+  /dev/fd/63
+  [c.biancheng.net]$ echo <(true)
+  /dev/fd/63
+  [c.biancheng.net]$ echo >(true) <(true)
+  /dev/fd/63 /dev/fd/62
+  ```
+
+  - `/dev/fd/`目录下有很多序号文件，进程替换一般用的是 63 号文件，该文件是系统内部文件，我们一般查看不到。
+
+#### 子shell和子进程
+
+- Shell 中有很多方法产生子进程，比如以新进程的方式运行 Shell 脚本，使用组命令、管道、命令替换等，但是这些子进程是有区别的。
+- 子进程的概念是由父进程的概念引申而来的。在 Linux 系统中，系统运行的应用程序几乎都是从 init（pid为 1 的进程）进程派生而来的，所有这些应用程序都可以视为 init 进程的子进程，而 init 则为它们的父进程。
+- Shell 脚本是从上至下、从左至右依次执行的，即执行完一个命令之后再执行下一个。如果在 Shell 脚本中遇到子脚本（即脚本嵌套，但是必须以新进程的方式运行）或者外部命令，就会向系统内核申请创建一个新的进程，以便在该进程中执行子脚本或者外部命令，这个新的进程就是子进程。子进程执行完毕后才能回到父进程，才能继续执行父脚本中后续的命令及语句。
+- 了解 Linux 编程的读者应该知道，使用 fork() 函数可以创建一个子进程；除了 PID（进程ID）等极少的参数不同外，子进程的一切都来自父进程，包括代码、数据、堆栈、打开的文件等，就连代码的执行位置（状态）都是一样的。
+- 也就是说，fork() 克隆了一个一模一样的自己，身高、体重、颜值、嗓音、年龄等各种属性都相同。当然，后期随着各自的发展轨迹不同，两者会变得不一样，比如 A 好吃懒做越来越肥，B 经常健身成了一个肌肉男；但是在 fork() 出来的那一刻，两者都是一样的。
+- Linux 还有一种创建子进程的方式，就是子进程被 fork() 出来以后立即调用 exec() 函数加载新的可执行文件，而不使用从父进程继承来的一切。什么意思呢？
+- 比如在 ~/bin 目录下有两个可执行文件分别叫 a.out 和 b.out。现在我运行 a.out，就会产生一个进程，比如叫做 A。在进程 A 中我又调用 fork() 函数创建了一个进程 B，那么 B 就是 A 的子进程，此时它们是一模一样的。但是，我调用 fork() 后立即又调用 exec() 去加载 b.out，这可就坏事了，B 进程中的一切（包括代码、数据、堆栈等）都会被销毁，然后再根据 b.out 重建建立一切。这样一折腾，B 进程除了 ID 没有变，其它的都变了，再也没有属于 A 的东西了。
+- 你看，同样是创建子进程，但是结果却大相径庭：
+  - 第一种只使用 fork() 函数，子进程和父进程几乎是一模一样的，父进程中的函数、变量、别名等在子进程中仍然有效。
+  - 第二种使用 fork() 和 exec() 函数，子进程和父进程之间除了硬生生地维持一种“父子关系”外，再也没有任何联系了，它们就是两个完全不同的程序。
+- 对于 Shell 来说，以新进程的方式运行脚本文件，比如`bash ./test.sh`、`chmod +x ./test.sh; ./test.sh`，或者在当前 Shell 中使用 bash 命令启动新的 Shell，它们都属于第二种创建子进程的方式，所以子进程除了能继承父进程的环境变量外，基本上也不能使用父进程的什么东西了，比如，父进程的全局变量、局部变量、文件描述符、别名等在子进程中都无效。
+- 但是，组命令、命令替换、管道这几种语法都使用第一种方式创建进程，所以子进程可以使用父进程的一切，包括全局变量、局部变量、别名等。我们将这种子进程称为**子 Shell（sub shell）**。
+- 子 Shell 虽然能使用父 Shell 的的一切，但是如果子 Shell 对数据做了修改，比如修改了全局变量，那么这种修改只能停留在子 Shell，无法传递给父 Shell。不管是子进程还是子 Shell，都是“传子不传父”。
+
+###### 如何检测子shell和子进程
+
+- 我们都知道使用 $ 变量可以获取当前进程的 ID，我在父 Shell 和子 Shell 中都输出 $ 的值，只要它们不一样，不就是创建了一个新的进程吗？那我们就来试一下吧。
+
+  ```
+  [mozhiyan@localhost ~]$ echo $$  #父Shell PID
+  3299
+  [mozhiyan@localhost ~]$ (echo $$)  #组命令形式的子Shell PID
+  3299
+  [mozhiyan@localhost ~]$ echo "http://c.biancheng.net" | { echo $$; }  #管道形式的子Shell PID
+  3299
+  [mozhiyan@localhost ~]$ read < <(echo $$)  #进程替换形式的子Shell PID
+  [mozhiyan@localhost ~]$ echo $REPLY
+  3299
+  ```
+
+  - 你看，子 Shell 和父 Shell 的 ID 都是一样的，哪有产生新进程了？作者你是不是骗人呢？
+
+  - 其实不是我骗人，而是你掉坑里了，因为 $ 变量在子 Shell 中无效！Base 官方文档说，在普通的子进程中，$ 确实被展开为子进程的 ID；但是在子 Shell 中，$ 却被展开成父进程的 ID。
+
+- 除了 $，Bash 还提供了另外两个环境变量——SHLVL 和 BASH_SUBSHELL，用它们来检测子 Shell 非常方便。
+
+- SHLVL 是记录多个 Bash 进程实例嵌套深度的累加器，每次进入一层普通的子进程，SHLVL 的值就加 1。而 BASH_SUBSHELL 是记录一个 Bash 进程实例中多个子 Shell（sub shell）嵌套深度的累加器，每次进入一层子 Shell，BASH_SUBSHELL 的值就加 1。
+
+- 我们还是用实例来说话吧，先说 SHLVL。创建一个脚本文件，命名为 test.sh，内容如下：
+
+  ```
+  #!/bin/bash
+  echo "$SHLVL  $BASH_SUBSHELL"
+  ```
+
+  然后打开 Shell 窗口，依次执行下面的命令：
+
+  ```
+  [mozhiyan@localhost ~]$ echo "$SHLVL  $BASH_SUBSHELL"
+  2  0
+  [mozhiyan@localhost ~]$ bash  #执行bash命令开启一个新的Shell会话
+  [mozhiyan@localhost ~]$ echo "$SHLVL  $BASH_SUBSHELL"
+  3  0
+  [mozhiyan@localhost ~]$ bash ./test.sh  #通过bash命令运行脚本
+  4  0
+  [mozhiyan@localhost ~]$ echo "$SHLVL  $BASH_SUBSHELL"
+  3  0
+  [mozhiyan@localhost ~]$ chmod +x ./test.sh  #给脚本增加执行权限
+  [mozhiyan@localhost ~]$ ./test.sh
+  4  0
+  [mozhiyan@localhost ~]$ echo "$SHLVL  $BASH_SUBSHELL"
+  3  0
+  [mozhiyan@localhost ~]$ exit  #退出内层Shell
+  exit
+  [mozhiyan@localhost ~]$ echo "$SHLVL  $BASH_SUBSHELL"
+  2  0
+  ```
+
+  - SHLVL 和 BASH_SUBSHELL 的初始值都是 0，但是输出结果中 SHLVL 的值从 2 开始，我猜测 Bash 在初始化阶段可能创建了子进程，我们暂时不用理会它，将关注点放在值的变化上。
+  - 仔细观察的读者应该会发现，使用 bash 命令开启新的会话后，需要使用 exit 命令退出才能回到上一级 Shell 会话。
+  - `bash ./test.sh`和`chmod +x ./test.sh; ./test.sh`这两种运行脚本的方式，在脚本运行期间会开启一个子进程，运行结束后立即退出子进程。
+
+- 再说一下 BASH_SUBSHELL，请看下面的命令：
+
+  ```
+  [mozhiyan@localhost ~]$ echo "$SHLVL  $BASH_SUBSHELL"
+  2  0
+  [mozhiyan@localhost ~]$ (echo "$SHLVL  $BASH_SUBSHELL")  #组命令
+  2  1
+  [mozhiyan@localhost ~]$ echo "hello" | { echo "$SHLVL  $BASH_SUBSHELL"; }  #管道
+  2  1
+  [mozhiyan@localhost ~]$ var=$(echo "$SHLVL  $BASH_SUBSHELL")  #命令替换
+  [mozhiyan@localhost ~]$ echo $var
+  2 1
+  [mozhiyan@localhost ~]$ ( ( ( (echo "$SHLVL  $BASH_SUBSHELL") ) ) )  #四层组命令
+  2  4
+  ```
+
+  - 你看，组命令、管道、命令替换这几种写法都会进入子 Shell。
+
+- 注意，“进程替换”看起来好像产生了一个子 Shell，其实只是玩了一个障眼法而已。进程替换只是借助文件在`()`内部和外部的命令之间传递数据，但是它并没有创建子 Shell；换句话说，`()`内部和外部的命令是在一个进程（也就是当前进程）中执行的。
+
+#### 正则表达式
+
+- Bash本身没有正则表达式的功能.在脚本里，使用正则表达式的是命令和软件包 -- 例如[sed](http://shouce.jb51.net/shell/sedawk.html#SEDREF)和[awk](http://shouce.jb51.net/shell/awk.html#AWKREF) -- 它们可以解释正则表达式.
+
+- Bash所做的是展开文件名扩展 [[1\]](http://shouce.jb51.net/shell/globbingref.html#FTN.AEN13843) -- 这就是所谓的通配*(globbing*) -- 但它不是使用标准的正则表达式. 而是使用通配符. 通配解释标准的通配符：*和?, 方括号括起来的字符,还有其他的一些特殊的字符(比如说^用来表示取反匹配).然而通配机制的通配符有很大的局限性. 包含有*号的字符串将不会匹配以点开头的文件，例如`.bashrc`. [[2\]](http://shouce.jb51.net/shell/globbingref.html#FTN.AEN13856) 另外,通配机制的`*?*` 字符和正则表达式中表示的意思不一样.
+
+  - 意思是说bash本身并不是用的标准的正则表达式，而是直接使用的通配符机制。只是用来扩展用的。
+
+- 文件名扩展*意思是扩展包含有特殊字符的文件名模式和模板. 例如，`example.???`可能扩展成`example.001`和/或`example.txt`.
+
+- 在此需要注意的是命令里面使用的正则表达式和bash里面用的符号不是同一个东西，一个是标准的正则，一个是文件名展开的工作。
+
+- 如果 Bash 中没有设置 -f 选项，就会支持文件名扩展。Bash 支持以下三种通配符来实现文件名扩展：
+
+  ```
+  *匹配任何字符串，包括空字符串。
+  ? 匹配任意单个字符。
+  [...] 匹配方括号内的任意字符。
+  ```
+
+###### 正则表达式遗忘的东西
+
+- 正则表达式\w含义
+
+  ```
+  匹配字母、数字、下划线。等价于 [A-Za-z0-9_]
+  ```
+
+  - 这是一个具体的意思，正则表达式就是这样规定的。sed也是这样用的
+
+  - sed中使用的是`\w\+`
+  - 例如\d匹配数字，这些是perl正则表达式，每一种语言都有自己的正则表达式语法，sed估计支持很多中语法，我们常用的是bash，但是sed也支持其他的，所以不能直观的认为只有bash的才支持。
+
+#### 数组
+
+- 和其他编程语言一样，Shell 也支持数组。数组（Array）是若干数据的集合，其中的每一份数据都称为元素（Element）。
+- Shell 并且没有限制数组的大小，理论上可以存放无限量的数据。和 [C++](http://c.biancheng.net/cplus/)、[Java](http://c.biancheng.net/java/)、[C#](http://c.biancheng.net/csharp/) 等类似，Shell 数组元素的下标也是从 0 开始计数。
+- 获取数组中的元素要使用下标`[ ]`，下标可以是一个整数，也可以是一个结果为整数的表达式；当然，下标必须大于等于 0。
+- 遗憾的是，常用的 Bash Shell 只支持一维数组，不支持多维数组。
+
+##### 数组的定义
+
+- 在 Shell 中，用括号`( )`来表示数组，数组元素之间用空格来分隔。由此，定义数组的一般形式为：
+
+  ```
+  array_name=(ele1  ele2  ele3 ... elen)
+  ```
+
+  - 注意，赋值号`=`两边不能有空格，必须紧挨着数组名和数组元素。
+
+- 下面是一个定义数组的实例：
+
+  ```
+  nums=(29 100 13 8 91 44)
+  ```
+
+- Shell 是弱类型的，它并不要求所有数组元素的类型必须相同，例如：
+
+```
+arr=(20 56 "http://c.biancheng.net/shell/")
+```
+
+- 第三个元素就是一个“异类”，前面两个元素都是整数，而第三个元素是字符串。
+
+- Shell 数组的长度不是固定的，定义之后还可以增加元素。例如，对于上面的 nums 数组，它的长度是 6，使用下面的代码会在最后增加一个元素，使其长度扩展到 7：
+
+```
+nums[6]=88
+```
+
+- 此外，你也无需逐个元素地给数组赋值，下面的代码就是只给特定元素赋值：
+
+```
+ages=([3]=24 [5]=19 [10]=12)
+```
+
+- 以上代码就只给第 3、5、10 个元素赋值，所以数组长度是 3。
+- 数组可以是稀疏的，并不是每一个元素都需要挨着。
+
+##### 获取数组元素
+
+- 获取数组元素的值，一般使用下面的格式：
+
+  ```
+  ${array_name[index]}
+  ```
+
+  其中，array_name 是数组名，index 是下标。例如：
+
+  ```
+  n=${nums[2]}
+  ```
+
+  表示获取 nums 数组的第二个元素，然后赋值给变量 n。再如：
+
+  ```
+  echo ${nums[3]}
+  ```
+
+  表示输出 nums 数组的第 3 个元素。
+
+  使用`@`或`*`可以获取数组中的所有元素，例如：
+
+  ```
+  ${nums[*]}
+  ${nums[@]}
+  ```
+
+  两者都可以得到 nums 数组的所有元素。
+
+- 上面获取到数组的所有元素之后，我们就可以直接使用for循环来使用这些元素，因为获取到的所有元素都是以空格区分的。
+
+  ```
+  #!/bin/bash
+  nums=(29 100 13 8 91 44)
+  echo ${nums[@]}  #输出所有数组元素
+  nums[10]=66  #给第10个元素赋值（此时会增加数组长度）
+  echo ${nums[*]}  #输出所有数组元素
+  echo ${nums[4]}  #输出第4个元素
+  
+  运行结果：
+  29 100 13 8 91 44
+  29 100 13 8 91 44 66
+  91
+  ```
+
+##### 获取数组长度
+
+```
+所谓数组长度，就是数组元素的个数。
+
+利用@或*，可以将数组扩展成列表，然后使用#来获取数组元素的个数，格式如下：
+${#array_name[@]}
+${#array_name[*]}
+
+其中 array_name 表示数组名。两种形式是等价的，选择其一即可。
+
+如果某个元素是字符串，还可以通过指定下标的方式获得该元素的长度，如下所示：
+${#arr[2]}
+
+获取 arr 数组的第 2 个元素（假设它是字符串）的长度。
+回忆字符串长度的获取
+回想一下 Shell 是如何获取字符串长度的呢？其实和获取数组长度如出一辙，它的格式如下：
+${#string_name}
+
+string_name 是字符串名。
+```
+
+```
+#!/bin/bash
+nums=(29 100 13)
+echo ${#nums[*]}
+#向数组中添加元素
+nums[10]="http://c.biancheng.net/shell/"
+echo ${#nums[@]}
+echo ${#nums[10]}
+#删除数组元素
+unset nums[1]
+echo ${#nums[*]}
+
+3
+4
+29
+3
+```
+
+##### 数组拼接
+
+```
+所谓 Shell 数组拼接（数组合并），就是将两个数组连接成一个数组。
+
+拼接数组的思路是：先利用@或*，将数组扩展成列表，然后再合并到一起。具体格式如下：
+array_new=(${array1[@]}  ${array2[@]})
+array_new=(${array1[*]}  ${array2[*]})
+
+两种方式是等价的，选择其一即可。其中，array1 和 array2 是需要拼接的数组，array_new 是拼接后形成的新数组。
+```
+
+```
+#!/bin/bash
+array1=(23 56)
+array2=(99 "http://c.biancheng.net/shell/")
+array_new=(${array1[@]} ${array2[*]})
+echo ${array_new[@]}  #也可以写作 ${array_new[*]}
+
+23 56 99 http://c.biancheng.net/shell/
+```
+
+##### 删除数组
+
+```
+在 Shell 中，使用 unset 关键字来删除数组元素，具体格式如下：
+unset array_name[index]
+
+其中，array_name 表示数组名，index 表示数组下标。
+
+如果不写下标，而是写成下面的形式：
+unset array_name
+
+那么就是删除整个数组，所有元素都会消失。
+```
+
+##### 关联数组
+
+- 现在最新的 Bash Shell 已经支持关联数组了。关联数组使用字符串作为下标，而不是整数，这样可以做到见名知意。
+
+- 关联数组也称为“键值对（key-value）”数组，键（key）也即字符串形式的数组下标，值（value）也即元素值。
+
+- 例如，我们可以创建一个叫做 color 的关联数组，并用颜色名字作为下标。
+
+  ```
+  declare -A color
+  color["red"]="#ff0000"
+  color["green"]="#00ff00"
+  color["blue"]="#0000ff"
+  ```
+
+  - 也可以在定义的同时赋值：
+
+    ```
+    declare -A color=(["red"]="#ff0000", ["green"]="#00ff00", ["blue"]="#0000ff")
+    ```
+
+  - 不同于普通数组，关联数组必须使用带有`-A`选项的 declare 命令创建。
+
+###### 访问关联数组
+
+```
+访问关联数组元素的方式几乎与普通数组相同，具体形式为：
+array_name["index"]
+
+例如：
+color["white"]="#ffffff"
+color["black"]="#000000"
+
+加上$()即可获取数组元素的值：
+$(array_name["index"])
+
+例如：
+echo $(color["white"])
+white=$(color["black"])
+```
+
+###### 获取所有元素的下标和值
+
+```
+使用下面的形式可以获得关联数组的所有元素值：
+${array_name[@]}
+${array_name[*]}
+
+使用下面的形式可以获取关联数组的所有下标值：
+${!array_name[@]}
+${!array_name[*]}
+```
+
+###### 获取关联数组长度
+
+```
+使用下面的形式可以获得关联数组的长度：
+${#array_name[*]}
+${#array_name[@]}
+```
+
+
+
+#### trap命令
+
+- 当我们设计一个大且复杂的脚本时，考虑到当脚本运行时出现用户退出或系统关机会发生什么是很重要的。当这样的事件发生时，一个信号将会发送到所有受影响的进程。相应地，这些进程的程序可以采取一些措施以确保程序正常有序地终结。比如说，我们编写了一个会在执行时生成临时文件的脚本。在好的设计过程中，我们会让脚本在执行完成时删除这些临时文件。同样聪明的做法是，如果脚本接收到了指示程序将提前结束的信号，也应删除这些临时文件。
+
+- Bash Shell 的内部命令 trap 让我们可以在 Shell 脚本内捕获特定的信号并对它们进行处理。 trap 命令的语法如下所示：
+
+  ```
+  trap command signal [ signal ... ]
+  ```
+
+  - 上述语法中，command 可以是一个脚本或是一个函数。signal 既可以用信号名，也可以用信号值指定。
+  - 当 Shell 收到信号 signal(s) 时，command 将被读取和执行。比如，如果 signal 是 0 或 EXIT 时，command 会在 Shell 退出时被执行。如果 signal 是 DEBUG 时，command 会在每个命令后被执行。
+  - signal 也可以被指定为 ERR，那么每当一个命令以非 0 状态退出时， command 就会被执行（注意，当非 0 退出状态来自一个 if 语句部分，或来自 while、until 循环时，command 不会被执行）。
+
+- 有时，接收到一个信号后你可能不想对其做任何处理。比如，当你的脚本处理较大的文件时，你可能希望阻止一些错误地输入 Ctrl+C 或 Ctrl+\ 组合键的做法，并且希望它能执行完成而不被用户中断。这时就可以使用空字符串`" "`或`' '`作为 trap 的命令参数，那么 Shell 将忽略这些信号。其用法类似如下所示：
+
+  ```
+  $ trap ' ' SIGHUP SIGINT [ signal... ]
+  ```
+
+- 如果我们在脚本中应用了捕获，我们通常会在脚本的结尾处，将接收到信号时的行为处理重置为默认模式。重置（移除）捕获的语法如下所示：
+
+  ```
+  $ trap - signal [ signal ... ]
+  ```
+
+  - 从上述语法中可以看出，使用破折号作为 trap 语句的命令参数，就可以移除信号的捕获。
+
+- 捕获信号之后，如果没有移除捕获，这个捕获会一直应用到最后，只要捕获到信号就执行命令。不管多少次。
+
+#### shell模块化
+
+- 所谓模块化，就是把代码分散到多个文件或者文件夹。对于大中型项目，模块化是必须的，否则会在一个文件中堆积成千上万行代码，这简直是一种灾难。
+
+- 基本上所有的编程语言都支持模块化，以达到代码复用的效果，比如，Java 和 Python 中有 import，C/C++ 中有 #include。在 Shell 中，我们可以使用 source 命令来实现类似的效果。
+
+  ```
+  source 命令的用法为：
+  source filename
+  
+  也可以简写为：
+  . filename
+  
+  两种写法的效果相同。对于第二种写法，注意点号.和文件名中间有一个空格。
+  ```
+
+  - source 是 [Shell 内置命令](http://c.biancheng.net/view/1136.html)的一种，它会读取 filename 文件中的代码，并依次执行所有语句。你也可以理解为，source 命令会强制执行脚本文件中的全部命令，而忽略脚本文件的权限。
+
+- 创建两个脚本文件 func.sh 和 main.sh：func.sh 中包含了若干函数，main.sh 是主文件，main.sh 中会包含 func.sh。
+
+  ```
+  func.sh 文件内容：
+  #计算所有参数的和
+  function sum(){
+      local total=0
+      for n in $@
+      do
+           ((total+=n))
+      done
+      echo $total
+      return 0
+  }
+  
+  main.sh 文件内容：
+  #!/bin/bash
+  source func.sh
+  echo $(sum 10 20 55 15)
+  
+  运行 main.sh，输出结果为：
+  100
+  
+  source 后边可以使用相对路径，也可以使用绝对路径，这里我们使用的是相对路径。
+  ```
+
+  - 这就相当于代码分散开来不是很长了，相当于在另一个文件中放入了一些代码，在使用的时候直接引入引来我们可以执行使用。这个和直接执行另一个脚本文件有本质的区别，执行脚本文件是起一个进程来运行这个脚本，模块化是分散代码，避免一个文件很大。
+
+###### 避免重复引入
+
+- 熟悉 C/C++ 的读者都知道，C/C++ 中的头文件可以避免被重复引入；换句话说，即使被多次引入，效果也相当于一次引入。这并不是 #include 的功劳，而是我们在头文件中进行了特殊处理。
+- Shell source 命令和 C/C++ 中的 #include 类似，都没有避免重复引入的功能，只要你使用一次 source，它就引入一次脚本文件中的代码。
+- 那么，在 Shell 中究竟该如何避免重复引入呢？
+- 我们可以在模块中额外设置一个变量，使用 if 语句来检测这个变量是否存在，如果发现这个变量存在，就 return 出去。
+- 这里需要强调一下 return 关键字。return 在 C++、C#、Java 等大部分编程语言中只能退出函数，除此以外再无他用；但是在 Shell 中，return 除了可以退出函数，还能退出由 source 命令引入的脚本文件。
+- 所谓退出脚本文件，就是在被 source 引入的脚本文件（子文件）中，一旦遇到 return 关键字，后面的代码都不会再执行了，而是回到父脚本文件中继续执行 source 命令后面的代码。
+- return 只能退出由 source 命令引入的脚本文件，对其它引入脚本的方式无效。
+- 下面我们通过一个实例来演示如何避免脚本文件被重复引入。本例会涉及到两个脚本文件，分别是主文件 main.sh 和 模块文件 module.sh。
+
+- 模块文件 module.sh：
+
+  ```
+  if [ -n "$__MODULE_SH__" ]; then
+      return
+  fi
+  __MODULE_SH__='module.sh'
+  echo "http://c.biancheng.net/shell/"
+  
+  ```
+
+  - 注意第一行代码，一定要是使用双引号把`$__MODULE_SH__`包围起来，具体原因已经在《[Shell test](http://c.biancheng.net/view/2742.html)》一节中讲到。
+
+  - 主文件 main.sh：
+
+  ```
+  #!/bin/bash
+  source module.sh
+  source module.sh
+  echo "here executed"
+  ```
+
+  - `./`表示当前文件，你也可以直接写作`source module.sh`。
+
+  ```
+  运行 main.sh，输出结果为：
+  http://c.biancheng.net/shell/
+  here executed
+  ```
+
+  - 我们在 main.sh 中两次引入 module.sh，但是只执行了一次，说明第二次引入是无效的。
+
+  - main.sh 中的最后一条 echo 语句产生了输出结果，说明 return 只是退出了子文件，对父文件没有影响。
+
 ### Linux常用命令
+
+#### 手册上
+
+##### ls
+
+- 基本的列出所有文件的命令.但是往往就是因为这个命令太简单,所以我们总是低估它.比如,用 -R 选项,这是递归选项,**ls** 将会以目录树的形式列出所有文件, 另一个很有用的选项是 -S ,将会按照文件尺寸列出所有文件, `-t`, 将会按照修改时间来列出文件,-i 选项会显示文件的inode
+
+##### cat
+
+- **cat**, 是单词 *concatenate的缩写*, 把文件的内容输出到`stdout`. 当与重定向操作符 (> 或 >>)结合使用时, 一般都是用来将多个文件连接起来.
+
+  ```
+  
+     1 # Uses of 'cat'
+     2 cat filename                          # 打印出文件内容.
+     3 
+     4 cat file.1 file.2 file.3 > file.123   # 把3个文件连接到一个文件中.
+  ```
+
+  - **cat** 命令的 -n 选项是为了在目标文件中的所有行前边插入行号. `-b` 选项 与 -n 选项一样, 区别是不对空行进行编号. -v 选项可以使用 ^ 标记法 来echo 出不可打印字符.-s选项可以把多个空行压缩成一个空行.
+
+- 在一个 [管道](http://shouce.jb51.net/shell/special-chars.html#PIPEREF) 中, 可能有一种把stdin [重定向](http://shouce.jb51.net/shell/io-redirection.html#IOREDIRREF) 到一个文件中的更有效的办法, 这种方法比 **cat**文件的方法更有效率.
+
+  ```
+     1 cat filename | tr a-z A-Z
+     2 
+     3 tr a-z A-Z < filename   #  效果相同,但是处理更少,
+     4                         #+ 并且连管道都省掉了.
+  ```
+
+- **tac** 命令, 就是 *cat*的反转, 将从文件的结尾列出文件.
+
+##### rev
+
+- 把每一行中的内容反转, 并且输出到 `stdout`上. 这个命令与 **tac**命令的效果是不同的, 因为它并不反转行序, 而是把每行的内容反转.
+
+  ```
+   bash$ cat file1.txt
+   This is line 1.
+   This is line 2.
+   
+   
+   bash$ tac file1.txt
+   This is line 2.
+   This is line 1.
+   
+   
+   bash$ rev file1.txt
+   .1 enil si sihT
+   .2 enil si sihT
+  ```
+
+##### cp
+
+- 这是文件拷贝命令. `**cp file1 file2**` 把` file1 `拷贝到 `file2`, 如果存在 `file2` 的话，那 file2 将被覆盖
+
+- 特别有用的选项就是 `-a` 归档 选项 (为了copy一个完整的目录树), `-u` 是更新选项, 和 `-r` 与 `-R` 递归选项.
+
+  ```
+     1 cp -u source_dir/* dest_dir
+     2 #  "Synchronize" dest_dir to source_dir把源目录"同步"到目标目录上,
+     3 #+  也就是拷贝所有更新的文件和之前不存在的文件
+  ```
+
+##### sort
+
+- sort 是 Linux 的排序命令，而且可以依据不同的数据类型来进行排序。sort 将文件的每一行作为一个单位，相互比较。比较原则是从首字符向后，依次按 ASCII 码值进行比较，最后将它们按升序输出。
+
+- sort 命令格式如下：
+
+  ```
+  sort [选项] 文件名
+  ```
+
+  - -f：忽略大小写；
+  - -b：忽略每行前面的空白部分；
+  - -n：以数值型进行排序，默认使用字符串排序；
+  - -r：反向排序；
+  - -u：删除重复行。就是 uniq 命令；
+  - -t：指定分隔符，默认分隔符是制表符；
+  - -k [n,m]：按照指定的字段范围排序。从第 n 个字段开始，到第 m 个字（默认到行尾）；
+
+##### expand
+
+- **expand** 将会把每个tab转化为一个空格.这个命令经常用在管道中.
+- **unexpand** 将会把每个空格转化为一个tab.效果与 **expand** 相反.
+
+##### uniq
+
+- 这个过滤器将会删除一个已排序文件中的重复行.这个命令经常出现在 [sort](http://shouce.jb51.net/shell/textproc.html#SORTREF)命令的管道后边 .
+
+  ```
+  -c或--count 在每列旁边显示该行重复出现的次数。
+  -d或--repeated 仅显示重复出现的行列。
+  -f<栏位>或--skip-fields=<栏位> 忽略比较指定的栏位。
+  -s<字符位置>或--skip-chars=<字符位置> 忽略比较指定的字符。
+  -u或--unique 仅显示出一次的行列。
+  -w<字符位置>或--check-chars=<字符位置> 指定要比较的字符。
+  ```
+
+  ```
+  
+     1 cat list-1 list-2 list-3 | sort | uniq > final.list
+     2 # 将3个文件连接起来,
+     3 # 将它们排序,
+     4 # 删除其中重复的行,
+     5 # 最后将结果重定向到一个文件中.
+  ```
+
+##### nl
+
+- 计算行号过滤器. `**nl filename**` 将会在 stdout 中列出文件的所有内容, 但是会在每个非空行的前面加上连续的行号. 如果没有 filename 参数, 那么就操作 stdin.
+- **nl** 命令的输出与 `**cat -n** 非常相似`, 然而, 默认情况下 **nl** 不会列出空行.
+
+##### tr
+
+- Linux tr 命令用于转换或删除文件中的字符。
+
+  ```
+  tr [-cdst][--help][--version][第一字符集][第二字符集]  
+  tr [OPTION]…SET1[SET2] 
+  ```
+
+  - -c, --complement：反选设定字符。也就是符合 SET1 的部份不做处理，不符合的剩余部份才进行转换
+  - -d, --delete：删除指令字符
+  - -s, --squeeze-repeats：缩减连续重复的字符成指定的单个字符
+  - -t, --truncate-set1：削减 SET1 指定范围，使之与 SET2 设定长度相等
+
+- [必须使用引用或中括号](http://shouce.jb51.net/shell/special-chars.html#UCREF), 这样做才是合理的. 引用可以阻止 shell 重新解释出现在 **tr** 命令序列中的特殊字符.中括号应该被引用起来防止被shell扩展.
+
+  ```
+  无论 tr "A-Z" "*" <filename 还是 tr A-Z \* <filename 都可以将 filename 中的大写字符修改为星号(写到 stdout).但是在某些系统上可能就不能正常工作了, 而 tr A-Z '[**]' 在任何系统上都可以正常工作.
+  ```
+
+- `-d` 选项删除指定范围的字符.
+
+  ```
+     1 echo "abcdef"                 # abcdef
+     2 echo "abcdef" | tr -d b-d     # aef
+     3 
+     4 
+     5 tr -d 0-9 <filename
+     6 # 删除 "filename" 中所有的数字.
+  ```
+
+- `--squeeze-repeats` (或 `-s`) 选项用来在重复字符序列中除去除第一个字符以外的所有字符. 这个选项在删除多余的[whitespace](http://shouce.jb51.net/shell/special-chars.html#WHITESPACEREF) 的时候非常有用.
+
+  ```
+  bash$ echo "XXXXX" | tr --squeeze-repeats 'X'
+   X
+  ```
+
+- `-c` "complement" 选项将会 *反转* 匹配的字符集. 通过这个选项, **tr** 将只会对那些 *不* 匹配的字符起作用.
+
+  ```
+   bash$ echo "acfdeb123" | tr -c b-d +
+   +c+d+b++++
+  ```
+
+- 注意 **tr** 命令支持 [POSIX 字符类](http://shouce.jb51.net/shell/regexp.html#POSIXREF). [[1\]](http://shouce.jb51.net/shell/textproc.html#FTN.AEN8253)
+
+  - 这个可以看man手册上有写。
+
+##### cmp
+
+- **cmp** 命令是上边 **diff** 命令的一个简单版本. **diff** 命令会报告两个文件的不同之处, 而 **cmp** 命令仅仅指出那些位置有不同, 而不会显示不同的具体细节.
+
+##### basename
+
+- 从文件名中去掉路径信息, 只打印出文件名. 结构 `**basename $0**` 可以让脚本知道它自己的名字, 也就是, 它被调用的名字. 可以用来显示用法信息, 比如如果你调用脚本的时候缺少参数, 可以使用如下语句:
+
+  ```
+  echo "Usage: `basename $0` arg1 arg2 ... argn"
+  ```
+
+##### dirname
+
+- 从带路径的文件名中去掉文件名, 只打印出路径信息.
+
+##### host
+
+- 通过名字或 IP 地址来搜索一个互联网主机的信息, 使用 DNS.
+
+  ```
+  
+   bash$ host surfacemail.com
+   surfacemail.com. has address 202.92.42.236
+  ```
+
+##### lsof
+
+- 列出打开的文件. 这个命令将会把所有当前打开的文件列出一份详细的表格, 包括文件的所有者信息, 尺寸, 与它们相关的信息等等. 当然, **lsof**也可以管道输出到 [grep](http://shouce.jb51.net/shell/textproc.html#GREPREF) 和(或)[awk](http://shouce.jb51.net/shell/awk.html#AWKREF)来分析它的结果.
+
+##### dmesg
+
+- 将所有的系统启动消息输出到stdout上. 方便出错,并且可以查出安装了哪些设备驱动和察看使用了哪些系统中断. **dmesg**命令的输出当然也可以在脚本中使用 [grep](http://shouce.jb51.net/shell/textproc.html#GREPREF), [sed](http://shouce.jb51.net/shell/sedawk.html#SEDREF), 或 [awk](http://shouce.jb51.net/shell/awk.html#AWKREF) 来进行分析.
+
+##### stat
+
+- 显示一个或多个给定文件(也可以是目录文件或设备文件)的详细的统计信息.
+
+  ```
+  bash$ stat test.cru
+     File: "test.cru"
+     Size: 49970        Allocated Blocks: 100          Filetype: Regular File
+     Mode: (0664/-rw-rw-r--)         Uid: (  501/ bozo)  Gid: (  501/ bozo)
+   Device:  3,8   Inode: 18185     Links: 1    
+   Access: Sat Jun  2 16:40:24 2001
+   Modify: Sat Jun  2 16:40:24 2001
+   Change: Sat Jun  2 16:40:24 2001
+  ```
+
+  
+
+#### 自己总结
 
 ##### xargs
 
@@ -3077,6 +4516,18 @@ done
 
 - -exec： find命令对匹配的文件执行该参数所给出的shell命令。相应命令的形式为'command' {} \;，注意{}和\;之间的空格。其中使用-exec时后面的{} 和\;一定要有，否则不能正常执行。
 
+  - 如果 `*COMMAND*` 中包含 {}, 那么 **find** 命令将会用所有匹配文件的路径名来替换 "{}" .
+
+  - 就相当于在所有的查出来的文件执行那个命令。
+
+    ```
+    
+       1 find ~/ -name 'core*' -exec rm {} \;
+       2 # 从用户的 home 目录中删除所有的 core dump文件.
+    ```
+
+    
+
 - -ok： 和-exec的作用相同，只不过以一种更为安全的模式来执行该参数所给出的shell命令，在执行每一个命令之前，都会给出提示，让用户来确定是否执行。
 
 - find 根据下列规则判断 path 和 expression，在命令列上第一个 - ( ) , ! 之前的部份为 path，之后的是 expression。如果 path 是空字串则使用目前路径，如果 expression 是空字串则使用 -print 为预设 expression。
@@ -3411,3 +4862,408 @@ done
 
   - 上面是两个脚本，shell脚本调用expect脚本。
   -  set 赋值，set host [lindex $argv 0] 就是将参数0赋值给变量host，其中，[] 括起命令，执行括号内命令后返回结果，lindex是取列表中的某个参数，$argv则是参数列表。
+
+##### sed
+
+- **sed** 是一种流编辑器，它是文本处理中非常重要的工具，能够完美的配合正则表达式使用，功能不同凡响。处理时，把当前处理的行存储在临时缓冲区中，称为“模式空间”（pattern space），接着用sed命令处理缓冲区中的内容，处理完成后，把缓冲区的内容送往屏幕。接着处理下一行，这样不断重复，直到文件末尾。文件内容并没有 改变，除非你使用重定向存储输出。Sed主要用来自动编辑一个或多个文件；简化对文件的反复操作；编写转换程序等。
+
+- sed是将处理完的数据打印到屏幕上，并不会修改文件里面的内容，如果需要修改文件里的内容，需要-i选项
+
+- 所有的命令都是单引号引起来的。
+
+- 命令格式
+
+  ```
+  sed [options] 'command' file(s)
+  sed [options] -f scriptfile file(s)
+  ```
+
+- 选项
+
+  ```
+  -e<script>或--expression=<script>：以选项中的指定的script来处理输入的文本文件；
+  -f<script文件>或--file=<script文件>：以选项中指定的script文件来处理输入的文本文件；
+  -h或--help：显示帮助；
+  -n或--quiet或——silent：仅显示script处理后的结果；
+  -V或--version：显示版本信息。
+  ```
+
+  ```
+  官方手册上给的
+  -e script, --expression=script
+      add the script to the commands to be executed
+  
+  -f script-file, --file=script-file
+      add the contents of script-file to the commands to be executed
+  这个说明要选项写全部的然后加=号，要不简写有空格没有等于号，直接写命令， 命令都需要单引号引起来
+  
+  -e选项是加入命令，因为一个单引号引起来的是一个命令，如果需要对一行进行多个操作，需要使用-e选项，这样多个命令就会组合起来，对每行都进行操作。
+  ```
+
+- sed命令
+
+  ```
+  a\ # 在当前行下面插入文本。
+  i\ # 在当前行上面插入文本。
+  c\ # 把选定的行改为新的文本。
+  d # 删除，删除选择的行。
+  D # 删除模板块的第一行。
+  s # 替换指定字符
+  h # 拷贝模板块的内容到内存中的缓冲区。
+  H # 追加模板块的内容到内存中的缓冲区。
+  g # 获得内存缓冲区的内容，并替代当前模板块中的文本。
+  G # 获得内存缓冲区的内容，并追加到当前模板块文本的后面。
+  l # 列表不能打印字符的清单。
+  n # 读取下一个输入行，用下一个命令处理新的行而不是用第一个命令。
+  N # 追加下一个输入行到模板块后面并在二者间嵌入一个新行，改变当前行号码。
+  p # 打印模板块的行。
+  P # (大写) 打印模板块的第一行。
+  q # 退出Sed。
+  b lable # 分支到脚本中带有标记的地方，如果分支不存在则分支到脚本的末尾。
+  r file # 从file中读行。
+  t label # if分支，从最后一行开始，条件一旦满足或者T，t命令，将导致分支到带有标号的命令处，或者到脚本的末尾。
+  T label # 错误分支，从最后一行开始，一旦发生错误或者T，t命令，将导致分支到带有标号的命令处，或者到脚本的末尾。
+  w file # 写并追加模板块到file末尾。  
+  W file # 写并追加模板块的第一行到file末尾。  
+  ! # 表示后面的命令对所有没有被选定的行发生作用。  
+  = # 打印当前行号码。  
+  # # 把注释扩展到下一个换行符以前。  
+  ```
+
+  - 其中a、i、c中后面有一个反斜线，这是一种写法，我们可以用这种来操作，或者将反斜线去掉中间写个空格，这样也可以。
+
+- sed替换标记
+
+  ```
+  g # 表示行内全面替换。  
+  p # 表示打印行。  
+  w # 表示把行写入一个文件。  
+  x # 表示互换模板块中的文本和缓冲区中的文本。  
+  y # 表示把一个字符翻译为另外的字符（但是不用于正则表达式）
+  \1 # 子串匹配标记
+  & # 已匹配字符串标记
+  ```
+
+  - 上面中的p命令，可以在用逗号选中一些行的时候直接打印，这些标记并不是在每一个命令中都能适用的，只是在一些命令中适用，例如s中适用g
+
+- sed元字符集
+
+  ```
+  ^ # 匹配行开始，如：/^sed/匹配所有以sed开头的行。
+  $ # 匹配行结束，如：/sed$/匹配所有以sed结尾的行。
+  . # 匹配一个非换行符的任意字符，如：/s.d/匹配s后接一个任意字符，最后是d。
+  * # 匹配0个或多个字符，如：/*sed/匹配所有模板是一个或多个空格后紧跟sed的行。
+  [] # 匹配一个指定范围内的字符，如/[sS]ed/匹配sed和Sed。  
+  [^] # 匹配一个不在指定范围内的字符，如：/[^A-RT-Z]ed/匹配不包含A-R和T-Z的一个字母开头，紧跟ed的行。
+  \(..\) # 匹配子串，保存匹配的字符，如s/\(love\)able/\1rs，loveable被替换成lovers。
+  & # 保存搜索字符用来替换其他字符，如s/love/ **&** /，love这成 **love** 。
+  \< # 匹配单词的开始，如:/\<love/匹配包含以love开头的单词的行。
+  \> # 匹配单词的结束，如/love\>/匹配包含以love结尾的单词的行。
+  x\{m\} # 重复字符x，m次，如：/0\{5\}/匹配包含5个0的行。
+  x\{m,\} # 重复字符x，至少m次，如：/0\{5,\}/匹配至少有5个0的行。
+  x\{m,n\} # 重复字符x，至少m次，不多于n次，如：/0\{5,10\}/匹配5~10个0的行。  
+  ```
+
+###### 替换操作s
+
+```
+替换文本中的字符串：
+
+sed 's/book/books/' file
+-n选项 和 p命令 一起使用表示只打印那些发生替换的行：
+
+sed -n 's/test/TEST/p' file
+
+直接编辑文件 选项-i ，会匹配file文件中每一行的所有book替换为books：
+
+sed -i 's/book/books/g' file
+```
+
+###### 全面替换标记g
+
+```
+使用后缀 /g 标记会替换每一行中的所有匹配：
+
+sed 's/book/books/g' file
+当需要从第N处匹配开始替换时，可以使用 /Ng：
+
+echo sksksksksksk | sed 's/sk/SK/2g'
+skSKSKSKSKSK
+
+echo sksksksksksk | sed 's/sk/SK/3g'
+skskSKSKSKSK
+
+echo sksksksksksk | sed 's/sk/SK/4g'
+skskskSKSKSK
+```
+
+###### 定界符
+
+```
+以上命令中字符 / 在sed中作为定界符使用，也可以使用任意的定界符：
+
+sed 's:test:TEXT:g'
+sed 's|test|TEXT|g'
+定界符出现在样式内部时，需要进行转义：
+
+sed 's/\/bin/\/usr\/local\/bin/g'
+```
+
+###### 删除操作d
+
+- 删除空白行：
+
+  ```shell
+  sed '/^$/d' file
+  ```
+
+  删除文件的第2行：
+
+  ```shell
+  sed '2d' file
+  ```
+
+  删除文件的第2行到末尾所有行：
+
+  ```shell
+  sed '2,$d' file
+  ```
+
+  删除文件最后一行：
+
+  ```shell
+  sed '$d' file
+  ```
+
+  删除文件中所有开头是test的行：
+
+  ```shell
+  sed '/^test/'d file
+  ```
+
+###### 已匹配字符串标记&
+
+- 正则表达式 \w+ 匹配每一个单词，使用 [&] 替换它，& 对应于之前所匹配到的单词：
+
+  ```shell
+  echo this is a test line | sed 's/\w\+/[&]/g'
+  [this] [is] [a] [test] [line]
+  ```
+
+  所有以192.168.0.1开头的行都会被替换成它自已加localhost：
+
+  ```shell
+  sed 's/^192.168.0.1/&localhost/' file
+  192.168.0.1localhost
+  ```
+
+###### 子串匹配标记
+
+- 匹配给定样式的其中一部分：
+
+  ```shell
+  echo this is digit 7 in a number | sed 's/digit \([0-9]\)/\1/'
+  this is 7 in a number
+  ```
+
+  命令中 digit 7，被替换成了 7。样式匹配到的子串是 7，(..) 用于匹配子串，对于匹配到的第一个子串就标记为 **\1** ，依此类推匹配到的第二个结果就是 **\2** ，例如：
+
+  ```shell
+  echo aaa BBB | sed 's/\([a-z]\+\) \([A-Z]\+\)/\2 \1/'
+  BBB aaa
+  ```
+
+  love被标记为1，所有loveable会被替换成lovers，并打印出来：
+
+  ```shell
+  sed -n 's/\(love\)able/\1rs/p' file
+  ```
+
+- 上面中的含义就是匹配到的那个字串后续用\1这种数字来标记出来，然后相当于在进行组合。
+
+###### 引用
+
+- sed表达式可以使用单引号来引用，但是如果表达式内部包含变量字符串，就需要使用双引号。
+
+  ```shell
+  test=hello
+  echo hello WORLD | sed "s/$test/HELLO"
+  HELLO WORLD
+  ```
+
+###### 选定行的范围
+
+- 所有在模板test和check所确定的范围内的行都被打印：
+
+  ```shell
+  sed -n '/test/,/check/p' file
+  ```
+
+  打印从第5行开始到第一个包含以test开始的行之间的所有行：
+
+  ```shell
+  sed -n '5,/^test/p' file
+  ```
+
+  对于模板test和west之间的行，每行的末尾用字符串aaa bbb替换：
+
+  ```shell
+  sed '/test/,/west/s/$/aaa bbb/' file
+  ```
+
+- 每一个匹配都是用斜杠抱起来的，如果没有逗号表示匹配一个，也必须用斜杠引起来
+- 这种选定行的范围在好多地方能用，例如s命令替换也可以选定行的范围。这样这个命令就可以在好些地方使用了，例如d，s这些
+
+###### 多点编辑e命令
+
+- -e选项允许在同一行里执行多条命令：
+
+  ```shell
+  sed -e '1,5d' -e 's/test/check/' file
+  ```
+
+  上面sed表达式的第一条命令删除1至5行，第二条命令用check替换test。命令的执行顺序对结果有影响。如果两个命令都是替换命令，那么第一个替换命令将影响第二个替换命令的结果。
+
+  和 -e 等价的命令是 --expression：
+
+  ```shell
+  sed --expression='s/test/check/' --expression='/love/d' file
+  ```
+
+###### 从文件读入r命令
+
+- file里的内容被读进来，显示在与test匹配的行后面，如果匹配多行，则file的内容将显示在所有匹配行的下面：
+
+  ```shell
+  sed '/test/r file' filename
+  ```
+
+###### 写入命令w命令
+
+- 在example中所有包含test的行都被写入file里：
+
+  ```shell
+  sed -n '/test/w file' example
+  ```
+
+###### 追加行下a\命令
+
+- 将 this is a test line 追加到 以test 开头的行后面：
+
+  ```shell
+  sed '/^test/a\this is a test line' file
+  ```
+
+  在 test.conf 文件第2行之后插入 this is a test line：
+
+  ```shell
+  sed -i '2a\this is a test line' test.conf
+  ```
+
+###### 插入行上i\命令
+
+- 将 this is a test line 追加到以test开头的行前面：
+
+  ```shell
+  sed '/^test/i\this is a test line' file
+  ```
+
+  在test.conf文件第5行之前插入this is a test line：
+
+  ```shell
+  sed -i '5i\this is a test line' test.conf
+  ```
+
+###### 变形y命令
+
+- 把1~10行内所有abcde转变为大写，注意，正则表达式元字符不能使用这个命令：
+
+  ```shell
+  sed '1,10y/abcde/ABCDE/' file
+  ```
+
+###### 退出q命令
+
+- 打印完第10行后，退出sed
+
+  ```shell
+  sed '10q' file
+  ```
+
+###### 下一个n命令
+
+- 如果test被匹配，则移动到匹配行的下一行，替换这一行的aa，变为bb，并打印该行，然后继续：
+
+  ```shell
+  sed '/test/{ n; s/aa/bb/; }' file
+  ```
+
+###### 保持和获取h和G命令
+
+- 在sed处理文件的时候，每一行都被保存在一个叫模式空间的临时缓冲区中，除非行被删除或者输出被取消，否则所有被处理的行都将 打印在屏幕上。接着模式空间被清空，并存入新的一行等待处理。
+
+  ```shell
+  sed -e '/test/h' -e '$G' file
+  ```
+
+  在这个例子里，匹配test的行被找到后，将存入模式空间，h命令将其复制并存入一个称为保持缓存区的特殊缓冲区内。第二条语句的意思是，当到达最后一行后，G命令取出保持缓冲区的行，然后把它放回模式空间中，且追加到现在已经存在于模式空间中的行的末尾。在这个例子中就是追加到最后一行。简单来说，任何包含test的行都被复制并追加到该文件的末尾。
+
+###### 保持和互换h和x命令
+
+- 互换模式空间和保持缓冲区的内容。也就是把包含test与check的行互换：
+
+  ```shell
+  sed -e '/test/h' -e '/check/x' file
+  ```
+
+###### 打印奇数行或者偶数行
+
+- 方法1：
+
+  ```shell
+  sed -n 'p;n' test.txt  #奇数行
+  sed -n 'n;p' test.txt  #偶数行
+  ```
+
+  方法2：
+
+  ```shell
+  sed -n '1~2p' test.txt  #奇数行
+  sed -n '2~2p' test.txt  #偶数行
+  ```
+
+###### 打印匹配字符串的下一行
+
+- ```
+  grep -A 1 SCC URFILE sed -n '/SCC/{n;p}' URFILE awk '/SCC/{getline; print}' URFILE
+  ```
+
+###### 脚本命令的寻址方式
+
+- 前面在介绍各个脚本命令时，我们一直忽略了对 address 部分的介绍。对各个脚本命令来说，address 用来表明该脚本命令作用到文本中的具体行。
+
+- 默认情况下，sed 命令会作用于文本数据的所有行。如果只想将命令作用于特定行或某些行，则必须写明 address 部分，表示的方法有以下 2 种：
+
+  1. 以数字形式指定行区间；
+  2. 用文本模式指定具体行区间。
+
+- 以上两种形式都可以使用如下这 2 种格式，分别是：
+
+  ```
+  [address]脚本命令
+  
+  或者
+  
+  address {
+    多个脚本命令
+  }
+  ```
+
+  - 如果address中后面只是一个脚本命令，可以不用写中括号，如果是多个命令，需要写上中括号，例如上面的n命令。
+
+- $符号表示最后一行，例如1，$d，删除所有的。
+
+- 如果有匹配的话需要写上中括号，如果没有匹配的话作用于所有，不用写括号也行，直接用分号隔开。
+
+##### awk
+
