@@ -919,6 +919,13 @@ echo ${str##*aa}  #结果为 @@@
     
     cmp命令是比较两个文件，如果相同则返回状态0
     grep -q用在if中很有用  Quiet; do not write anything to standard output.  Exit immediately with zero status if any match is found, even if an error was detected.  Also see the -s or --no-messages option.中文意思为，安静模式，不打印任何标准输出。 如果有匹配的内容则立即返回状态值0。
+    
+  type可以判断一个命令是否存在，如果不存在就显示没有存在命令，存在的话就会打印一些信息，此时我们重定向，让信息不打印
+  if type wget >/dev/null
+  then
+  	echo "in"
+  fi
+  这样可以判断一个命令在不在，如果在的话，打印in，不在的话就不打印。
   ```
 
 - shell中各种真假的总结，如果不知道可以用if/then来判断一下
