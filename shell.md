@@ -9,7 +9,7 @@
    - 只读变量 readonly variable，删除变量unset，unset不能删除只读变量
    
 - shell变量的作用范围
-   
+  
    - Shell 也支持自定义函数，但是 Shell 函数和 C++、Java、C# 等其他编程语言函数的一个不同点就是：在 Shell 函数中定义的变量默认也是全局变量，它和在函数外部定义变量拥有一样的效果
    
       ```
@@ -37,7 +37,16 @@
    
    - 需要强调的是，全局变量的作用范围是当前的 Shell 进程，而不是当前的 Shell 脚本文件，它们是不同的概念。打开一个 Shell 窗口就创建了一个 Shell 进程，打开多个 Shell 窗口就创建了多个 Shell 进程，每个 Shell 进程都是独立的，拥有不同的进程 ID。在一个 Shell 进程中可以使用 source 命令执行多个 Shell 脚本文件，此时全局变量在这些脚本文件中都有效。
    
+      - 上面的意思是说一个shell窗口是一个shell进程，如果在shell窗口中定义一个变量，然后在shell脚本中可以使用这个变量。这个是错误的，不能这么用。
+   
    - 环境变量，使用export命令将全局变量导出，那么它的子进程也可以使用了，没有关系的两个进程不可以使用。进入子进程直接输入bash命令就行，exit退出
+   
+      - 全局变量只在当前 Shell 进程中有效，对其它 Shell 进程和子进程都无效。如果使用`export`命令将全局变量导出，那么它就在所有的子进程中也有效了，这称为“环境变量”。
+      - 环境变量被创建时所处的 Shell 进程称为父进程，如果在父进程中再创建一个新的进程来执行 Shell 命令，那么这个新的进程被称作 Shell 子进程。当 Shell 子进程产生时，它会继承父进程的环境变量为自己所用，所以说环境变量可从父进程传给子进程。不难理解，环境变量还可以传递给孙进程。
+      - 注意，两个没有父子关系的 Shell 进程是不能传递环境变量的，并且环境变量只能向下传递而不能向上传递，即“传子不传父”。
+      - 我们一直强调的是环境变量在 Shell 子进程中有效，并没有说它在所有的 Shell 进程中都有效；如果你通过终端创建了一个新的 Shell 窗口，那它就不是当前 Shell 的子进程，环境变量对这个新的 Shell 进程仍然是无效的。
+      - 通过 export 导出的环境变量只对当前 Shell 进程以及所有的子进程有效，如果最顶层的父进程被关闭了，那么环境变量也就随之消失了，其它的进程也就无法使用了，所以说环境变量也是临时的。
+      - 如果想让环境变量长期有效需要写进配置文件中
    
 - shell命令替换
    - shell命令替换是指将命令的输出结果赋值给某个变量。
@@ -2901,6 +2910,10 @@ done
 
 - exec 是 [Shell 内置命令](http://c.biancheng.net/view/1136.html)，它有两种用法，一种是执行 Shell 命令，一种是操作文件描述符。本节只讲解后面一种，前面一种请大家自行学习。
 
+- shell的内建命令exec将并不启动新的shell，而是用要被执行命令替换当前的shell进程，并且将老进程的环境清理掉，而且exec命令后的其它命令将不再执行。
+
+  - 因此，如果你在一个shell里面，执行exec ls；那么，当列出了当前目录后，这个shell就自己退出了，因为这个shell进程已被替换为仅仅执行ls命令的一个进程，执行结束自然也就退出了。为了避免这个影响我们的使用，一般将exec命令放到一个shell脚本里面，用主脚本调用这个脚本，调用点处可以用bash a.sh，（a.sh就是存放该命令的脚本），这样会为a.sh建立一个sub shell去执行，当执行到exec后，该子脚本进程就被替换成了相应的exec的命令。source命令或者”.”，不会为脚本新建shell，而只是将脚本包含的命令在当前shell执行。不过，要注意一个例外，当exec命令来对文件描述符操作的时候，就不会替换shell，而且操作完成后，还会继续执行接下来的命令。
+
 - 使用 exec 命令可以永久性地重定向，后续命令的输入输出方向也被确定了，直到再次遇到 exec 命令才会改变重定向的方向；换句话说，一次重定向，永久有效。
 
 - 难道说我们以前使用的重定向都是临时的吗？是的！前面使用的重定向都是临时的，它们只对当前的命令有效，对后面的命令无效。
@@ -4122,6 +4135,23 @@ ${#array_name[@]}
   echo "Usage: `basename $0` arg1 arg2 ... argn"
   ```
 
+- basename - strip directory and suffix from filenames
+
+  ```
+  basename [pathname] [suffix]
+  ```
+
+  - suffix为后缀，如果suffix被指定了，basename会将pathname或string中的suffix去掉。
+
+    ```
+    $ basename /tmp/test/file.txt
+    file.txt
+    $ basename /tmp/test/file.txt .txt
+    file
+    ```
+
+    
+
 ##### dirname
 
 - 从带路径的文件名中去掉文件名, 只打印出路径信息.
@@ -4227,6 +4257,21 @@ ${#array_name[@]}
 - sync命令是强制把内存中的数据写回硬盘，以免数据的丢失。主要还是和缓冲区有关，理解了缓冲区就理解了sync命令。缓冲区可以在c.md里面查看
 
 - mount挂载之后直接umount文件就会出现错误，因为有一部分数据在缓冲区内没有写入到u盘中，所以在umount之前要执行sync命令。每一个文件都有缓冲区，所以在将文件cp 到/mnt中时，每一个文件都开辟了缓冲区，如果没有强制写入硬盘就会出现有一部分数据在缓冲区中没有写入硬盘中。
+
+
+##### ps
+
+- ps兼容UNIX、BSD、GUN三种风格的语法：
+
+  - UNIX 风格，选项可以组合在一起，并且选项前必须有“-”连字符
+
+  - BSD 风格，选项可以组合在一起，但是选项前不能有“-”连字符。BSD是[Unix](https://link.jianshu.com?t=http://zh.wikipedia.org/zh-cn/Unix)的一个分支
+
+  - GNU 风格的长选项，选项前有两个“-”连字符。GUN计划，后来发展出了Linux
+
+- -o 用户自定义格式。
+
+  - 用户自定义输出的格式以及选项，例如ps aux -o pid，只显示pid，ps aux -o pid，command将显示pid和命令列
 
 ##### diff
 
@@ -4633,7 +4678,94 @@ ${#array_name[@]}
 
   - 其中-a表示与，也可以没有
 
-  - ！表示非，！-name表示不取以~开头的备份文件，-exec就是对查找到的文件执行命令。
+  - ！表示非，！-name表示不取以~开头的备份文件，-exec就是对查找到的文件执行命令。、
+
+
+##### alias
+
+- ```
+  alias [name[=value]]
+  ```
+
+  - 这里需要注意的是：
+
+  - 等号（=）前后不能有空格，否则就会出现语法错误了。
+  - 如果value中有空格或tab，则value一定要使用引号（单、双引号都行）括起来。
+
+- 别名虽好，但也有它的弊端，比如定义的别名恰好和某个命令重名了，这就麻烦了，Shell 中执行的将永远都是别名。这里，如果我们想执行真正的那个命令而非别名，该怎么办呢？有三种方法可以解决这个问题：
+
+  - 方案一：使用命令的绝对路径。
+
+  - 方案二：切换到命令所在的目录，执行./command。
+
+  - 方案三：在命令前使用反斜线（\）。
+
+    ```
+    #绝对路径方法
+    [roc@roclinux ~]$ /bin/vi test.sh
+     
+    #明确指定当前路径的方法
+    [roc@roclinux ~]$ cd /bin
+    [roc@roclinux bin]$ ./vi ~/test.sh
+     
+    #使用反斜线的方法
+    [roc@roclinux bin]$ cd
+    [roc@roclinux ~]$ \vi test.sh
+    ```
+
+- 如果想让别名永久有效的话，就需要把所有的别名设置方案加入到（$HOME）目录下的 .alias 文件中（如果系统中没有这个文件，你可以创建一个），然后在 .bashrc 文件中增加这样一段代码：
+
+  ```
+  # Aliases
+  if [ -f ~/.alias ]; then
+    . ~/.alias
+  fi
+  ```
+
+  - 也可以设置别的文件
+
+- 在别名的应用中，单引号和双引号的使用是比较容易造成困惑的，请看下面的示例：
+
+  ```
+  [root@roclinux ~]$ echo $PWD
+  /root
+  [root@roclinux ~]$ alias dirA="echo work directory is $PWD"
+  [root@roclinux ~]$ alias dirB='echo work directory is $PWD'
+   
+  # 正确显示
+  [root@roclinux ~]$ dirA            
+  work directory is /root
+   
+  # 正确显示
+  [root@roclinux ~]$ dirB
+  work directory is /root 
+   
+  # 显示不正确, 怎么回事?     
+  [root@roclinux ~]$ cd /
+  [root@roclinux /]$ dirA
+  work directory is /root     
+   
+  # 正确显示 
+  [root@roclinux /]$ dirB
+  work directory is /    
+  ```
+
+  - 上面的程序最让人困惑的是，别名中使用了 Shell 的系统变量 $PWD 来显示当前的目录路径，但当目录切换了之后，单引号的别名可以正常显示，而双引号的别名却无法正常显示了，这和我们使用 bash 的变量的经验正好相反。这是怎么回事呢？
+
+  - 下面就来看看 dirA 和 dirB 背后的真实面容：
+
+    ```
+    [roc@roclinux ~]$ alias dirA
+    alias dirA="echo work directory is /root"
+     
+    [roc@roclinux ~]$ alias dirB
+    alias dirB='echo work directory is $PWD'
+    ```
+
+  - 看到了吧，使用双引号的 dirA，通过 Shell 的变量转换后已经变成了字符串 echo work directory is/root，当目录切换后，当然还是显示字符串的内容。而使用单引号的 dirB，由于不受 Shell 的影响，仍然保留着原来的设置 echowork directory is$PWD，当切换目录后再执行，变量 $PATH 被 Shell 替换掉，因此，内容被正确显示了。
+
+  - 上面的程序最让人困惑的是，别名中使用了 Shell 的系统变量 $PWD 来显示当前的目录路径，但当目录切换了之后，单引号的别名可以正常显示，而双引号的别名却无法正常显示了，这和我们使用 bash 的变量的经验正好相反。这是怎么回事呢？
+  - 在使用引号时如果有系统变量需要使用单引号。
 
 ##### expect
 
@@ -5315,6 +5447,7 @@ awk [options] -f scriptfile var=value file(s)
 
 - 常用命令选项
   - **-F fs** fs指定输入分隔符，fs可以是字符串或正则表达式，如-F:，默认的分隔符是连续的空格或制表符
+    - 每一行开始的空格都会被去掉，不会当作分隔符。
   - **-v var=value** 赋值一个用户定义变量，将外部变量传递给awk
   - **-f scripfile** 从脚本文件中读取awk命令
   - **-m[fr] val** 对val值设置内在限制，-mf选项限制分配给val的最大块数目；-mr选项限制记录的最大数目。这两个功能是Bell实验室版awk的扩展功能，在标准awk中不适用。
@@ -6300,3 +6433,63 @@ netstat -antup | grep 7770 | awk '{ print $NF NR}' | awk '{ print $1}'
   | %y   | 两位数字表示的年(99)                                     |
   | %Y   | 当前月份                                                 |
   | %%   | 百分号(%)                                                |
+
+###### 字符串拼接
+
+- 别家的语言，字符串拼接符好歹也是看得见分的清楚的，比如 [PHP](https://www.twle.cn/l/yufei/php/php-basic-index.html) 家的字符串拼接符是 **点号（ . ）**，比如 [Python](https://www.twle.cn/l/yufei/python30/python-30-index.html) 家的是 **加号（ + ）**
+
+- AWK 家的字符串拼接符，竟然是 **空格 ( `' '` )**。 你能分得清这到底是拼接符还是空白符嘛？
+
+- AWK 语言使用 **空格 ( `' '` )** 作为字符串拼接符。
+
+- 需要注意的是，空格没有限制，你可以任意多个。
+
+  ```
+  [www.twle.cn]$ awk 'BEGIN { str1 = "你好，"; str2 = "简单教程"; str3 = str1 str2; print str3 }'
+  [www.twle.cn]$ awk 'BEGIN { str1 = "你好，"; str2 = "简单教程"; str3 = str1      str2; print str3 }'
+  
+  你好，简单教程
+  你好，简单教程
+  ```
+
+- 如果需要在字符串中间拼接一个空格
+
+  ```
+  node=$1 " " $2
+  ```
+
+###### 多条模式匹配的语句
+
+```
+awk '
+BEGIN   {
+        scenario = trace_ref = central = ""
+        fmt = "%-12s %s\n"
+        }
+$1 == "NODE" || $1 == "FPNODE" {
+        node = $2
+        if (NF > 2 && $3 != "TYPE") node = node " " $3
+        }
+$1 == "TRACE_REF" {
+        trace_ref = $2
+        }
+$1 == "CENTRAL" {
+        central = node
+        }
+$1 == "CSCI" {
+        csci = $2 $3
+        if ($2 == "ATG") central = node
+        if ($2 ~ /^PTG/) scenario = node
+        printf(fmt, csci, node)
+        }
+END     {
+        if (central != "" || trace_ref != "" || scenario != "" ) print ""
+        if (central   != "") printf(fmt, "CENTRAL", central)
+        if (scenario  != "") printf(fmt, "SCENARIO", scenario)
+        if (trace_ref != "") printf(fmt, "TRACE_REF", trace_ref)
+        }
+' $HOME/INTEG/run_config/$RUN_CONFIG_VERS/config/`basename $map .map`.conf
+
+```
+
+- 上例中每一行$1匹配了好多次，如果$1匹配到NODE，创建变量node并赋值，第二行没有匹配到NODE，但是在下面的模式匹配语句中也可以使用第一次皮袍到赋值的node值，因为这是一个变量，而且这是相当于在一个语句中，所以可以一直使用node值。
