@@ -523,7 +523,7 @@ echo ${str##*aa}  #结果为 @@@
 
 ##### while read line
 
-- while read line如果不是从文件中重定向的话，会一直等待输入，直到按ctrl-D
+- while read line如果不是从文件中重定向的话，会一直等待输入，直到按ctrl-D，在脚本里面有while read line，执行这个脚本的时候，会一直在终端里面等待输入。
 
 - 在shell脚本中，我们经常看到以下的一种结构：
 
@@ -690,7 +690,7 @@ echo ${str##*aa}  #结果为 @@@
 
 #### 变量和参数
 
-- 让我们仔细地区别变量和变量的值。如果`**variable1**`是一个变量的名字，那么`**$variable1**`就是引用这个变量的值――即这个变量它包含的数据。如果只有变量名出现（即指没有前缀$），那就可能是在1）声明一个变量或是在给这个变量赋值。2）声明废弃这个变量，3）导出（[exported](http://shouce.jb51.net/shell/internal.html#EXPORTREF)）变量，4）或是在变量指示的是一种[信号](http://shouce.jb51.net/shell/debugging.html#SIGNALD)的特殊情况。（参考[例子 29-5](http://shouce.jb51.net/shell/debugging.html#EX76)）。变量赋值可以使用等于号（＝），比如：var1=27。也可在[read](http://shouce.jb51.net/shell/internal.html#READREF)命令和在一个循环的情况下赋值，比如：for var2 in 1 2 3。
+- 让我们仔细地区别变量和变量的值。如果`variable1`是一个变量的名字，那么`$variable1`就是引用这个变量的值――即这个变量它包含的数据。如果只有变量名出现（即指没有前缀$），那就可能是在1）声明一个变量或是在给这个变量赋值。2）声明废弃这个变量，3）导出（[exported](http://shouce.jb51.net/shell/internal.html#EXPORTREF)）变量，4）或是在变量指示的是一种[信号](http://shouce.jb51.net/shell/debugging.html#SIGNALD)的特殊情况。（参考[例子 29-5](http://shouce.jb51.net/shell/debugging.html#EX76)）。变量赋值可以使用等于号（＝），比如：var1=27。也可在[read](http://shouce.jb51.net/shell/internal.html#READREF)命令和在一个循环的情况下赋值，比如：for var2 in 1 2 3。
 
   ```
   hello="A B  C   D"
@@ -791,7 +791,8 @@ echo ${str##*aa}  #结果为 @@@
    file2.txt:This is the First line of file2.txt.
   ```
 
-  - 此时引号引起来的不被命令行解释二十将参数传到grep命令中，有grep命令来解释。
+  - 此时引号引起来的不被命令行解释而是将参数传到grep命令中，由grep命令来解释。
+  - 上面那句话保护命令行山的一个参数不被shell解释说的就是如果不带引号[Ff]irst将会被shell解释，就不会传进去grep命令中，如果引号引起来就会原封不动的传进去grep命令中，因为grep命令也是能解释正则表达式的。
 
 - 引号也能改掉[echo's](http://shouce.jb51.net/shell/internal.html#ECHOREF)不换行的“习惯”。
 
@@ -808,7 +809,7 @@ echo ${str##*aa}  #结果为 @@@
 
   - 不加引号是不会默认换行的，加上引号是默认换行的。
 
-- 当要引用一个变量的值时，一般推荐使用双引号。使用双引号除了变量名[[2\]](http://shouce.jb51.net/shell/quoting.html#FTN.AEN1994)前缀($)、后引符(`)和转义符(\)外，会使shell不再解释引号中其它所有的特殊字符。[[3\]](http://shouce.jb51.net/shell/quoting.html#FTN.AEN2000) 用双引号时$仍被当成特殊字符，允许引用一个被双引号引起的变量("$variable"), 那也是说$variable会被它的值所代替。
+- 当要引用一个变量的值时，一般推荐使用双引号。使用双引号除了变量名[[2\]](http://shouce.jb51.net/shell/quoting.html#FTN.AEN1994)前缀($)、后引符(`)和转义符(\)外，会使shell不再解释引号中其它所有的特殊字符。[[3\]](http://shouce.jb51.net/shell/quoting.html#FTN.AEN2000) 用双引号时$仍被当成特殊字符，允许 引用一个被双引号引起的变量("$variable"), 那也是说$variable会被它的值所代替。
 
 - 用双引号还能使句子不被分割开. [[4\]](http://shouce.jb51.net/shell/quoting.html#FTN.AEN2024) 一个参数用双引号引起来能使它被看做一个单元，这样即使参数里面包含有[空白字符](http://shouce.jb51.net/shell/special-chars.html#WHITESPACEREF)也不会被shell分割开了。
 
@@ -840,7 +841,7 @@ echo ${str##*aa}  #结果为 @@@
 
 ###### 转义
 
-- *转义*是引用单字符的方法.在单个字符前面的转义符(\)告诉shell不必特殊解释这个字符，只把它当成字面上的意思。但是一些字符前面加上反斜杠是有特殊的含义的。
+- 转义是引用单字符的方法.在单个字符前面的转义符\告诉shell不必特殊解释这个字符，只把它当成字面上的意思。但是一些字符前面加上反斜杠是有特殊的含义的。
 
 - 一些转义字符的表示的特殊意思
 
