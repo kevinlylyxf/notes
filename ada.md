@@ -1,3 +1,14 @@
+#### ada编译理解
+
+- [ada编译理解](https://www.wenmi.com/article/ptlf7v04iygi.html)
+
+  ```
+  $ gnatmake main.adb
+  gcc -c main.adb
+  gnatbind -x main.ali
+  gnatlink main.ali
+  ```
+
 #### 数据类型
 
 ##### 创建新的数据类型
