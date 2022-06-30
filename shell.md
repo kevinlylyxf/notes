@@ -4562,6 +4562,23 @@ ${#array_name[@]}
   - `sh filename` 重新建立一个子shell，在子shell中执行脚本里面的语句，该子shell继承父shell的环境变量，但子shell新建的、改变的变量不会被带回父shell，除非使用export。
   - `source filename`：这个命令其实只是简单地读取脚本里面的语句依次在当前shell里面执行，没有建立新的子shell。那么脚本里面所有新建、改变变量的语句都会保存在当前shell里面。
 
+###### 脚本里面写函数
+
+- 如果我们在一个脚本里面写一个函数，然后在当前终端下source一下，我们就可以在终端里面使用这个函数。例如
+
+  ```
+  #test.sh
+  #!/bin/sh
+  function pcd(){
+  	echo "test"
+  }
+  ```
+
+  - 如果我们在当前终端里面source一下，我们就可以直接在当前终端里面输入pcd，就会打印出test，相当于在终端里面执行这个函数。
+  - 所以我们可以写一些函数，然后source一下这个文件，然后在终端里面使用。
+
+- 对于上面的source test.sh，我们必须在test.sh目录里面，如果我们将test.sh所在目录加入到PATH环境变量中我们就可以在任意目录source，因为现在我们能找到这个test.sh文件了。
+
 ##### netstat
 
 - Linux netstat 命令用于显示网络状态。利用 netstat 指令可让你得知整个 Linux 系统的网络情况。
