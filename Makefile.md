@@ -1635,3 +1635,198 @@ $(warning TEXT...)
   - 函数功能：函数 "warning" 类似于函数 "error" ，区别在于它不会导致致命错误（make不退出），而只是提示 "TEXT..."，make 的执行过程继续。
   - 返回值：空
   - 函数说明：用法和 "error" 类似，展开过程相同。
+
+### 后续总结
+
+##### 双冒号规则
+
+- 一个目标可以出现在多个规则中, 但要求所有的规则必须是同一类型: 要么都是普通规则, 要么是双冒号规则. 双冒号规则与单冒号规则是两种明显不同的规则.
+
+- 如果这些相同目标的规则是双冒号的, 则其中任意一条规则相对于另外的同目标规则是独立的:
+
+  - 当一条规则中的目标比该规则中的任何一个依赖旧时, 该规则中的方法就会被执行, 但仅仅限于该规则.
+  - 如果该规则中的目标没有依赖, 不管目标存在与否, 该规则的方法总是会被执行, 但也仅仅限于该条规则.
+    - 有点类似于伪目标
+  - 同目标的双冒号规则彼此之间相互独立, 每一条规则都分开处理, 就像不同目标不同规则被执行一样.这种机制, 能够让相同目标的双冒号规则集合中的任何一条方法执行, 或所有方法都执行, 或所有方法都不执行.
+
+- 注意事项
+
+  - 双冒号规则会按照他们在makefile中出现的顺序来执行, 然而在实际使用中双冒号规则都用在处理顺序无关的的场合.
+  - 每一个双冒号规则都要带一个方法, 如果不带的话, 将使用隐含规则.
+  - 模式规则带有双冒号时, 将匹配任何满足模式的目标.
+
+- 解决的问题
+
+  - 双冒号规则有点晦涩难懂, 也不常用, 主要用在根据不同的依赖条件来使用不同的方法处理同一个目标.
+
+- 实例
+
+  ```
+  Newprog :: foo.c
+         $(CC) $(CFLAGS) $< -o $@
+  
+  Newprog :: bar.c
+         $(CC) $(CFLAGS) $< -o $@
+  ```
+
+  - 如果“foo.c”文件被修改，执行make以后将根据“foo.c”文件重建目标“Newprog”。而如果“bar.c”被修改那么“Newprog”将根据“bar.c”被重建。回想一下，如果以上两个规则为普通规时出现的情况是什么？（make将会出错并提示错误信息）
+  - 当同一个目标出现在多个双冒号规则中时，规则的执行顺序和普通规则的执行顺序一样，按照其在Makefile中的书写顺序执行。
+  - GNU make的双冒号规则给我们提供一种根据依赖的更新情况而执行不同的命令来重建同一目标的机制。一般这种需要的情况很少，所以双冒号规则的使用比较罕见。一般双冒号规则都需要定义命令，如果一个双冒号规则没有定义命令，在执行规则时将为其目标自动查找隐含规则。
+
+##### $和$$
+
+```
+经典示例代码如下所示：
+var=3                    # a
+target:
+       echo $(var)       # b
+       var=4             # c
+       echo $(var)       # d
+       echo $$var        # e
+a：定义Makefile中的变量var，值为3
+b：打印Makefile中的变量，值为3
+c：定义shell命令中的变量var，值为4，Makefile的变量var不受影响
+d：打印Makefile中的变量，值为3
+e：打印shell命令中的变量。此时var为未定义的变量。
+
+读者可能会奇怪，shell命令中的var明明已经定义了，为什么是未定义呢？
+原因：在Makefile的规则命令，如果相互之间没有使用';\'连接起来的话，相互之间是不能共享变量的。
+修改示例代码，使用';\'连接shell规则命令行。
+var=3                      # a
+target:
+       echo $(var);\       # b
+       var=4;\             # c
+       echo $(var);\       # d
+       echo $$var
+```
+
+- 变量在声明时需要给予初值，而在使用时，需要给在变量名前加上 `$` 符号，但最好用小括号 `()` 或是大括号 `{}` 把变量给包括起来。如果你要使用真实的 `$` 字符，那么你需要用 `$$` 来表示。
+- 因为在命令中$$会解释成真实的字符$，相当于在shell中的一个$字符，这时我们就可以用shell中的变量了。如果在命令中还是使用一个$字符，这时还会解释成为Makefile中的变量，这样就不能使用shell变量了。
+
+###### $
+
+- Makefile中的`$`用法和shell中的大体类似，只不过在Makefile中，`$`仅能用于引用Makefile声明的变量，无法引用shell的变量。
+
+- 这里要注意下，使用make命令执行Makefile时并不是shell环境，当执行到Makefile的某个操作时才会执行shell，例：
+
+  ```
+  checkstack:
+  	$(OBJDUMP) -d vmlinux $$(find . -name '*.ko') | \
+  	$(PERL) $(src)/scripts/checkstack.pl $(CHECKSTACK_ARCH)
+  
+  kernelrelease:
+  	@echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))"
+  
+  kernelversion:
+  	@echo $(KERNELVERSION)
+  ```
+
+  - makefile中对变量的引用需要使用`$()`这种带括号的方式，否则只会识别`$`后的一个字母
+  - 只有执行对应的Makefile命令的shell语句时才会进入shell环境，每行命令独立，每行都是单独的shell，所以上一行定义的shell变量并不适用于下一行。当然如果是使用了`\`来合并行就可以摆脱这个限制了，比如例子中的`checkstack`命令下的shell命令虽然是两行但在同一个shell环境中执行
+
+###### $$
+
+- Makefile命令中的shell语句也并非直接用于shell环境，make会对该语句进行预处理，如果想要引用shell中的变量，就要使用`$`号来把Makefile变量转换成shell变量
+
+- `$$`的用法就是把Makefile引用转化为shell引用，可以理解为此时的`$`是一个转义符，**也可以理解为去掉一个`$`后直接带入shell脚本中**
+
+- 例1
+
+  ```
+  LIST = one two three
+  all:
+  	for i in $(LIST); do \
+          echo $i; \
+      done
+  ```
+
+  - 通过make预处理后转化为shell:
+
+    ```
+    for i in one two three; do \
+            echo ; \
+        done
+    
+    # 输出为空
+    ```
+
+  - 本例中，`$i`和`$(LIST)`会被先当成Makefile变量，`LIST`变量在Makefile中有定义，被转换为了`one two three`，由于`i`变量未在Makefile中定义，所以转化为了空。
+
+- 例2
+
+  ```
+  LIST = one two three
+  all:
+  	for i in $(LIST); do \
+          echo $$i; \
+      done
+  ```
+
+  - 通过make预处理后转化为shell:
+
+    ```
+    for i in one two three; do \
+            echo $i; \
+        done
+    
+    # 输出为
+    # one
+    # two
+    # three
+    ```
+
+  - 例2中，`$$i`命令被make翻译成了shell命令中的`$i`，此时shell脚本可以正常执行，输出正确结果
+
+- 例3
+
+  ```
+  help:
+  	@echo  '                    (default: $$(INSTALL_MOD_PATH)/lib/firmware)'
+  ```
+
+  - 输出结果为(default: $(INSTALL_MOD_PATH)/lib/firmware)
+  - Makefile中的`@`符号表示该行shell命令不回显，否则执行时make会把转化后的shell脚本打印一遍
+  - `单引号`在shell中表示不执行转义或引用，按照原样字符串输出，此处`$(INSTALL_MOD_PATH)`不会被理解为变量
+  - `$$(INSTALL_MOD_PATH)`被翻译成`$(INSTALL_MOD_PATH)`，但由于存在`单引号`，导致shell变量不会被引用
+
+- 例4
+
+  ```makefile
+  VERSION = 3
+  PATCHLEVEL = 10
+  SUBLEVEL = 108
+  EXTRAVERSION =
+  # kernel 版本号，为四个版本号的组合
+  KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
+  # 从shell环境变量中提取shell的执行环境
+  CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
+  	  else if [ -x /bin/bash ]; then echo /bin/bash; \
+  	  else echo sh; fi ; fi)
+  # 选取脚本的目录，如果KBUILD_SRC未定义，则选择$(CURDIR)，$(CURDIR)表示当前目录绝对路径
+  srctree		:= $(if $(KBUILD_SRC),$(KBUILD_SRC),$(CURDIR))
+  KBUILD_VERBOSE = 1
+  # 是否在控制台回显，如果有@则不回显
+  ifeq ($(KBUILD_VERBOSE),1)
+    quiet =
+    Q =
+  else
+    quiet=quiet_
+    Q = @
+  endif
+  
+  version:
+  	$(Q)echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))" > $@
+  
+  ```
+
+  - 转化后的shell为：
+
+    ```
+    echo "3.10.108$(/bin/bash /root/repo/makefile_test/scripts/setlocalversion /root/repo/makefile_test)" > version
+    
+    # 假定setlocalversion脚本存在，且会输出一个'+'号，输出结果为：
+    # 3.10.108+
+    # 该值会被写入version文件
+    ```
+
+  - 例4为比较实际的例子，选自linux kernel的makefile中，相关变量的注释已经添加，结合前三个例子应该很好理解
