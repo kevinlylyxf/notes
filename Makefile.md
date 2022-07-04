@@ -1951,3 +1951,220 @@ endif
 
 - @$${TRACE_TARGET:=:} "-- ${MAKEFILE_ENV}: $@"这条语句执行的shell命令，其中$$会解释成一个$，${TRACE_TARGET:=:}是shell脚本中的参数替换，意思为如果没有定义这个变量，则为:冒号，然后是后面的引号里面的内容，如果没有冒号，直接是引号里面的内容会报错，因为在shell中会将其当作一个命令，但是没有这个命令，所以报错，加上冒号之后就不会报错了，因为不将其看作一个命令。冒号就是空命令。
 
+##### 大坑和技巧
+
+###### 术语
+
+- **目标（Target）**：Makefile中用于执行特定任务、生成特定文件的一组程序块，以特定的标识符（目标名加半角冒号）开始，碰到下一个标识符或Makefile语句（如赋值语句、`include`）结束。
+- **配方（Recipe）**：目标中用于执行具体操作的程序语句，为shell命令，统一以一个制表符开头。
+
+###### 缩进问题
+
+- 除了Python，Makefile是另一个严格要求缩进的编程语言，把缩进视为语法的一部分。更重要的是，Makefile的缩进有这样的特殊规则，堪比大坑：
+
+  - 缩进只允许用Tab（制表符），不允许用空格。
+  - 缩进后的语句一律视为编译目标的一部分，作为shell语句解释。
+  - 因此，在Makefile中，用代码缩进增强可读性的方式不管用了。
+
+- 举一个简单的例子：根据变量`ENABLE_OPTIMIZATION`定义与否，给`CFLAGS`赋不同的值。**注意`ifdef`分支下的语句是没有缩进的。**
+
+  ```
+  ifdef ENABLE_OPTIMIZATION
+  CFLAGS += -O3
+  else
+  CFLAGS += -g -O0
+  endif
+  ```
+
+  - 然而，一些像我当时一样的新手可能会觉得可读性不给力，于是习惯性地加上缩进：
+
+  ```
+  ifdef ENABLE_OPTIMIZATION
+  	CFLAGS += -O3
+  else
+  	CFLAGS += -g -O0
+  endif
+  ```
+
+  - 这样做会存在一定的风险。
+
+  - **其一，**如果上例放在文件开头，在一些Make版本中不成问题。我目前的Make版本（`4.3`）仍会正常识别缩进后的赋值语句，而不解释为shell语句。比如这个完整的`Makefile`：
+
+    ```
+    ENABLE_OPTIMIZATION := true
+    
+    ifdef ENABLE_OPTIMIZATION
+    	CFLAGS += -O3
+    else
+    	CFLAGS += -g -O0
+    endif
+    
+    all:
+    	@echo $(CFLAGS)
+    ```
+
+  - 在终端中运行，结果如下：
+
+    ```
+    $ make
+    -O3
+    $ make ENABLE_OPTIMIZATION=
+    -g -O0
+    ```
+
+    - 可见结果正常。但无法保证其他版本的Make能正常工作。
+
+  - **其二，**如果上例放在目标当中，条件分支语句仍能正常解析，但被缩进的赋值语句已经被解释成了shell语句，出错是必然的。
+
+    略微修改“其一”中的代码清单，改成：
+
+    ```
+    ENABLE_OPTIMIZATION := true
+    
+    all:
+    ifdef ENABLE_OPTIMIZATION
+    	CFLAGS += -O3
+    else
+    	CFLAGS += -g -O0
+    endif
+    
+    	@echo $(CFLAGS)
+    ```
+
+  - 在终端中运行，结果如下：
+
+    ```
+    $ make
+    CFLAGS += -O3
+    make: CFLAGS: No such file or directory
+    make: *** [Makefile:5: all] Error 127
+    ```
+
+    - 可见，Make把那两句`CFLAGS += ...`当作一个配方来解析了，不会给变量`CFLAGS`赋值。
+
+###### 不能在目标中使用赋值等语句
+
+- 接着“第一坑：其二”中的例子，如果要在运行目标`all`时通过条件判断给`CFLAGS`变量赋值，似乎去掉赋值语句前的缩进就可以了：
+
+  ```
+  ENABLE_OPTIMIZATION := true
+  
+  all:
+  ifdef ENABLE_OPTIMIZATION
+  CFLAGS += -O3
+  else
+  CFLAGS += -g -O0
+  endif
+  
+  	@echo $(CFLAGS)
+  ```
+
+- 但在运行后，却出现了这样的错误：
+
+  ```
+  Makefile:10: *** recipe commences before first target.  Stop.
+  Makefile:10: *** 配方在第一个目标前开始。 停止。
+  ```
+
+- 这是因为在一个目标之下**只能出现配方，而不允许掺杂出现不属于配方的语句（例如赋值语句、`include`语句）**。条件分支语句虽也允许使用，但在目标中**它只能用于控制在不同条件下执行哪些配方**。在编写Makefile时应当尤其注意这一点。
+
+###### 赋值语句的作用域
+
+- 其他编程语言中，变量定义没有溯及既往的效力，即定义一个变量后，该变量定义之前的程序代码是不能使用该变量的。然而，Makefile却有，这非常类似于JavaScript函数的“先使用后定义”。且看下面的例子：
+
+  ```
+  all:
+  	@echo $(VAR)
+  
+  VAR := abcdefg
+  ```
+
+- 按理来说，变量`VAR`定义在目标`all`之后，运行`make all`应该什么也不会输出。不过，**Makefile的变量允许先使用后定义**，所以运行`all`时，变量`VAR`已经被赋值了，最终是有输出的：
+
+  ```
+  $ make all
+  abcdefg
+  ```
+
+###### 如何保证不再重新生成一个目标（例如文件下载）
+
+- Make能够判断一个目标是否应该重新生成：如果源文件进行了修改，或目标文件被删除，则重新生成；否则保持原样。这个特性能够确保在只修改个别文件时，不至于一股脑儿全都重新编译，有助于保证程序员的工作效率。
+
+- 但是，上述特性似乎只适用于编译，对于一些特殊的场合则不管用。例如编写一个下载文件的目标，让Make在检测到文件存在时不再重新下载：
+
+  ```
+  download/test.gz:
+  	wget http://somewhere.org/test.gz -O $@    # $@ 为内置变量，自动设为目标名
+  ```
+
+- 然而事实上，Make总是会无条件重新生成这个目标，也就是总会重新下载`test.gz`这个文件。实践中，这非常不利于资源利用，同时给网络环境不理想的用户造成了麻烦。
+
+- 有鉴于此，我们应该在该目标中，手动判断文件是否存在，如果不存在则重新下载。修改上述代码清单如下：
+
+  ```
+  download/test.gz:
+  ifeq (, $(wildcard $@))
+  	wget http://somewhere.org/test.gz -O $@    # $@ 为内置变量，自动设为目标名
+  endif
+  ```
+
+- 这里，`$(wildcard)`函数返回一个文件列表的字符串，可用来判断文件是否存在，不存在则自然返回空值。条件判断语句`ifeq`比较两个表达式是否相等，第一个表达式为空。连起来，则是判断`$(wildcard)`是否返回空值，一旦返回空值，则目标文件不存在，应当重新下载。
+
+- 到此，Make不至于反复重新下载我们需要的文件了。
+
+###### 在Makefile编译目标中使用`cd`等Shell命令
+
+- 在编写一些目标时，有时会需要切换到一个特定目录下进行操作，比如运行某个子目录中子项目的`configure`：
+
+  ```
+  build_libuv:
+  	cd libuv
+  	./configure
+  ```
+
+- 但是上面这种写法，一旦运行就直接提示“找不到`./configure`”。这是因为Makefile的目标中，**每一个配方都被视为一个独立的shell脚本，在不同的shell会话中运行**，以便处理并行任务。
+
+- 也正因如此，在使用`cd`等要在同一个shell会话中运行的命令时，应当把它们写在同一行中。就像这样：
+
+  ```
+  build_libuv:
+  # 第一种写法，用"&&"分隔多个命令
+  	cd libuv && ./configure
+  # 第二种写法，也可用分号分隔
+  	cd libuv; ./configure
+  ```
+
+- 也可拆成多行，用反斜杠`\`断行。在书写多条命令或较长命令时会显得非常清爽。
+
+  ```
+  build_libuv:
+  	cd libuv ; \
+  	./configure
+  ```
+
+###### 调用子Makefile
+
+- 有些大型的项目包含若干个子项目，每个项目都有自己的`Makefile`。如果想要调用子项目的`Makefile`，正确的做法并不是使用`include`语句，而是用`make`命令。
+
+- 比如，项目`Test`的结构如图所示，包含两个子项目`doc`和`src`：
+
+  ```
+  Test/
+  ├─doc/
+  │ └─Makefile
+  ├─Makefile
+  └─src/
+    └─Makefile
+  ```
+
+- 如果想编译`doc`和`src`，则在`Test/Makefile`中编写这样的目标：
+
+  ```
+  build_doc:
+  	$(MAKE) -C doc
+  build_src:
+  	$(MAKE) -C src
+  ```
+
+- 即，运行一个新的`make`程序，切换到对应目录下并读取其`Makefile`。`$(MAKE)`为内置变量，指向用于运行当前Makefile的`make`命令路径。
+
