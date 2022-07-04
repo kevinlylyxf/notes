@@ -1933,3 +1933,21 @@ target:
   - make运行时的系统环境变量能够在make开始运行时被加载到Makefile文件里，可是假设Makefile中已定义了这个变量，或是这个变量由make命令行带入，那么系统的环境变量的值将被覆盖。（假设make指定了“-e”參数，那么，系统环境变量将覆盖Makefile中定义的变量）
 - 以前的理解，在Makefile中定义一个PATH变量和环境变量重名，此时在makefile中command中可以使用$$来使用环境变量的值，$来使用当前makefile中定义的值。这种理解是错误的，如果这种重名的变量被定义后，只能使用当前的变量，不能使用系统的变量。不能通过$$来使用系统的环境变量
 - makefile可以直接使用环境变量，但是我们在command里面定义的变量并不是环境变量，也不是makefile变量，此时就需要$$来获取
+
+###### 实例
+
+```makefile
+ifneq (${PROD},)
+ check_PROD ?= check_PROD
+ PROD_CHECK :=$(filter ${PROD},${PROD_LIST}) #PROD_CHECK => GNAT
+ _check_PROD ${check_PROD} ::
+	@$${TRACE_TARGET:=:} "-- ${MAKEFILE_ENV}: $@"
+	@if [ "${PROD_LIST}" ] && [ "${PROD}" != "${PROD_CHECK}" -o "${PROD}" = "" ] ; then \
+	echo " ${MAKE_CMD} Error : wrong PROD value : ${PROD} !!!" ; echo "" ;\
+		exit 1 ;\
+	fi
+endif
+```
+
+- @$${TRACE_TARGET:=:} "-- ${MAKEFILE_ENV}: $@"这条语句执行的shell命令，其中$$会解释成一个$，${TRACE_TARGET:=:}是shell脚本中的参数替换，意思为如果没有定义这个变量，则为:冒号，然后是后面的引号里面的内容，如果没有冒号，直接是引号里面的内容会报错，因为在shell中会将其当作一个命令，但是没有这个命令，所以报错，加上冒号之后就不会报错了，因为不将其看作一个命令。冒号就是空命令。
+
