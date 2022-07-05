@@ -2168,3 +2168,88 @@ endif
 
 - 即，运行一个新的`make`程序，切换到对应目录下并读取其`Makefile`。`$(MAKE)`为内置变量，指向用于运行当前Makefile的`make`命令路径。
 
+
+###### 变量赋值运算符`=`和`:=`
+
+- 设计Makefile时，如果要判断当前的系统版本，可以调用系统命令`uname`，这里假设用下列变量来存贮该命令的输出，并尝试在它们当中搜索字符串`"Linux"`：
+
+  ```
+  UNAME_1	:= `uname -a`
+  UNAME_2	= `uname -a` 
+  UNAME_3	:= $(shell uname -a)
+  UNAME_4	= $(shell uname -a)
+  
+  all:	
+  	@echo $(findstring Linux,$(UNAME_1))
+  	@echo $(findstring Linux,$(UNAME_2))
+  	@echo $(findstring Linux,$(UNAME_3))
+  	@echo $(findstring Linux,$(UNAME_4))
+  ```
+
+  ```
+  
+  
+  Linux
+  Linux
+  ```
+
+  - 只有`UNAME_3 UNAME_4`的值能最终被`$(findstring)`函数正常识别并工作：
+
+- 目前不知道为什么会产生上面这种情况，好像是反引号导致的，反引号的变量在函数当中不能展开，但是反引号的变量能正常输出。
+
+- 在makefile中尽量使用$(shell )这种格式。
+
+##### tab键说明
+
+- 如果是shell命令的话需要有tab键，如果没有tab键会报错缺失分隔符
+
+- Makefile是顺序执行的，在第一个目标之前不能有shell命令，用上面的话说是配方。但是可以有正常的变量赋值什么的
+
+  ```
+  ifeq (a, a)
+  	test = abc   #makefile中没有字符串一说，变量不需要双引号
+  	@echo "abc"   #这个引号因为是shell中的命令，需要加上
+  endif
+  
+  all ：
+  	@echo "abc"
+  ```
+
+  - 上面这种写法是错误的，因为在第一个目标all出现之前出现了shell命令，如果将ifeq中的echo去掉就正确了。
+
+- 如果上面的ifeq语句出现在all目标里面，也是会出错的，因为目标里面不能有变量的赋值，所以将test去掉就争取了，目标里面可以是语句。
+
+- 上面的理解是错误的，一般shell命令只能出现在目标下面，单独的ifeq这些只能有变量赋值或者makfile函数这些，不能有shell命令。
+
+- 目标下的tab键都会解释成命令。
+
+##### makefile字符串拼接
+
+- makefile中没有字符串的概念，所以不用双引号，用变量时直接赋值就可以了
+
+  ```
+  test = abc
+  test1 = $(test)123   #abc123
+  all : 
+  	@echo $(test1)
+  ```
+
+  - 上面的test1需要拼接，直接写在一起就行了，不用双引号，也不用特殊的处理。
+
+##### export
+
+- makefile中export可以先用export导出，然后在后面赋值，这样在其他的makefile中也能用
+
+  ```
+  export test
+  test = 123
+  all:
+  	$(MAKE) -C src
+  ```
+
+  - src中的makefile直接能使用test变量。
+
+
+
+
+
