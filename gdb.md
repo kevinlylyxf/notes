@@ -164,7 +164,49 @@
 ##### 调试多进程程序
 
 - attach PID号
-- pidof命令可以手动获取进程id号
+- pidof命令可以手动获取进程id号，pidof是shell命令
+- 前面提到，GDB 调试多进程程序时默认只调试父进程。对于内核版本为 2.5.46 甚至更高的 Linux 发行版系统来说，可以通过修改 follow-fork-mode 或者 detach-on-fork 选项的值来调整这一默认设置。
+- GDB follow-fork-mode选项
+
+  - 确切地说，对于使用 fork() 或者 vfork() 函数构建的多进程程序，借助 follow-fork-mode 选项可以设定 GDB 调试父进程还是子进程。该选项的使用语法格式为：
+
+  ```
+  (gdb) set follow-fork-mode mode
+  ```
+
+  - 参数 mode 的可选值有 2 个：
+
+    - parent：选项的默认值，表示 GDB 调试器默认只调试父进程；
+
+    - child：和 parent 完全相反，它使的 GDB 只调试子进程。且当程序中包含多个子进程时，我们可以逐一对它们进行调试。
+- GDB detach-on-fork选项
+
+  - 注意，借助 follow-fork-mode 选项，我们只能选择调试子进程还是父进程，且一经选定，调试过程中将无法改变。如果既想调试父进程，又想随时切换并调试某个子进程，就需要借助 detach-on-fork 选项。
+
+  - detach-on-fork 选项的语法格式如下：
+
+  ```
+  (gdb) set detach-on-fork mode
+  ```
+
+  - 其中，mode 参数的可选值有 2 个：
+
+    - on：默认值，表明 GDB 只调试一个进程，可以是父进程，或者某个子进程；
+
+    - off：程序中出现的每个进程都会被 GDB 记录，我们可以随时切换到任意一个进程进行调试。
+
+  - 和 detach-on-fork 搭配使用的，还有如表 1 所示的几个命令。
+
+    
+
+    | 命令语法格式             | 功 能                                                        |
+    | ------------------------ | ------------------------------------------------------------ |
+    | (gdb)show detach-on-fork | 查看当前调试环境中 detach-on-fork 选项的值。                 |
+    | (gdb) info inferiors     | 查看当前调试环境中有多少个进程。其中，进程 id 号前带有 * 号的为当前正在调试的进程。 |
+    | (gdb) inferiors id       | 切换到指定 ID 编号的进程对其进行调试。                       |
+    | (gdb) detach inferior id | 断开 GDB 与指定 id 编号进程之间的联系，使该进程可以独立运行。不过，该进程仍存在 info inferiors 打印的列表中，其 Describution 列为 <null>，并且借助 run 仍可以重新启用。 |
+    | (gdb) kill inferior id   | 断开 GDB 与指定 id 编号进程之间的联系，并中断该进程的执行。不过，该进程仍存在 info inferiors 打印的列表中，其 Describution 列为 <null>，并且借助 run 仍可以重新启用。 |
+    | remove-inferior id       | 彻底删除指令 id 编号的进程（从 info inferiors 打印的列表中消除），不过在执行此操作之前，需先使用 detach inferior id 或者 kill inferior id 命令将该进程与 GDB 分离，同时确认其不是当前进程。 |
 
 ##### 反向调试
 
