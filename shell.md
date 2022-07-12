@@ -68,7 +68,34 @@
 
 - shell字符串
    - 获取字符串长度 ${#string_name}
+   
    - shell中字符串拼接，直接放在一起即为拼接
+   
+      ```
+      在 Shell 中你不需要使用任何运算符，将两个字符串并排放在一起就能实现拼接，非常简单粗暴
+      #!/bin/bash
+      name="Shell"
+      url="http://c.biancheng.net/shell/"
+      str1=$name$url  #中间不能有空格
+      str2="$name $url"  #如果被双引号包围，那么中间可以有空格
+      str3=$name": "$url  #中间可以出现别的字符串
+      str4="$name: $url"  #这样写也可以
+      str5="${name}Script: ${url}index.html"  #这个时候需要给变量名加上大括号
+      echo $str1
+      echo $str2
+      echo $str3
+      echo $str4
+      echo $str5
+      
+      Shellhttp://c.biancheng.net/shell/
+      Shell http://c.biancheng.net/shell/
+      Shell: http://c.biancheng.net/shell/
+      Shell: http://c.biancheng.net/shell/
+      ShellScript: http://c.biancheng.net/shell/index.html
+      ```
+   
+      
+   
    - shell字符串截取
       - 从左边开始计数${string:start:length} url="c.biancheng.net" echo ${url:2:9} 省略length参数默认截取到字符串末尾
       - 从右边开始计数${string:0-start:length} 0-是固定写法表示从右边计数
@@ -910,6 +937,24 @@ echo ${str##*aa}  #结果为 @@@
 #### 测试
 
 - 一个**if/then**结构测试一列命令的[退出状态](http://shouce.jb51.net/shell/exit-status.html#EXITSTATUSREF)是否为0（因为依照惯例，0意味着命令执行成功），如果是0则会执行一个或多个命令。
+
+  ```
+  if  condition1
+  then
+     statement1
+  elif condition2
+  then
+      statement2
+  elif condition3
+  then
+      statement3
+  ……
+  else
+     statementn
+  fi
+  ```
+
+  
 
 - 有一个命令 **[** ([左方括](http://shouce.jb51.net/shell/special-chars.html#LEFTBRACKET)是特殊字符). 它和**test**是同义词,因为效率的原因，它被[内建](http://shouce.jb51.net/shell/internal.html#BUILTINREF)在shell里。这个命令的参数是比较表达式或者文件测试，它会返回一个退出状态指示比较的结果(0表示真，1表示假)。
 
@@ -2712,6 +2757,39 @@ done
   - 每个条件块都以两个分号结尾;;.
   - **case**块的结束以esac(case的反向拼写)结尾.
 
+- c语言中文网讲述
+
+  ```
+  case expression in
+      pattern1)
+          statement1
+          ;;
+      pattern2)
+          statement2
+          ;;
+      pattern3)
+          statement3
+          ;;
+      ……
+      *)
+          statementn
+  esac
+  ```
+
+  - case、in 和 esac 都是 Shell 关键字，expression 表示表达式，pattern 表示匹配模式。
+
+    - expression 既可以是一个变量、一个数字、一个字符串，还可以是一个数学计算表达式，或者是命令的执行结果，只要能够得到 expression 的值就可以。
+    - pattern 可以是一个数字、一个字符串，甚至是一个简单的正则表达式。
+
+  - case in 的 pattern 部分支持简单的正则表达式，具体来说，可以使用以下几种格式：
+
+    | 格式  | 说明                                                         |
+    | ----- | ------------------------------------------------------------ |
+    | *     | 表示任意字符串。                                             |
+    | [abc] | 表示 a、b、c 三个字符中的任意一个。比如，[15ZH] 表示 1、5、Z、H 四个字符中的任意一个。 |
+    | [m-n] | 表示从 m 到 n 的任意一个字符。比如，[0-9] 表示任意一个数字，[0-9a-zA-Z] 表示字母或数字。 |
+    | \|    | 表示多重选择，类似逻辑运算中的或运算。比如，abc \| xyz 表示匹配字符串 "abc" 或者 "xyz"。 |
+
 - 实例
 
   ```
@@ -3579,7 +3657,7 @@ done
 
 - Bash本身没有正则表达式的功能.在脚本里，使用正则表达式的是命令和软件包 -- 例如[sed](http://shouce.jb51.net/shell/sedawk.html#SEDREF)和[awk](http://shouce.jb51.net/shell/awk.html#AWKREF) -- 它们可以解释正则表达式.
 
-- Bash所做的是展开文件名扩展 [[1\]](http://shouce.jb51.net/shell/globbingref.html#FTN.AEN13843) -- 这就是所谓的通配*(globbing*) -- 但它不是使用标准的正则表达式. 而是使用通配符. 通配解释标准的通配符：*和?, 方括号括起来的字符,还有其他的一些特殊的字符(比如说^用来表示取反匹配).然而通配机制的通配符有很大的局限性. 包含有*号的字符串将不会匹配以点开头的文件，例如`.bashrc`. [[2\]](http://shouce.jb51.net/shell/globbingref.html#FTN.AEN13856) 另外,通配机制的`*?*` 字符和正则表达式中表示的意思不一样.
+- Bash所做的是展开文件名扩展 [[1\]](http://shouce.jb51.net/shell/globbingref.html#FTN.AEN13843) -- 这就是所谓的通配*(globbing*) -- 但它不是使用标准的正则表达式. 而是使用通配符. 通配解释标准的通配符：\*和?, 方括号括起来的字符,还有其他的一些特殊的字符(比如说^用来表示取反匹配).然而通配机制的通配符有很大的局限性. 包含有*号的字符串将不会匹配以点开头的文件，例如`.bashrc`. [[2\]](http://shouce.jb51.net/shell/globbingref.html#FTN.AEN13856) 另外,通配机制的`*?*` 字符和正则表达式中表示的意思不一样.
 
   - 意思是说bash本身并不是用的标准的正则表达式，而是直接使用的通配符机制。只是用来扩展用的。
 
