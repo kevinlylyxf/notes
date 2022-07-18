@@ -5328,8 +5328,10 @@ sed 's/\/bin/\/usr\/local\/bin/g'
   sed '$d' file
   ```
 
-  删除文件中所有开头是test的行：
+  - $符号表示最后一行，例如1，$d，删除所有的。
 
+  删除文件中所有开头是test的行：
+  
   ```shell
   sed '/^test/'d file
   ```
@@ -6733,3 +6735,216 @@ END     {
 - **locate**：超快速查找任意文件。它会从linux内置的索引数据库查找文件的路径，索引速度超快。刚刚新建的文件可能需要一定时间才能加入该索引数据库，可以通过执行updatedb命令来强制更新一次索引，这样确保不会遗漏文件。该命令通常会返回大量匹配项，可以使用 *-r* 选项通过正则表达式来精确匹配。
 - **find**：直接搜索整个文件目录，默认直接从根目录开始搜索，建议在以上命令都无法解决问题时才用它，功能最强大但速度超慢。除非你指定一个很小的搜索范围。通过 *-name* 选项指定要查找的文件名，支持通配符。
 
+##### echo
+
+- 在`Linux`命令行终端或`Bash Shell`脚本中适当使用颜色，能够让第一时间感觉到您的命令或脚本执行过程中差异。
+
+- 字背景颜色范围`40–47`
+
+  - `40`:黑
+  - `41`:红
+  - `42`:绿
+  - `43`:黄色
+  - `44`:蓝色
+  - `45`:紫色
+  - `46`:天蓝
+  - `47`:白色
+
+- 字颜色`30–37`
+
+  - `30`:黑
+  - `31`:红
+  - `32`:绿
+  - `33`:黄
+  - `34`:蓝色
+  - `35`:紫色
+  - `36`:天蓝
+  - `37`:白色
+
+- ANSI控制码的说明
+
+  - `\33[0m` 关闭所有属性
+  - `\33[1m` 设置高亮度
+  - `\33[4m` 下划线
+  - `\33[5m` 闪烁
+  - `\33[7m` 反显
+
+- 当`echo`命令带`-e`参数时，可以使用反斜杠`\`输出特殊的字符。
+
+  echo输出带颜色的字体格式如下:
+
+  ```sh
+  $ echo -e "\033[字背景颜色;字体颜色m字符串\033[0m"
+  # 其中: "\033" 引导非常规字符序列。”m”意味着设置属性然后结束非常规字符序列。
+  
+  $ echo -e "\033[41;32m红色背景绿色文字\033[0m"
+  # 其中: 41的位置代表底色, 32的位置是代表字的颜色。
+  
+  $ echo -e "\033[32m绿色文字\033[0m"
+  #输出绿色文字
+  
+  $ echo -e "\033[31m红字\033[32m绿字\033[0m" # 输出红字和绿字
+  #输出红字和绿字
+  
+  $ echo -e "\033[31m红字\033[43;32m绿字带黄色背景\033[0m" # 输出红字和带黄色背景的绿字
+  #输出红字和带黄色背景的绿字
+  
+  $ echo -e "\033[4;47;31m带下划线的白色背景的红字\033[0m\033[1;41;32m高亮的红色背景的绿字\033[0m"
+  $ echo -e "\033[4m\033[47m\033[31m带下划线的白色背景的红字\033[0m \033[1m\033[41m\033[32m高亮的红色背景的绿字\033[0m"
+  #带下划线的白色背景的红字、高亮的红色背景的绿字
+  
+  通过以上示例可知：控制符可以进行组合在一起，如\033[4;47;31m将三个属性组合在一起(属性数字中间使用分号;隔开)；也可以\033[4m\033[47m\033[31m每个属性单独写。
+  ```
+
+- 如果经常使用颜色控制的话，可以将颜色控制符进行定义好。 可以在`~/.bashrc`中设置个人偏好，使用`vi ~/.bashrc`打开`.bashrc`文件：并将下面的变量写入到文件中：将下面的变量写入到`~/.bashrc`文件中:
+
+  ```sh
+  [meizhaohui@localhost ~]$ vi ~/.bashrc
+  bg_black=”\033[40m”
+  bg_red=”\033[41m”
+  bg_green=”\033[42m”
+  bg_yellow=”\033[43m”
+  bg_blue=”\033[44m”
+  bg_purple=”\033[45m”
+  bg_cyan=”\033[46m”
+  bg_white=”\033[47m”
+      
+  fg_black=”\033[30m”
+  fg_red=”\033[31m”
+  fg_green=”\033[32m”
+  fg_yellow=”\033[33m”
+  fg_blue=”\033[34m”
+  fg_purple=”\033[35m”
+  fg_cyan=”\033[36m”
+  fg_white=”\033[37m”
+      
+  set_clear=”\033[0m”
+  set_bold=”\033[1m”
+  set_underline=”\033[4m”
+  set_flash=”\033[5m”
+  ```
+
+  - 此时按如下命令输入相应的字体:
+
+    ```sh
+    [meizhaohui@localhost ~]$ source ~/.bashrc
+    [meizhaohui@localhost ~]$ echo -e "${bg_red}${fg_green}${set_bold}红色背景粗体的绿色字${set_clear}"
+    红色背景粗体的绿色字
+    红色背景粗体的绿色字  
+    [meizhaohui@localhost ~]$ echo -e "${bg_red}${fg_green}红色背景的绿色字${set_clear}"
+    红色背景的绿色字
+    红色背景的绿色字
+    ```
+
+  - 如果要在脚本中使用使用`~/.bashrc`中定义的`bg_red`、`fg_green`等变量，可以在`shell`脚本中使用`source ~/.bashrc`或者点操作符加载`~/.bashrc`文件到脚本中。
+
+    打印颜色脚本:
+
+    ```sh
+    [meizhaohui@localhost ~]$ cat print_color.sh
+    #!/bin/bash
+    #Source personal definitions
+    source ~/.bashrc
+    # 或使用以下命令：
+    # . ~/.bashrc
+    echo -e "${bg_red}${fg_green}${set_bold}红色背景粗体的绿色字${set_clear}"
+    ```
+
+- 当我们编写Shell脚本时，需要将日志信息保存起来，我们也可以使用`echo`命令输出带颜色的字体，方便查看日志信息。
+
+  如，我们将以下代码加入到`~/.bashrc`文件中，并重新加载，使其生效。
+
+  ```sh
+  #################################################
+  # Get now date string.
+  # 当前日期字符串
+  #################################################
+  function now_date() {
+      format=$1
+      if [[ "${format}" ]]; then
+          now=$(date +"${format}")
+      else
+          now=$(date +"%Y%m%d_%H%M%S")
+      fi
+  
+      echo "${now}"
+  }
+  
+  #################################################
+  # Basic log function.
+  # 基本日志，输出时间戳
+  # ex: [2021/08/15 19:16:10]
+  #################################################
+  function echo_log() {
+      now=$(date +"[%Y/%m/%d %H:%M:%S]")
+      echo -e "\033[1;$1m${now}$2\033[0m"
+  }
+  
+  #################################################
+  # Debug log message.
+  # 调试日志，黑色
+  #################################################
+  function msg_debug() {
+      echo_log 30 "[Debug] ====> $*"
+  }
+  
+  #################################################
+  # Error log message.
+  # 异常日志，红色
+  #################################################
+  function msg_error() {
+      echo_log 31 "[Error] ====> $*"
+  }
+  
+  #################################################
+  # Success log message.
+  # 成功日志，绿色
+  #################################################
+  function msg_success() {
+      echo_log 32 "[Success] ====> $*"
+  }
+  
+  #################################################
+  # Warning log message.
+  # 警告日志，黄色
+  #################################################
+  function msg_warn() {
+      echo_log 33 "[Warning] ====> $*"
+  }
+  
+  #################################################
+  # Information log message.
+  # 一般消息日志，蓝色
+  #################################################
+  function msg_info() {
+      echo_log 34 "[Info] ====> $*"
+  }
+  ```
+
+  - 然后，在命令行就可以打印不同样式的消息了。
+
+  ```sh
+  [meizhaohui@hellogitlab ~]$ msg_debug 'debug message'
+  [2021/08/21 12:35:45][Debug] ====> debug message
+  [meizhaohui@hellogitlab ~]$ msg_info "info message"
+  [2021/08/21 12:35:47][Info] ====> info message
+  [meizhaohui@hellogitlab ~]$ msg_warn 'warn message'
+  [2021/08/21 12:35:58][Warning] ====> warn message
+  [meizhaohui@hellogitlab ~]$ msg_error 'error message'
+  [2021/08/21 12:36:16][Error] ====> error message
+  [meizhaohui@hellogitlab ~]$ msg_success 'success message'
+  [2021/08/21 12:36:25][Success] ====> success message
+  ```
+
+- 后面我们可以把相应的消息写入到日志文件中，后期查看日志文件内容时，也可以看到有颜色的日志信息。
+
+  ```sh
+  [meizhaohui@hellogitlab ~]$ msg_info "info message" >> log.txt
+  [meizhaohui@hellogitlab ~]$ msg_warn 'warn message' >> log.txt
+  [meizhaohui@hellogitlab ~]$ msg_success 'success message' >> log.txt
+  [meizhaohui@hellogitlab ~]$ cat log.txt
+  [2021/08/21 12:40:14][Info] ====> info message
+  [2021/08/21 12:40:27][Warning] ====> warn message
+  [2021/08/21 12:40:37][Success] ====> success message
+  [meizhaohui@hellogitlab ~]$
+  ```
