@@ -6948,3 +6948,7 @@ END     {
   [2021/08/21 12:40:37][Success] ====> success message
   [meizhaohui@hellogitlab ~]$
   ```
+
+##### grep
+
+- grep -B 连带显示查找到的行上面的几行，-B后面跟具体的数字几行
