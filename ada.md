@@ -1277,6 +1277,7 @@ type array_name is array (index specification) of type;
   ```
 
   -   *procedure_name* 为该过程的名称；*parameter_specification* 是这个过程所要使用的参数，是可选的；*declarations* 是声明一些局部的新类型、变量、函数、过程；*statements* 则是该过程要执行的语句。
+  -   没有参数的话括号就不用写了，和c语言不一样
 
 -   下例创建一个比较两数大小，并输出较大值的过程**：**
 
