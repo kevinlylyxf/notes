@@ -3671,7 +3671,7 @@ done
   ```
   *匹配任何字符串，包括空字符串。
   ? 匹配任意单个字符。
-  [...] 匹配方括号内的任意字符。
+  [...] 匹配方括号内的任意字符。任意一个字符
   ```
 
 ###### 正则表达式遗忘的东西
@@ -3690,9 +3690,52 @@ done
 ###### 通配符和正则表达式
 
 - 通配符是shell在做PathnameExpansion时用到的。说白了一般只用于文件名匹配，它是由shell解析的，比如find，ls，cp，mv等。
--  case分支中支持的也是通配符
+
+- case分支中支持的也是通配符
+
 - [正则表达式](https://so.csdn.net/so/search?q=正则表达式&spm=1001.2101.3001.7020)是用来匹配字符串的，针对文件内容的文本过滤工具里，大都用到正则表达式，如vi，grep，awk，sed等。
+
 - 通配符和正则表达式看起来有点像，不能混淆。可以简单的理解为通配符只有*,?,[],{}这4种，而正则表达式复杂多了。
+
+  - `{...}` 表示匹配大括号里面的所有模式，模式之间使用逗号分隔。
+
+    ```
+    $ echo d{a,e,i,u,o}g
+    dag deg dig dug dog
+    
+    它可以用于多字符的模式。
+    $ echo {cat,dog}
+    cat dog
+    ```
+
+  - `{...}`与`[...]`有一个很重要的区别。如果匹配的文件不存在，`[...]`会失去模式的功能，变成一个单纯的字符串，而`{...}`依然可以展开。
+
+    ```
+    # 不存在 a.txt 和 b.txt
+    $ ls [ab].txt
+    ls: [ab].txt: No such file or directory
+    
+    $ ls {a,b}.txt
+    ls: a.txt: No such file or directory
+    ls: b.txt: No such file or directory
+    
+    上面代码中，如果不存在a.txt和b.txt，那么[ab].txt就会变成一个普通的文件名，而{a,b}.txt可以照样展开。
+    ```
+
+    - 所以mv test{,_bak}，这个通配符可以扩展为mv test test_bak.
+
+  - 大括号可以嵌套
+
+    ```
+    $ echo {j{p,pe}g,png}
+    jpg jpeg png
+    
+    大括号也可以与其他模式联用。
+    $ echo {cat,d*}
+    cat dawg dg dig dog doug dug
+    上面代码中，会先进行大括号扩展，然后进行*扩展。
+    ```
+
 - \*在通配符和正则表达式中有其不一样的地方，在通配符中\*可以匹配任意的0个或多个字符，而在正则表达式中他是重复之前的一个或者多个字符，不能独立使用的。比如通配符可以用*来匹配任意字符，而正则表达式不行，他只匹配任意长度的前面的字符。
 
 #### 数组
@@ -6952,3 +6995,115 @@ END     {
 ##### grep
 
 - grep -B 连带显示查找到的行上面的几行，-B后面跟具体的数字几行
+
+#### 其他
+
+##### getopt和getopts
+
+- getopts是shell命令行参数解析工具，意在从shell 命令行当中解析参数。命令格式：
+
+  ```bash
+  getopts optstring name [arg ...]
+  ```
+
+  - optstring列出了对应的shell 脚本可以识别的所有参数。比如：shell script可以识别-a, -f 以及-s参数，则optstring就是afs;如果对应的参数后面还跟随一个值，则在相应的optstring后面加冒号**。**比如a:fs表示a参数后面会有一个值出现，-a value的形式。另外，getopts执行匹配到a的时候，会把value存放在一个OPTARG的shell 变量中。如果optstring是以冒号开头的，命令行当中出现了optstring当中没有的参数将不会提示错误信息。
+
+  - name表示的是参数的名称，每次执行getopts，会从命令行当中获取下一个参数，然后存放到name中。如果获取到参数不在optstring中，则name的值被设置为?。命令行当中的所有参数都有一个index，第一个参数从1开始，依次类推，另外有一个名为OPTIND的shell变量存放下一个要处理的参数的index。
+
+    ```bash
+    #!/bin/bash
+     
+    func() {
+        echo "Usage:"
+        echo "test.sh [-j S_DIR] [-m D_DIR]"
+        echo "Description:"
+        echo "S_DIR,the path of source."
+        echo "D_DIR,the path of destination."
+        exit -1
+    }
+     
+    upload="false"
+     
+    while getopts 'h:j:m:u' OPT; do
+        case $OPT in
+            j) S_DIR="$OPTARG";;
+            m) D_DIR="$OPTARG";;
+            u) upload="true";;
+            h) func;;
+            ?) func;;
+        esac
+    done
+     
+    echo $S_DIR
+    echo $D_DIR
+    echo $upload
+    
+    
+    //执行结果：
+    [root@bobo tmp] sh test.sh -j /data/usw/web -m /opt/data/web
+    /data/usw/web
+    /opt/data/web
+    false
+    ```
+
+    - getopts后面跟的字符串就是参数列表，每个字母代表一个选项，如果字母后面跟一个冒号，则表示这个选项还会有一个值，比如-j /data/usr/web 和 -m /opt/data/web。而getopts字符串中没有跟随冒号的字母就是开关型的选项，不需要指定值，等同于true/false，只要带上这个参数就是true。
+    - getopts识别出各个选项之后，就可以配合case进行操作。操作中，有两个"常量"，一个是OPTARG，用来获取当前选项的值；另外一个就是OPTIND，表示当前选项在参数列表中的位移。case的最后一项是?，用来识别非法的选项，进行相应的操作，我们的脚本中输出了帮助信息。
+    - OPTIND是用来获取当前选项在参数列表中的位移，例如上面示例中就是解析参数列表中的 -h、-j、-m、-u这些参数的，如果有的参数不以这些开头，例如写在最后的不以这些开头的参数，OPTIND就不会+1，所以我们可以结合shift来将这些可以解析的参数shift掉，剩下的就是不用解析值。
+
+    ```bash
+    #!/bin/bash
+    #test3.sh
+    
+    func() {
+            echo "Usage:"
+            echo "test.sh [-j S_DIR] [-m D_DIR]"
+            echo "Description:"
+            echo "S_DIR, the path of source."
+            echo "D_DIR, the path of destination."
+            exit -1
+    }
+    
+    upload="false"
+    
+    echo $OPTIND
+    
+    while getopts 'h:s:d:u' OPT; do
+            case $OPT in
+                    s) S_DIR="$OPTARG";;
+                    d) D_DIR="$OPTARG";;
+                    u) upload="true";;
+                    h) func;;
+                    ?) func;;
+            esac
+    done
+    
+    echo $OPTIND
+    shift $((OPTIND - 1))
+    echo $1
+    
+    
+    
+    [root@bobo tmp]# sh test.sh -j /data/usw/web beijing
+    1              #执行的是第一个"echo $OPTIND"
+    3              #执行的是第二个"echo $OPTIND"
+    beijing        #此时$1是"beijing"
+     
+    [root@bobo tmp]# sh test.sh -m /opt/data/web beijing                
+    1              #执行的是第一个"echo $OPTIND"
+    3              #执行的是第二个"echo $OPTIND"
+    beijing
+     
+    [root@bobo tmp]# sh test.sh -j /data/usw/web -m /opt/data/web beijing
+    1              #执行的是第一个"echo $OPTIND"
+    5              #执行的是第二个"echo $OPTIND"
+    beijing
+     
+                      参数位置： 1        2       3       4        5     6
+    [root@bobo tmp]# sh test.sh -j /data/usw/web -m /opt/data/web -u beijing
+    6
+    beijing
+    ```
+
+    - 当选项参数识别完成以后，就能识别剩余的参数了，我们可以使用shift进行位移，抹去选项参数。
+    - 在上面的脚本中，我们位移的长度等于case循环结束后的OPTIND - 1，OPTIND的初始值为1。当选项参数处理结束后，其指向剩余参数的第一个。getopts在处理参数时，处理带值的选项参数，OPTIND加2；处理开关型变量时，OPTIND则加1。
+    - 很多脚本执行的时候我们并不知道后面参数的个数，但可以使用$*来获取所有参数。但在程序处理的过程中有时需要逐个的将$1、$2、$3……$n进行处理。shift是shell中的内部命令，用于处理参数位置。每次调用shift时，它将所有位置上的参数减一。 $2变成了$1, $3变成了$2, $4变成了$3。shift命令的作用就是在执行完$1后，将$2变为$1，$3变为$2，依次类推。shift也可以带参数，表示shift多少次。
