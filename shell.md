@@ -7000,6 +7000,11 @@ END     {
 
 #### 其他
 
+##### 区别
+
+- getopts是shell中内建的命令，它的使用语法相对getopt简单，但它不支持长命令参数（--option）。它不会重排列所有参数的顺序，选项参数的格式必须是-d val，而不能是中间没有空格的-dval，遇到非-开头的参数，或者选项参数结束标记--就中止了，如果中间遇到非选项的命令行参数，后面的选项参数就都取不到了，出现的目的仅仅是为了代替getopt较快捷方便的执行参数的分析。
+- getopts的缺点正好是getopt所具有的优点。相对于getopts而言，getopt是一个独立的外部工具（Linux的一个命令），它的使用语法比较复杂，支持长命令参数，会重排参数的顺序。在shell中处理命令行参数时，需要配合其他Linux命令一起使用才行。
+
 ##### getopt和getopts
 
 - getopts是shell命令行参数解析工具，意在从shell 命令行当中解析参数。命令格式：
@@ -7109,3 +7114,161 @@ END     {
     - 当选项参数识别完成以后，就能识别剩余的参数了，我们可以使用shift进行位移，抹去选项参数。
     - 在上面的脚本中，我们位移的长度等于case循环结束后的OPTIND - 1，OPTIND的初始值为1。当选项参数处理结束后，其指向剩余参数的第一个。getopts在处理参数时，处理带值的选项参数，OPTIND加2；处理开关型变量时，OPTIND则加1。
     - 很多脚本执行的时候我们并不知道后面参数的个数，但可以使用$*来获取所有参数。但在程序处理的过程中有时需要逐个的将$1、$2、$3……$n进行处理。shift是shell中的内部命令，用于处理参数位置。每次调用shift时，它将所有位置上的参数减一。 $2变成了$1, $3变成了$2, $4变成了$3。shift命令的作用就是在执行完$1后，将$2变为$1，$3变为$2，依次类推。shift也可以带参数，表示shift多少次。
+
+##### getopt
+
+- getopt的命令使用有一下的三种格式：
+
+  ```
+  getopt optstring parameters
+  getopt [options] [--] optstring parameters
+  getopt [options] -o|--options optstring [options] [--] parameters
+  ```
+
+  - getopt的参数分为两部分：用于修改getopt解析模式的选项(即语法中的options和-o|--options optstring)和待解析的参数(即语法中的parameters部分)。第二部分将从第一个非选项参数开始，或者从"--"之后的第一项内容开始。如果在第一部分中没有给定"-o|--options"，则第二部分的第一个参数将用作短选项字符串。
+  - 上面的说法是针对第三种语法来说的，第二种语法是可以添加一些选项来用的，getopt支持一些选项，第一种语法和getopts一样，使用方法类似。
+
+- 如在Linux的Terminal中输入：get c:b -c file -b home
+
+  - 返回匹配结果如下：
+
+  ```
+  -c file -b -- home
+  ```
+
+  - 输出结果分为两部分，"--"之前的是模式的匹配的结果，"--"之后的是非选项类型的参数
+  - 所谓的非选项类型的参数，即是在parameters中，一个不是以"-"开头，也不是它前面的选项所需的参数，那么它就是一个非选项类型的参数（比如上述输入paramters中的home)。
+  - --是getopt命令自己加的，最后解析完这个也会变成位置参数，所以在判断的时候可以判断位置参数是不是--
+
+- 仅凭getopt命令是不能独立完成shell命令行参数的解析，还需要配合其他命令一起运用才行。我们可以使用这样一种方法，将getopt命令返回的匹配结果重新作为shell的位置参数，我们在循环中去左移动这些位置参数，每移动一次判断是当前参数是那种类型选项，并执行对应操作。当遇到"--"时，命令参数解析完毕，退出循环
+
+- getopt返回的结果如何作为shell的传入位置参数呢？此时可以使用shell的内置的set函数，set -- arg，arg中的参数作为shell的新的位置参数，可通过$N进行直接引用
+
+  ```
+  #!/bin/sh
+  
+  SHORTOPTS="h,o:"
+  LONGOPTS="help,output:"
+  ARGS=$(getopt --options $SHORTOPTS  \  #①
+    --longoptions $LONGOPTS -- "$@" )
+    
+  eval set -- "$ARGS"
+  while true;
+  do
+      case $1 in
+          -h|--help)
+             echo "Print Help Information "
+             shift
+             ;;
+          -o|--output)
+             echo "Output result to $2 directory"
+             shift 2
+             ;;
+          --)
+             shift
+             break
+             ;;
+      esac
+  done
+  ```
+
+  - --options表示短选项，--longoptions表示长选项，这里使用的是上述getopt命令的第三种形式。
+  - 如果--options、--longoptions后要指定多个选项参数，不同选项之间可以通过","进行分割指定；如果选项需要跟随一个参数，该选项后面需要加":"，如果选项后面需要跟随一个可选参数，该选项后面需要加"::"
+
+- 其他例子
+
+  ```
+  #!/bin/bash
+  
+  #echo $@
+  
+  #-o或--options选项后面接可接受的短选项，如ab:c::，表示可接受的短选项为-a -b -c，其中-a选项不接参数，-b选项后必须接参数，-c选项的参数为可选的
+  #-l或--long选项后面接可接受的长选项，用逗号分开，冒号的意义同短选项。
+  #-n选项后接选项解析错误时提示的脚本名字
+  ARGS=`getopt -o ab:c:: --long along,blong:,clong:: -n 'example.sh' -- "$@"`
+  if [ $? != 0 ]; then
+      echo "Terminating..."
+      exit 1
+  fi
+  
+  #echo $ARGS
+  #将规范化后的命令行参数分配至位置参数（$1,$2,...)
+  eval set -- "${ARGS}"
+  
+  while true
+  do
+      case "$1" in
+          -a|--along) 
+              echo "Option a";
+              shift
+              ;;
+          -b|--blong)
+              echo "Option b, argument $2";
+              shift 2
+              ;;
+          -c|--clong)
+              case "$2" in
+                  "")
+                      echo "Option c, no argument";
+                      shift 2  
+                      ;;
+                  *)
+                      echo "Option c, argument $2";
+                      shift 2;
+                      ;;
+              esac
+              ;;
+          --)
+              shift
+              break
+              ;;
+          *)
+              echo "Internal error!"
+              exit 1
+              ;;
+      esac
+  done
+  
+  #处理剩余的参数
+  for arg in $@
+  do
+      echo "processing $arg"
+  done
+  ```
+
+  - 这个set --也可以直接简写，不用set -- $()
+
+    ```
+    #/bin/bash
+    ###################################
+    # Extract command line options & values with getopt
+    #
+    set -- $(getopt -q ab:cd "$@")
+    #
+    echo 
+    while [ -n "$1" ]
+    do
+      case "$1" in
+      -a) echo "Found the -a option" ;;
+      -b) param="$2"
+          echo "Found the -b option, with parameter value $param"
+          shift ;;
+      -c) echo "Found the -c option" ;;
+      --) shift
+          break ;;
+       *) echo "$1 is not option";;
+    esac
+    
+      shift
+    done
+    #
+    count=1
+    for param in "$@"
+    do 
+      echo "Parameter #$count: $param"
+      count=$[ $count + 1 ]
+    done
+    #
+    ```
+
+    
