@@ -7328,4 +7328,27 @@ END     {
     #
     ```
 
-    
+
+##### 批量修改文件名
+
+###### rename
+
+```
+rename [options] expression replacement file...
+```
+
+- 其中file支持通配符
+
+- 如果只是修改当前目录下的文件只需要执行
+
+  ```
+  rename .a .adb *.a
+  ```
+
+- 如果目录有嵌套要修改所有的
+
+  ```
+  find ./ -name "*.a" | xargs rename .a .adb *
+  ```
+
+  - 没有xargs是不对的。
