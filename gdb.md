@@ -203,11 +203,25 @@
 ##### 调试多进程程序
 
 - attach PID号
+
 - pidof命令可以手动获取进程id号，pidof是shell命令
 
   - pidof + 进程名可以直接查看进程id，如果查不出来，带上全路径查看。
 
+- 使用GDB调试某个进程，如果该进程fork了子进程，GDB会继续调试该进程，子进程会不受干扰地运行下去。
+
+- gdb调试多进程程序时打印
+
+  ```
+  Detaching after fork from child process 28804.
+  Detaching after fork from child process 28806.
+  ```
+
+  - 当 GDB 正在调试一个特定的进程，并且该进程派生出一个子进程时，GDB 只能跟随两个进程中的一个，因此它必须分离（停止跟随）另一个。这打印告诉你这种选择性的分离。子进程将在不被 GDB 调试的情况下运行。
+  - 可以使用下面的方法调试子进程。
+
 - 前面提到，GDB 调试多进程程序时默认只调试父进程。对于内核版本为 2.5.46 甚至更高的 Linux 发行版系统来说，可以通过修改 follow-fork-mode 或者 detach-on-fork 选项的值来调整这一默认设置。
+
 - GDB follow-fork-mode选项
 
   - 确切地说，对于使用 fork() 或者 vfork() 函数构建的多进程程序，借助 follow-fork-mode 选项可以设定 GDB 调试父进程还是子进程。该选项的使用语法格式为：
@@ -221,6 +235,7 @@
     - parent：选项的默认值，表示 GDB 调试器默认只调试父进程；
 
     - child：和 parent 完全相反，它使的 GDB 只调试子进程。且当程序中包含多个子进程时，我们可以逐一对它们进行调试。
+
 - GDB detach-on-fork选项
 
   - 注意，借助 follow-fork-mode 选项，我们只能选择调试子进程还是父进程，且一经选定，调试过程中将无法改变。如果既想调试父进程，又想随时切换并调试某个子进程，就需要借助 detach-on-fork 选项。
