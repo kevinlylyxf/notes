@@ -204,6 +204,9 @@
 
 - attach PID号
 - pidof命令可以手动获取进程id号，pidof是shell命令
+
+  - pidof + 进程名可以直接查看进程id，如果查不出来，带上全路径查看。
+
 - 前面提到，GDB 调试多进程程序时默认只调试父进程。对于内核版本为 2.5.46 甚至更高的 Linux 发行版系统来说，可以通过修改 follow-fork-mode 或者 detach-on-fork 选项的值来调整这一默认设置。
 - GDB follow-fork-mode选项
 
