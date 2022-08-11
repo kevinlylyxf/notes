@@ -200,9 +200,136 @@
 - command&，意思是不用等调试执行结束，其后台执行（异步），直接就可以执行下一条调试信息。后台执行命令异步调试程序的方法，多用于 non-stop 模式中。虽然 all-stop 模式中也可以使用，但在前一个异步命令未执行完毕前，仍旧不能执行其它命令。
 - 对于在后台处于执行状态的线程，可以使用 interrupt 命令将其中断。在 all-stop 模式下，interrupt 命令作用于所有线程，即该命令可以令整个程序暂停执行；而在 non-stop 模式下，interrupt 命令仅作用于当前线程。 如果想另其作用于所有线程，可以执行 interrupt -a 命令。
 
+##### 调用GDB的方式
+
+- 直接使用 gdb 指令启动 GDB 调试器
+
+  ```
+  gdb
+  ```
+
+  - 此方式启动的 GDB 调试器，由于事先未指定要调试的具体程序，因此需启动后借助 file 或者 exec-file 命令指定
+
+- 调试尚未执行的程序
+
+  ```
+  gdb program
+  ```
+
+  - 其中，program 为可执行文件的文件名，例如上节创建好的 main.exe。
+
+- 调试正在执行的程序
+
+  - 在某些情况下，我们可能想调试一个当前已经启动的程序，但又不想重启该程序，就可以借助 GDB 调试器实现。
+
+  - 也就是说，GDB 可以调试正在运行的 C、C++ 程序。要知道，每个 C 或者 C++ 程序执行时，操作系统会使用 1 个（甚至多个）进程来运行它，并且为了方便管理当前系统中运行的诸多进程，每个进程都配有唯一的进程号（PID）。
+
+  - 如果需要使用 GDB 调试正在运行的 C、C++ 程序，需要事先找到该程序运行所对应的进程号。查找方式很简单，执行如下命令即可：
+
+    ```
+    pidof 文件名
+    ```
+
+  - 可以看到，当前正在执行的 main.exe 对应的进程号为 1830。在此基础上，可以调用 GDB 对该程序进行调试，调用指令有以下 3 种形式：
+
+    ```
+    \1) gdb attach PID
+    \2) gdb 文件名 PID
+    \3) gdb -p PID
+    ```
+
+  - 注意，当 GDB 调试器成功连接到指定进程上时，程序执行会暂停
+
+  - 注意，当调试完成后，如果想令当前程序进行执行，消除调试操作对它的影响，需手动将 GDB 调试器与程序分离，分离过程分为 2 步：
+
+    1. 执行 detach 指令，使 GDB 调试器和程序分离；
+    2. 执行 quit（或 q）指令，退出 GDB 调试。
+
+- 调试执行异常崩溃的程序
+
+  - 调试core.dump文件，如后面所述
+
+- 在启动 GDB 调试器时常用的指令参数，以及它们各自的功能。
+
+  | 参 数                 | 功 能                                                        |
+  | --------------------- | ------------------------------------------------------------ |
+  | -pid number -p number | 调试进程 ID 为 number 的程序。                               |
+  | -symbols file -s file | 仅从指定 file 文件中读取符号表。                             |
+  | -q -quiet -silent     | 取消启动 GDB 调试器时打印的介绍信息和版权信息                |
+  | -cd directory         | 以 directory 作为启动 GDB 调试器的工作目录，而非当前所在目录。 |
+  | --args 参数1 参数2... | 向可执行文件传递执行所需要的参数。                           |
+
 ##### 调试多进程程序
 
 - attach PID号
+
+  - 无论父进程还是子进程，都可以借助 attach 命令启动 GDB 调试它。attach 命令用于调试正在运行的进程，要知道对于每个运行的进程，操作系统都会为其配备一个独一无二的 ID 号。在得知目标子进程 ID 号的前提下，就可以借助 attach 命令来启动 GDB 对其进行调试。
+
+  - 这里还需要解决一个问题，很多场景中子进程的执行时间都是一瞬而逝的，这意味着，我们可能还未查到它的进程 ID 号，该进程就已经执行完了，何谈借助 attach 命令对其调试呢？对于 C、C++ 多进程程序，解决该问题最简单直接的方法是，在目标进程所执行代码的开头位置，添加一段延时执行的代码。
+
+    ```
+    #include <stdio.h>
+    #include <unistd.h>
+    int main()
+    {
+        pid_t pid = fork();
+        if(pid == 0)
+        {
+            printf("this is child,pid = %d\n",getpid());
+        }
+        else
+        {
+            printf("this is parent,pid = %d\n",getpid());
+        }
+        return 0;
+    }
+    
+    修改一下
+    if(pid == 0)
+    {
+        int num =10;
+        while(num==10){
+            sleep(10);
+        }
+        printf("this is child,pid = %d\n",getpid());
+    }
+    ```
+
+  - 可以看到，通过添加第 3~6 行代码，该进程执行时会直接进入死循环。这样做的好处有 2 个，其一是帮助 attach 命令成功捕捉到要调试的进程；其二是使用 GDB 调试该进程时，进程中真正的代码部分尚未得到执行，使得我们可以从头开始对进程中的代码进行调试。
+
+    ```
+    [root@bogon demo]# gdb myfork.exe -q
+    Reading symbols from ~/demo/myfork.exe...done.
+    (gdb) r
+    Starting program: ~/demo/myfork.exe
+    Detaching after fork from child process 5316.  <-- 子进程的 ID 号为 5316
+    this is parent,pid = 5313               <-- 父进程执行完毕
+    
+    Program exited normally.
+    (gdb) attach 5316                          <-- 跳转调试 ID 号为 5316 的子进程
+    ......
+    (gdb) n                                           <-- 程序正在运行，所有直接使用 next 命令就可以进行单步调试
+    Single stepping until exit from function __nanosleep_nocancel,
+    which has no line number information.
+    0x00000037ee2acb50 in sleep () from /lib64/libc.so.6
+    (gdb) n
+    Single stepping until exit from function sleep,
+    which has no line number information.
+    main () at myfork.c:10
+    10  while(num==10){
+    (gdb) p num=1
+    $1 = 1
+    (gdb) n                                           <-- 跳出循环
+    13         printf("this is child,pid = %d\n",getpid());
+    (gdb) c
+    Continuing.
+    this is child,pid = 5316
+    
+    Program exited normally.
+    (gdb) 
+    ```
+
+    
 
 - pidof命令可以手动获取进程id号，pidof是shell命令
 
@@ -236,6 +363,41 @@
 
     - child：和 parent 完全相反，它使的 GDB 只调试子进程。且当程序中包含多个子进程时，我们可以逐一对它们进行调试。
 
+
+    ```
+    (gdb) show follow-fork-mode
+    Debugger response to a program call of fork or vfork is "parent".
+    (gdb) set follow-fork-mode child                        <-- 调试子进程
+    (gdb) r 
+    Starting program: ~/demo/myfork.exe
+    [New process 5376]
+    this is parent,pid = 5375                  <-- 父进程执行完成
+    
+    Program received signal SIGTSTP, Stopped (user).
+    [Switching to process 5376]             <-- 自动进入子进程
+    0x00000037ee2accc0 in __nanosleep_nocancel () from /lib64/libc.so.6
+    (gdb) n
+    Single stepping until exit from function __nanosleep_nocancel,
+    which has no line number information.
+    0x00000037ee2acb50 in sleep () from /lib64/libc.so.6
+    (gdb) n
+    Single stepping until exit from function sleep,
+    which has no line number information.
+    main () at myfork.c:10
+    10  while(num==10){
+    (gdb) p num=1
+    $2 = 1
+    (gdb) c
+    Continuing.
+    this is child,pid = 5376
+    ```
+
+    ```
+    通过执行如下命令，我们可以轻松了解到当前调试环境中 follow-fork-mode 选项的值：
+    (gdb) show follow-fork-mode
+    Debugger response to a program call of fork or vfork is "child".
+    ```
+
 - GDB detach-on-fork选项
 
   - 注意，借助 follow-fork-mode 选项，我们只能选择调试子进程还是父进程，且一经选定，调试过程中将无法改变。如果既想调试父进程，又想随时切换并调试某个子进程，就需要借助 detach-on-fork 选项。
@@ -254,8 +416,6 @@
 
   - 和 detach-on-fork 搭配使用的，还有如表 1 所示的几个命令。
 
-    
-
     | 命令语法格式             | 功 能                                                        |
     | ------------------------ | ------------------------------------------------------------ |
     | (gdb)show detach-on-fork | 查看当前调试环境中 detach-on-fork 选项的值。                 |
@@ -265,9 +425,127 @@
     | (gdb) kill inferior id   | 断开 GDB 与指定 id 编号进程之间的联系，并中断该进程的执行。不过，该进程仍存在 info inferiors 打印的列表中，其 Describution 列为 <null>，并且借助 run 仍可以重新启用。 |
     | remove-inferior id       | 彻底删除指令 id 编号的进程（从 info inferiors 打印的列表中消除），不过在执行此操作之前，需先使用 detach inferior id 或者 kill inferior id 命令将该进程与 GDB 分离，同时确认其不是当前进程。 |
 
+  ```
+  (gdb) set detach-on-fork off             <-- 令 GDB 可调试多个进程
+  (gdb) b 6
+  Breakpoint 1 at 0x11b5: file myfork.c, line 6.
+  (gdb) r
+  Starting program: ~/demo/myfork.exe
+  
+  Breakpoint 1, main () at myfork.c:6
+  6     pid_t pid = fork();
+  (gdb) n
+  [New inferior 2 (process 5163)]           <-- 新增一个子进程，ID 号为 5163
+  Reading symbols from ~/demo/myfork.exe...
+  Reading symbols from /usr/lib/debug/lib/x86_64-linux-gnu/libc-2.31.so...
+  7     if(pid == 0)
+  (gdb) n                                                <-- 由于 GDB 默认调试父进程，因此进入 else 语句
+  17     int mnum=5;
+  (gdb) info inferiors     <-- 查看当前调试环境中的进程数，当前有 2 个进程，1 号进程为当前正在调试的进程
+    Num  Description       Executable       
+  * 1    process 5159      ~/demo/myfork.exe
+    2    process 5163       ~/demo/myfork.exe
+  (gdb) inferior 2                                   <-- 进入 id 号为 2 的子进程
+  [Switching to inferior 2 [process 5163] (~/demo/myfork.exe)]
+  [Switching to thread 2.1 (process 5163)]
+  (gdb) n
+  53 in ../sysdeps/unix/sysv/linux/arch-fork.h
+  (gdb) n
+  __libc_fork () at ../sysdeps/nptl/fork.c:78
+  78 ../sysdeps/nptl/fork.c: No such file or directory.
+  (gdb) n
+  ......                                                       <-- 执行多个 next 命令
+  (gdb) n
+  main () at myfork.c:7                           <-- 正式单步调试子进程  
+  7     if(pid == 0)
+  (gdb) n
+  9         int num =10;
+  (gdb)
+  ```
+
+  
+
 ##### 反向调试
 
-- 回退调试
+- 读到本节，我们已经学会了借助 GDB 调试器对代码进行单步调试和断点调试。这 2 种调试方法有一个共同的特点，即调试过程中代码一直都是“正向”执行的（从第一行代码执行到最后一行代码）。这就产生一个问题，如果调试过程中不小心多执行了一次 next、step 或者 continue 命令，又或者想再次查看刚刚程序执行的过程，该怎么办呢？
+
+- 面对这种情况，很多读者想到的是借助 run 命令重新启动程序，还原之前所做的所有调试工作。的确，这种方式可以解决上面列举的类似问题，只不过比较麻烦。事实上，如果我们使用的是 7.0 及以上版本的 GDB 调试器，还有一种更简单的解决方法，即反向调试。
+
+- 所谓反向调试，指的是临时改变程序的执行方向，反向执行指定行数的代码，此过程中 GDB 调试器可以消除这些代码所做的工作，将调试环境还原到这些代码未执行前的状态。
+
+- 要想反向调试程序，我们需要学会使用相应的一些命令。表 1 为大家罗列了完成反向调试常用的一些命令，并且展示各个命令的使用格式和对应的功能。
+
+  | 命 令                            | 功 能                                                        |
+  | -------------------------------- | ------------------------------------------------------------ |
+  | (gdb) record (gdb) record btrace | 让程序开始记录反向调试所必要的信息，其中包括保存程序每一步运行的结果等等信息。进行反向调试之前（启动程序之后），需执行此命令，否则是无法进行反向调试的。 |
+  | (gdb) reverse-continue (gdb) rc  | 反向运行程序，直到遇到使程序中断的事件，比如断点或者已经退回到 record 命令开启时程序执行到的位置。 |
+  | (gdb) reverse-step               | 反向执行一行代码，并在上一行代码的开头处暂停。和 step 命令类似，当反向遇到函数时，该命令会回退到函数内部，并在函数最后一行代码的开头处（通常为 return 0; ）暂停执行。 |
+  | (gdb) reverse-next               | 反向执行一行代码，并在上一行代码的开头处暂停。和 reverse-step 命令不同，该命令不会进入函数内部，而仅将被调用函数视为一行代码。 |
+  | (gdb) reverse-finish             | 当在函数内部进行反向调试时，该命令可以回退到调用当前函数的代码处。 |
+  | (gdb) set exec-direction mode    | mode 参数值可以为 forward （默认值）和 reverse：forward 表示 GDB 以正常的方式执行所有命令；reverse 表示 GDB 将反向执行所有命令，由此我们直接只用step、next、continue、finish 命令来反向调试程序。注意，return 命令不能在 reverse 模式中使用。 |
+
+  - 注意，表 1 中仅罗列了常用的一些命令，并且仅展示了各个命令最常用的语法格式。有关 GDB 调试器提供的更多支持反向调试的命令，以及各个命令不同的语法格式，感兴趣的读者可前往[ GDB官网](https://sourceware.org/gdb/current/onlinedocs/gdb/Reverse-Execution.html#Reverse-Execution)查看。
+
+- 程序如下
+
+  ```
+  #include <stdio.h>
+  int main ()
+  {
+      int n, sum;
+      n = 1;
+      sum = 0;
+      while (n <= 100)
+      {
+          sum = sum + n;
+          n = n + 1;
+      }
+      return 0;
+  }
+  ```
+
+  ```
+  (gdb) b 6
+  Breakpoint 1 at 0x40047f: file main.c, line 6.
+  (gdb) r
+  Starting program: ~/demo/main.exe
+  
+  Breakpoint 1, main () at main.c:6
+  6     sum = 0;
+  (gdb) record                                                       <-- 开启记录模式
+  (gdb) b 10 if n==10
+  Breakpoint 2 at 0x40048e: file main.c, line 10.
+  (gdb) c
+  Continuing.
+  
+  Breakpoint 2, main () at main.c:10
+  10         n = n + 1;
+  (gdb) p n                                                           <-- 执行至 n=10，sum=55
+  $1 = 10
+  (gdb) p sum
+  $2 = 55
+  (gdb) reverse-next                                            <-- 回退一步，暂停在第 9 行代码开头处
+  9         sum = sum + n;
+  (gdb) p n                                                           <-- 此时 n=10，sum=45
+  $3 = 10
+  (gdb) p sum
+  $4 = 45
+  (gdb) reverse-continue                                      <-- 反向执行代码，直至第 6 行，也就是开启记录的起始位置
+  Continuing.
+  
+  No more reverse-execution history.
+  main () at main.c:6
+  6     sum = 0;
+  (gdb) p n                                                             <-- 回到了 n=1，sum=0 的时候
+  $5 = 1
+  (gdb) p sum
+  $6 = 0
+  (gdb)
+  ```
+
+- 对于打印到屏幕的数据并不会因为打印语句的回退而自动消失。换句话说，对于程序中出现的打印语句（例如 C 语言中的 printf() 输出函数），虽然可以进行反向调试，但已经输出到屏幕上的数据不会因反向调试而撤销。另外，反向调试也不适用于包含 I/O 操作的代码。
+
+- 总的来说，尽管 GDB 调试功能尚不完善，但瑕不掩瑜，它能满足大部分场景的需要。在需要进行将代码反向执行时，读者可以先尝试使用 GDB 反向调试，其次再使用 run 命令重新开启调试。
 
 ##### 信号处理
 
