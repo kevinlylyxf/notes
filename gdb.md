@@ -391,7 +391,7 @@
     Continuing.
     this is child,pid = 5376
     ```
-
+    
     ```
     通过执行如下命令，我们可以轻松了解到当前调试环境中 follow-fork-mode 选项的值：
     (gdb) show follow-fork-mode
@@ -485,6 +485,9 @@
   | (gdb) set exec-direction mode    | mode 参数值可以为 forward （默认值）和 reverse：forward 表示 GDB 以正常的方式执行所有命令；reverse 表示 GDB 将反向执行所有命令，由此我们直接只用step、next、continue、finish 命令来反向调试程序。注意，return 命令不能在 reverse 模式中使用。 |
 
   - 注意，表 1 中仅罗列了常用的一些命令，并且仅展示了各个命令最常用的语法格式。有关 GDB 调试器提供的更多支持反向调试的命令，以及各个命令不同的语法格式，感兴趣的读者可前往[ GDB官网](https://sourceware.org/gdb/current/onlinedocs/gdb/Reverse-Execution.html#Reverse-Execution)查看。
+  - h running 可以查看各种运行命令，包括缩写。有的有缩写有的没有。
+  - record是记录一些反向调试所必要的信息，程序反向运行并不能无限的反向运行，只能运行到record刚开始的地方，因为record会记录一些信息，所以反向调试才会成功，如果没有record记录的这些信息，反向调试就会失败。所以需要record命令。
+  - info record可以看record信息。record btrace是记录分支的，如果只是一个record，和record命令一样，但是record btrace可以记录分支。类似于在记录一个，这只是猜测，需要后续验证一下。
 
 - 程序如下
 
