@@ -141,7 +141,7 @@
 | next（n）                               | 单步调试程序，即手动控制代码一行一行地执行。不会退出循环体。 |
 | step（s）                               | 如果有调用函数，进入调用的函数内部；否则，和 next 命令的功能一样。 |
 | until（u） until location（u location） | 当你厌倦了在一个循环体内单步跟踪时，单纯使用 until 命令，可以运行程序直到退出循环体。 until n 命令中，n 为某一行代码的行号，该命令会使程序运行至第 n 行代码处停止。 |
-| finish（fi）                            | 结束当前正在执行的函数，并在跳出函数后暂停程序的执行。       |
+| finish（fin）                           | 结束当前正在执行的函数，并在跳出函数后暂停程序的执行。       |
 | return（return）                        | 结束当前调用函数并返回指定值，到上一层函数调用处停止程序执行。 |
 | jump（j）                               | 使程序从当前要执行的代码处，直接跳转到指定位置处继续执行后续的代码。 |
 | print（p）                              | 打印指定变量的值。                                           |
@@ -150,6 +150,20 @@
 - 实际调试时，在某个函数中调试一段时间后，可能不需要再一步步执行到函数返回处，希望直接执行完当前函数，这时可以使用 finish 命令。与 finish 命令类似的还有 return 命令，它们都可以结束当前执行的函数。finish 命令和 return 命令的区别是，finish 命令会执行函数到正常退出；而 return 命令是立即结束执行当前函数并返回，也就是说，如果当前函数还有剩余的代码未执行完毕，也不会执行了。除此之外，return 命令还有一个功能，即可以指定该函数的返回值。例如return 5，指定函数返回值。
 
 ##### 查看变量的值
+
+- 查看变量的类型ptype命令。
+
+  ```
+  ptype[/FLAGS] TYPE | EXPRESSION
+  
+  Available FLAGS are:
+    /r    print in "raw" form; do not substitute typedefs
+    /m    do not print methods defined in a class
+    /M    print methods defined in a class
+    /t    do not print typedefs defined in a class
+    /T    print typedefs defined in a class
+    /o    print offsets and sizes of fields in a struct (like pahole)
+  ```
 
 - Printf：在 GDB 调试程序的过程中，输出或者修改指定变量或者表达式的值。其可以输出变量的值，也可以修改变量的值。例如p result = 10
 
