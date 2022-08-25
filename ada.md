@@ -1890,3 +1890,11 @@ end PutResult;
 ##### and 和and then ，or 和 or else
 
 - and在运算时两侧都会计算，不管第一天条件是否为FALSE，其他的一些语言例如c中&&在第一个条件为FALSE时第二个条件就不运算了。ada中用and then来进行类似的功能。or else也是类似，如果第一个为TRUE，第二个就不计算了。
+
+##### renames
+
+```
+LOCAL_EVENT : FPL_LOCAL_EVENT_TYPES.EVENTS renames FPL_DISK.EVENT_LIST.TABLE(INDEX);
+```
+
+- 上面这种用法是让LOCAL_EVENT这个变量代替比较难写的FPL_DISK.EVENT_LIST.TABLE(INDEX)，FPL_DISK.EVENT_LIST.TABLE(INDEX)的类型就是FPL_LOCAL_EVENT_TYPES.EVENTS
