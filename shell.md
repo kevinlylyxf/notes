@@ -7355,3 +7355,8 @@ rename [options] expression replacement file...
   ```
 
   - 没有xargs是不对的。
+
+##### nm、objdump、readelf
+
+- nm命令如果不加参数是用来查看目标文件或者可执行文件ELF的符号表的，所以要查看动态库的符号表时不加参数就会出错。如果要查看动态库的符号表需要加参数`nm -D`
+
