@@ -1697,15 +1697,17 @@ echo ${str##*aa}  #结果为 @@@
      echo -n "$n "
     ```
 
-  - 和[重定向操作符](http://shouce.jb51.net/shell/io-redirection.html#IOREDIRREF)（>）连用, 可以把一个文件的长度截短为零，文件的权限不变。如果文件不存在，则会创建一个新文件。
+    - 冒号和后面要有一个空格作为分割。
 
+  - 和[重定向操作符](http://shouce.jb51.net/shell/io-redirection.html#IOREDIRREF)（>）连用, 可以把一个文件的长度截短为零，文件的权限不变。如果文件不存在，则会创建一个新文件。
+  
     ```
      : > data.xxx   # 文件"data.xxx"现在长度为0了	      
      
      # 作用相同于：cat /dev/null >data.xxx（译者注：echo >data.xxx也可以）
      # 但是，用NULL（:）操作符不会产生一个新的进程，因为NULL操作符是内建的。
     ```
-
+  
   - 和添加重定向操作符（>>）连用(`**: >> target_file**`).如果目标文件存在则什么也没有发生，如果目标文件不存在，则创建它。
 
 ###### （）
