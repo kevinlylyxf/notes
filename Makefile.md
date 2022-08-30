@@ -1535,6 +1535,8 @@ test.o:test.c
   export <variable>
   ```
 
+- 在嵌套执行make的时候执行的是其他的makefile，我们可以简单理解为如果没有export的变量其他的makefile里面是不能直接使用的，如果export变量之后，其他的makefile可以使用export的变量，export的变量只能在子目录的makefile中使用，在和export所在makefile平级的目录是不能使用的，当然平级目录的子目录也不能使用。但是我们一般都在总控makefile里面export，也就不存在平级的子目录了。
+
 - 如果不需要那么可以这样来写：
 
   ```
