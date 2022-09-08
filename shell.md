@@ -4784,6 +4784,7 @@ ${#array_name[@]}
   -t或--tcp 显示TCP传输协议的连线状况。
   -u或--udp 显示UDP传输协议的连线状况。
   -i或--interfaces 显示网络界面信息表单。即网卡列表
+  -l或--listening Show only listening sockets.  (These are omitted by default.)显示监听端口
   -x或--unix 此参数的效果和指定"-A unix"参数相同。即本地套接字连接
   <Socket>={-t|--tcp} {-u|--udp} {-U|--udplite} {-S|--sctp} {-w|--raw}
              {-x|--unix} --ax25 --ipx --netrom
