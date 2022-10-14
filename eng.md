@@ -53,6 +53,42 @@
 - 某人某事有某种特性，就像是在外面包了一层包装，有某种气质 There's something dangerous about the wolf
 - 到处(在外面来来回回) Stop running about
 
+### 助动词
+
+- 助动词顾名思义就是一种帮助动词的词类，英文称作helPing veth或auxihary 。使用时置于动词前，使动词能表现出时态、语态、否定句、疑问句等变化。
+
+- 助动词的种类：
+
+  ```
+  be ( am 、 15 、 are 、 was 、 were 、 have / has / had been ) ; have ( has 、 had ) ; do( does 、 did ) ; shall ( should ) ; will ( would ) ; can ( could ) ; m盯（might ) ; must ; ought to ; need ; dare ; used to 。
+  ```
+
+##### be动词
+
+- be动词原为不完全不及物动词译成“是”此时要用名词或形容词作表语。
+
+  ```
+  He is handsome
+  They are good students .
+  ```
+
+- 但be动词之后亦可接现在分词或过去分词表进行时或被动语态，此时be动词就称为助动词。
+
+##### have
+
+- have 、 has 、 had十过去分词  己经⋯ ⋯
+
+- 以上结构构成动词的完成时态，have为助动词，译成“已经”
+
+  ```
+  He has written the letter .（现在完成时）
+  （他已把信写好了。）
+  I had finished the task before he came .（过去完成时）
+  （在他来之前我已完成此工作。）
+  ```
+
+  
+
 ### 一些疑惑
 
 #### 名词修饰名词
