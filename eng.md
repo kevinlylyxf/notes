@@ -87,6 +87,245 @@
   （在他来之前我已完成此工作。）
   ```
 
+
+##### do
+
+- do、does 、 did等助动词可用以形成下列结构：
+
+  ```
+  | do   | + not + 动词原形
+  | does |
+  | did  |
+  ```
+
+  - 任何动词与not连用形成否定时，一定要靠do 、 does 、 did再加上not协助
+
+  - 动词前若置not以外的否定副词，如：never (从未）、 seldom（不常）、 rarely（很少）、 hardly（几乎不）、scarcely（几乎不／非常少）等，则不须与do 、 does 、 did连用。
+
+- 疑问句
+
+  ```
+  Did you understand it?
+  Where does he live?
+  ```
+
+- 强势语气，即在肯定句的动词前，按时态、人称置入do 、 does或did，再将动词改为原形，此时do 、 does 、 did均译成“的确”
+
+  ```
+  He worked hard
+  He did work hard .
+  ```
+
+  - 有时祈使句（即一开头就是原形动词的句子），前面亦可加Do，造成强势语气，Do译成“务必”
+
+    ```
+    Be quiet
+    Do be quiet  务必要安静
+    ```
+
+- 否定倒装句
+
+  ```
+  Never did I know that he was so stupid
+  ```
+
+- 代动词，此种助动词用以代替句中已出现过的动词及其后的其他词类。
+
+  ```
+  Did you read this book ?
+  Yes , I did（= read this book）·
+  
+  I work as hard as he does(=works)
+  ```
+
+##### shall、will
+
+-  shall 、 will表“将要”．之后接原形动词。
+
+- 传统的语法常在shall及will二词上做文章，谓第一人称I之后须用shall, we之后可用shall或will，you之后须用shall ⋯等。现在的英文可没有如此的用法。而且
+  英美人士多已用will取代shall表单纯的一般将来时。因此赖老师建议你只须使用will就好，既口语化，又是常态用法。
+
+  ```
+  I will tell you the truth tomorrow .
+  
+  Will you be here tomorrow ?
+  ```
+
+  - 无论主语为第几人称均用will 
+
+- 但在下列结构中则仍习惯用shall代替will
+
+  - 征求对方意见时
+
+    ```
+    Shall I ⋯？ 要不要我⋯？
+    Shall I open the door ? = Would you like me to open the door?
+    ```
+
+  - 求对方台作时
+
+    ```
+    Shan we ...？我们...好吗？
+    Shall we go for a walk ? = Let's go for a walk,shall we?
+    ```
+
+  - 命令对方时
+
+    ```
+    You shall ... 你必须... = You must
+    
+    You shall obey the law .
+    ```
+
+  - 向对方保证某种承诺时
+
+    ```
+    You shall   你一定会
+    You shall have the present .= I promise that you will have the present 我保证你会得到礼物的
+    ```
+
+##### should
+
+-  should之后接原形动词。
+
+- should的主要功能就是表示一种义务，译为“应当”，此时等于ought to 。
+
+  ```
+  We should be kind to others  我们应该善待他人
+  ```
+
+- 但在下列结构时，习惯上用should，有其不同的意思。
+
+  ```
+  It is | natural | that ... should ...会...
+  	  | proper  |
+  	  | right   |
+  	  | advisable |
+  	  | desirable |
+  	  | no wonder |
+  自然的、适当的、正当的、恰当的、较好的、无疑的
+  
+  It is natural that he should get angry 他会生气是很自然的事
+  It is proper that one who works hard should be successful 努力的人会成功，这是合理的
+  
+  ```
+
+  
+
+### 疑问句
+
+#### 一般疑问句
+
+- 一般疑问句是疑问句的一种。它一般只用Yes…（是）或No…（否）来回答的[句子](https://baike.baidu.com/item/句子/4687927?fromModule=lemma_inlink)。
+
+##### 一般疑问句的结构
+
+- 一般疑问句有两个家族。
+
+- 第一家族为含be动词或情态动词的一般疑问句，其结构为：
+
+  ```
+  be 动词+ 主语 + 其它部分+？
+  情态动词 + 主语 + 动词原形 + 其它部分+？
+  
+  肯定回答用“Yes，主语+be\情态动词.”，否定回答用“No，主语+be\情态动词+not.”。be或情态动词和not可用缩写形式，主要有isn’t，aren’t，wasn’t，weren’t，can’t，mustn’t，needn’t等。
+  ```
+
+  - 例子
+
+    ```
+    问句： Is this your English book？
+    肯定回答： Yes，it is.
+    否定回答： No，it isn’t.
+    
+    问句： Can you speak English?
+    肯定回答： Yes，I can.
+    否定回答： No，I can’t.
+    
+    问句： Are these your English books？
+    肯定回答： Yes，they are.
+    否定回答： No，they aren’t.
+    
+    注意例句1和例句3，在回答时必须将this/that与these/those分别变为it和they。
+    ```
+
+- 另一家族为含行为动词（或称为实义动词）的一般疑问句，其结构为：
+
+  ```
+  助动词 + 主语 + 动词原形 + 其它+？
+  
+  肯定回答用“Yes, 主语+ do\does.”，否定回答用“No, 主语+do\does not.”。助动词也常用缩写形式，主要有don’t，doesn’t，didn’t等。
+  ```
+
+  - 这里的助动词就是Do，如果没有情态动词的话，就用do构成一般疑问句。
+
+  - 例子
+
+    ```
+    Do your parents like English？
+    肯答： Yes，they do.
+    否答： No，they don’t.
+    ```
+
+##### 陈述句变成一般疑问句
+
+- 第一家族：含be动词或情态动词的句子
+
+  ```
+  一调二改三问号
+  一调：即把句中的be或情态动词调到主语前；
+  二改：改换主语称谓，即将句中的主语I\my\mine\we\our\ours等第一人称分别改为相应的第二人称you\your\ yours等；
+  三问号：句末的句号改为问号。如：
+  I am an English teacher. → Are you an English teacher?
+  We can speak English fluently. → Can you speak English fluently?
+  ```
+
+- 第二家族：含行为动词（或称为实义动词）的句子
+
+  ```
+  一加二改三问号
+  一加：即在句首加助动词Do或Does；
+  二改：1、把谓语动词改为原形；2、改换主语称谓（同第一家族）；
+  三问号：句末的句号改为问号。
+  We read English every morning. → Do you read English every morning?
+  Tom’s father listens to English on the radio every evening. →
+  Tom’s father listen to English on the radio every evening?
+  ```
+
+  - 对于第二家族一定要注意动词的还原，因为时态与数的变化已经体现在助动词上了。
+
+##### 注意
+
+- 在一般疑问句中，要表达“一些”时 ，一般用any，但如果这个问句是用来表达 “建议、请求、邀请”等交际功能时 ，应该用some.
+
+  ```
+  Is there any tea in the cup?
+  Do you have any children?
+  May I have some fish?
+  Would you like some tea?
+  Shall we buy some vegetables?
+  Can I borrow some money from you?
+  Why not have some bread?
+  How about some orange juice?
+  ```
+
+- 在把肯定句改成否定句或一般疑问句的时候,要注意句中是否有already、some、something、somebody等词，如果有也必须进行改变，already要改成yet、some、something、somebody等分别改成any、anything、anybody等。另外，在改成否定句的时候注意把too改成either,both改成neither,all改成none等.在改成一般疑问句的时候，常常把第一人称I、we改成第二人称you。
+
+  ```
+  Are you from Japan﹖
+  Yes, I am． / No, I'm not．
+  Is her sister doing her homework now﹖
+  Yes, she is． / No, she isn't．
+  Does he work in a bank﹖
+  Yes, he does． / No, he doesn't．
+  Do you live near your school﹖
+  Yes, I do． / No, I don't．
+  Can you speak French﹖
+  Yes, I can． / No, I can't．
+  May I go home now﹖
+  Yes, you may． / No, you mustn't．
+  ```
+
   
 
 ### 一些疑惑
