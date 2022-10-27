@@ -150,6 +150,8 @@
 
   ![](https://mianbaoban-assets.oss-cn-shenzhen.aliyuncs.com/2021/3/77fiE3.jpeg)
 
+  ![](https://s2.51cto.com/images/blog/202108/31/524eb7ce68d3f7cc50e0d7976c9f52e5.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_30,g_se,x_10,y_10,shadow_20,type_ZmFuZ3poZW5naGVpdGk=/format,webp/resize,m_fixed,w_750)
+
 - `Sequence Number` 是记录包的序号，TCP 会按照报文字节进行编号，它是用来解决包在网络中乱序的问题。
 
 - `Acknowledgement Number` 确认序列号，是用于向发送方确认已经收到了哪些包，用来解决不丢包的问题。
