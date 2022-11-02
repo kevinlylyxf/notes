@@ -292,6 +292,8 @@
 
 ###### 通用标量类型属性
 
+- 一个标量就是一个单独的数(整数或实数)，标量就是一个数，只有大小没有方向。
+
 ```
 S'First 返回 S 类型的下限，返回值为 S 型。
 S'Last 返回 S 类型的上限，返回值为 S 型。
@@ -307,6 +309,10 @@ S'Wide_Width 表示 S'Wide_Image 返回的字符串的最大长度，返回值�
 S'Width 表示 S'Image 返回的字符串的最大长度,返回值为 universal_integer。
 S'Wide_Value 函数定义为: function S'Wide_Value ( Arg : Wide_String) return S'Base。是 S'Wide_Image 的逆过程，返回与“像”Arg 相对应的 S 类型的值。如: Float'Wide_Value ("9.00") = 9.00 。
 S'Value 与 S'Value 一样，但参数 Arg 是 String 类型。
+```
+
+```
+S'img和S'Image是一个的，都是将其他类型的数据转换为string，然后输出，只是img不需要括号的参数，image需要参数。
 ```
 
 ###### 通用离散类型属性
@@ -862,6 +868,8 @@ type array_name is array (index specification) of type;
 
 - 最后注意一下，变体部份要在记录类型声明的底部，不能在 Job 或其他成员前面---变体记录的变量大小是不定的
 
+- 注意Age变量也是record的一部分，也是占内存的，我们在打印的时候也能打印这个变量值。
+
 ##### 无约束记录
 
 - 上面的记录都是受限定的，如 创建 My_Card 后，它的判别式无法再被改动，Monthly_Income，Working_Address这些成员也无法拥有。但如果 ID_Card 的判别式有了初使值，则还有办法使记录动态改变。
@@ -918,6 +926,66 @@ type array_name is array (index specification) of type;
   ```
 
   - 这样 Buffer 两个成员的大小就取决于 Size 值，在文本处理中这种用法还是挺好的。
+
+##### record和c语言的接口
+
+- ada在创建了一个record类型之后，如果要和c语言接口进行使用，此时就需要决定各个类型占用多少字节，因为c语言每一个数据类型的字节数是固定的，所以我们要规定ada中每一个类型的数据占用的字节数。
+
+  - 例子
+
+  ```
+  for myRecord use
+      record
+          eta    at    8    range    0 .. 31;
+          ttg    at    16   range    0 .. 63;
+      end record;
+  ```
+
+  - eta 从记录开始的字节偏移量 8 的第 0 位开始，一直到第 31 位；即它占用从字节 8 开始的 32 位。
+
+- 我们的代码的例子
+
+  ```ada
+  type CONFIGURATION_POSITION_ITEM_T(POSITION_CATEGORY : POSITION_CATEGORY_T := POSITION_CATEGORY_DEF)
+              is
+      record
+        LOGICAL_POSITION_NAME  : LOGICAL_POSITION_NAME_T;
+        PHYSICAL_POSITION_NAME : PHYSICAL_POSITION_NAME_T;
+        PADDING_1              : PAD_BYTE_T;
+        POSITION_ROLE          : POSITION_ROLE_T;
+        PADDING_2              : PAD_BYTE_T;
+        case POSITION_CATEGORY is
+          when POSITION_IS_EC =>
+            PLC_LOGICAL_POS_NAME : LOGICAL_POSITION_NAME_T;
+          when POSITION_IS_PLC =>
+            DEFAULT_EC_LOGICAL_POS : LOGICAL_POSITION_NAME_T;
+          when others =>
+            DUMMY : LOGICAL_POSITION_NAME_T;
+        end case;
+      end record;
+  
+    for CONFIGURATION_POSITION_ITEM_T use
+      record
+        LOGICAL_POSITION_NAME  at 0  range 0 .. 39;
+        POSITION_CATEGORY      at 8  range 0 .. 7;
+        PHYSICAL_POSITION_NAME at 12 range 0 .. 39;
+        PLC_LOGICAL_POS_NAME   at 20 range 0 .. 39;
+        DEFAULT_EC_LOGICAL_POS at 20 range 0 .. 39;
+        DUMMY                  at 20 range 0 .. 39;
+        PADDING_1              at 25 range 0 .. 23;
+        POSITION_ROLE          at 28 range 0 .. 7;
+        PADDING_2              at 29 range 0 .. 23;
+      end record;
+    for CONFIGURATION_POSITION_ITEM_T'SIZE use 32 * STANDARD_TYPES.OCTET;
+    
+    
+    LOGICAL_POSITION_NAME_LENGTH : constant := 5;
+    subtype LOGICAL_POSITION_NAME_T is STRING (1 .. LOGICAL_POSITION_NAME_LENGTH);
+  
+  ```
+
+  - 例如上面LOGICAL_POSITION_NAME占用了5个字节，每一个字节8bits，所以从0到39正好40个bits，其他的多余的是补充字节，和c对应。
+  - 一般在用这种结构的时候定义一个S'Size这个确定字节数。
 
 #### 控制结构
 
