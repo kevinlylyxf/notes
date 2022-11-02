@@ -732,7 +732,18 @@ int main(){
 - 在实际编程中，有时数组的长度不能提前确定，如果这个变化范围小，那么使用常量表达式定义一个足够大的数组就可以，如果这个变化范围很大，就可能会浪费内存，这时就可以使用变长数组。请看下面的代码：
 
   ```
-  #include <stdio.h>int main(){    int n;    printf("Input string length: ");    scanf("%d", &n);    scanf("%*[^\n]"); scanf("%*c");  //清空输入缓冲区    char str[n];    printf("Input a string: ");    gets(str);    puts(str);    return 0;}
+  #include <stdio.h>
+  int main(){    
+  	int n;    
+  	printf("Input string length: ");    
+  	scanf("%d", &n);    
+  	scanf("%*[^\n]"); 
+  	scanf("%*c");  //清空输入缓冲区    
+  	char str[n];    
+  	printf("Input a string: ");    
+  	gets(str);    
+  	puts(str);    
+  	return 0;}
   ```
 
   - 在 GCC 和 Xcode 下的运行结果：
@@ -796,7 +807,7 @@ int main(){
   }
   ```
 
-  a、b、x、y 都是在函数外部定义的全局变量。C语言代码是从前往后依次执行的，由于 x、y 定义在函数 func1() 之后，所以在 func1() 内无效；而 a、b 定义在源程序的开头，所以在 func1()、func2() 和 main() 内都有效。
+  - a、b、x、y 都是在函数外部定义的全局变量。C语言代码是从前往后依次执行的，由于 x、y 定义在函数 func1() 之后，所以在 func1() 内无效；而 a、b 定义在源程序的开头，所以在 func1()、func2() 和 main() 内都有效。
 
 ##### 递归函数
 
