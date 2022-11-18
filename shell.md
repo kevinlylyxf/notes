@@ -7427,6 +7427,52 @@ END     {
   [meizhaohui@hellogitlab ~]$
   ```
 
+###### Nerd font
+
+- echo支持一些转义字符，nerd font就是一堆特殊的符号和字体，对于特殊的符号，在终端中也可以输出出来，当然终端要配置对应的字体，转义如下
+
+  ```
+  \uHHHH
+  	the Unicode (ISO/IEC 10646) character whose value is the hexadecimal value HHHH (one to four hex digits)
+  \xHH
+  the eight-bit character whose value is the hexadecimal value HH (one or two hex digits)
+  ```
+
+  - 所以在终端中可以输出一些特殊的符号，这些符号对应的UTF-8的值在nerd font官网上可以查到，以四位十六进制的数表示。
+  - \u在bash 4.2之后才支持的，所以man echo没有查到这个，只有在bash官网手册上才查到。
+
+- 在vim配置中也是以\uHHHH表示的，这些最后在终端中以对应的符号表示
+
+  ```
+  "suggest.completionItemKindLabels": {
+  		"class": "\uf0e8",
+  		"color": "\ue22b",
+  		"constant": "\uf8fe",
+  		"default": "\uf29c",
+  		"enum": "\uf435",
+  		"enumMember": "\uf02b",
+  		"event": "\ufacd",
+  		"field": "\uf93d",
+  		"file": "\uf723",
+  		"folder": "\uf115",
+  		"function": "\u0192",
+  		"interface": "\uf417",
+  		"keyword": "\uf1de",
+  		"method": "\uf6a6",
+  		"module": "\uf40d",
+  		"operator": "\uf915",
+  		"property": "\ue624",
+  		"reference": "\ufa46",
+  		"snippet": "\ue60b",
+  		"struct": "\ufb44",
+  		"text": "\ue612",
+  		"typeParameter": "\uf728",
+  		"unit": "\uf475",
+  		"value": "\uf89f",
+  		"variable": "\ue71b"
+  	},
+  ```
+
 ##### grep
 
 - grep -B 连带显示查找到的行上面的几行，-B后面跟具体的数字几行
