@@ -7777,6 +7777,17 @@ rename [options] expression replacement file...
 
   - 没有xargs是不对的。
 
+- 如果删除文件名中的某一个子字符串，
+
+  ```
+  rename '_with_long_name' '' file_with_long_name.*
+         will remove the substring in the filenames.
+  示例
+  find ./ -name "*.adb" | xargs rename '_b' '' *.adb
+  将查找出来的所有文件名中的_b去掉。
+  mdx_timer_b.adb变为mdx_timer.adb
+  ```
+
 ##### nm、objdump、readelf
 
 - nm命令如果不加参数是用来查看目标文件或者可执行文件ELF的符号表的，所以要查看动态库的符号表时不加参数就会出错。如果要查看动态库的符号表需要加参数`nm -D`

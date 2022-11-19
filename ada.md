@@ -1,6 +1,17 @@
-#### ada编译理解
+#### ada编译gnat
 
 - [ada编译理解](https://www.wenmi.com/article/ptlf7v04iygi.html)
+
+- 编译步骤
+
+  ```
+  Three steps are needed to create an executable file from an Ada source file:
+  	The source file(s) must be compiled.    gcc编译，对于每一个只要gcc -c *.adb，不用管ads
+  	The file(s) must be bound using the GNAT binder.  gnatbind
+  	All appropriate object files must be linked to produce an executable. gnatlink
+  ```
+
+- 只有一个文件main.adb
 
   ```
   $ gnatmake main.adb
@@ -8,6 +19,18 @@
   gnatbind -x main.ali
   gnatlink main.ali
   ```
+
+- 对于多个文件
+
+  ```
+  $ gnatmake main.adb
+  gcc -c main.adb
+  gcc -c overload.adb
+  gnatbind -x main.ali
+  gnatlink main.ali
+  ```
+
+  - 对于多个文件也是执行gnatmake + 主文件，其中的过程会自己执行。
 
 #### 数据类型
 
