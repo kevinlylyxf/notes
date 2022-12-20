@@ -4472,6 +4472,65 @@ ${#array_name[@]}
 
   - `-p`参数打印出要执行的命令，询问用户是否要执行。
 
+- bilibili介绍
+
+  - 主要讲述以下两个shell指令区别，通过这个例子来理解xargs与管道
+
+    ```
+    $ find . -name "test*" | grep js
+    
+    $ find . -name "test*" | xargs grep js
+    ```
+
+  - 不加xargs的管道
+
+    - 管道都是前面的输出作为后面的输入，而不加xargs这种正常的管道，讲的具体一点是:前面的输出变成一个匿名文件，后面的shell接这个匿名文件。我们详细展开第一句的效果等同于下面的shell，这样作用就很明显了，就是先找到当前目录下test开头的文件列表，然后呢这些文件名里面含有js字样的给过滤出来
+
+      ```
+      $ find . -name "test*" > 1.output
+      $ grep js 1.output
+      ```
+
+    - 因为我当前目录有多个testx.js文件，所以上述指令结果如下
+
+      ```
+      find . -name "test*" | grep js
+      ./test1.js
+      ./test2.js
+      ./test3.js
+      ./test4.js
+      ./test5.js
+      ./test6.js
+      ```
+
+  - 加xargs的管道
+
+    - 同样还是前面的输出作为后面的输入，只不过这次没有中间文件了，前面shell的字符串输出，通过空格和回车拆分成1或多条，后面shell接这一或多条。我们将第二局shell展开，就等效于下面指令，即找到所有test开头的文件，并在文件内容里寻找js字样，注意不加xargs是在文件名里寻找。可以通过xargs后面加-t查看实际执行的shell。
+
+      ```
+      $ find . -name "test*"
+      ./test1.js
+      ./test2.js
+      ./test3.js
+      ./test4.js
+      ./test5.js
+      ./test6.js
+      $ grep js ./test1.js ./test2.js ./test3.js ./test4.js ./test5.js ./test6.js
+      ```
+
+    - 这几个js文件的内容中基本也都含有js字样，指令结果如下。
+
+    ```
+    $ find . -name "test*" | xargs grep js
+    ./test1.js:const data = await readJSONFromURL('https://jsonplaceholder.typicode.com/comments');
+    ./test2.js:const content = await Deno.readTextFile("test2.js");
+    ./test4.js:fs.readFile('test4.js', 'utf8', function(err, data) {
+    ./test4.js:const data = await Deno.readTextFile('test4.js');
+    ./test5.js:import {express,readJSONFromURL} from "./deps.js";
+    ./test5.js:    const data = await readJSONFromURL('https://jsonplaceholder.typicode.com 
+    ```
+
+
 ##### su -
 
 - su和su - 的区别，su不切换当前的家目录，不改变当前环境，跟最开始登录一样。相当于su 到那个用户获得那个用户对文件的权限，而su - 切换用户之后会切换到用户的家目录。其中的-号相当于更新当前的环境，相当于重新登录用户。
