@@ -335,7 +335,9 @@ S'Value 与 S'Value 一样，但参数 Arg 是 String 类型。
 ```
 
 ```
-S'img和S'Image是一个的，都是将其他类型的数据转换为string，然后输出，只是img不需要括号的参数，image需要参数。
+S'img和S'Image是一个意思，都是将其他类型的数据转换为string，然后输出，只是img不需要括号的参数，image需要参数。
+INTEGER'image(INTEGER(TEMP_DATE.HOURS))  这个是拼接字符串的一部分
+DEBUG.DISPLAY("M4029_3 : Unknown field " & FIELD'img & ", ignore it!" );
 ```
 
 ###### 通用离散类型属性
