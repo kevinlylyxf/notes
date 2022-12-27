@@ -1916,6 +1916,21 @@ int main(){
 
 - 由于常量一旦被创建后其值就不能再改变，所以常量必须在定义的同时赋值（初始化），后面的任何赋值行为都将引发错误。一如既往，初始化常量可以使用任意形式的表达式，可以使用函数，变量初始化。
 
+  ```c
+  #include <stdio.h>
+  int getNum(){
+      return 100;
+  }
+  int main(){
+      int n = 90;
+      const int MaxNum1 = getNum();  //运行时初始化
+      const int MaxNum2 = n;  //运行时初始化
+      const int MaxNum3 = 80;  //编译时初始化
+      printf("%d, %d, %d\n", MaxNum1, MaxNum2, MaxNum3);
+      return 0;
+  }
+  ```
+
 - 非const变量默认为extern。要使const变量能够在其他文件中访问，必须在文件中显式地指定它为extern。
 
   ```c++
