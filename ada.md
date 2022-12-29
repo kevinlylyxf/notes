@@ -331,7 +331,7 @@ S'Image 与 S'Wide_Image 一样，但返回字符串型 String 。
 S'Wide_Width 表示 S'Wide_Image 返回的字符串的最大长度，返回值为 universal_integer。
 S'Width 表示 S'Image 返回的字符串的最大长度,返回值为 universal_integer。
 S'Wide_Value 函数定义为: function S'Wide_Value ( Arg : Wide_String) return S'Base。是 S'Wide_Image 的逆过程，返回与“像”Arg 相对应的 S 类型的值。如: Float'Wide_Value ("9.00") = 9.00 。
-S'Value 与 S'Value 一样，但参数 Arg 是 String 类型。
+S'Value 与 S'Wide_Value 一样，但参数 Arg 是 String 类型。
 ```
 
 ```
