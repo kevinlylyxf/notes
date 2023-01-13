@@ -34,6 +34,19 @@
 
 #### 数据类型
 
+##### 基型数字
+
+- 在大部分语言中，都使用 10 进制数字表示；Ada 里整数可以不用 10 进制的表示方法书写，而是直接使用 2 至 16 进制的表示法，格式为:Base#Number#，Base 表示所采用的进制，Number 为该进制下所表示的数字。如：
+
+  ```
+  16#90#,表示 16 进制数 90，其 10 进值为 144；
+  
+  代码实例
+  subtype SSR_CODES is INTEGER_16 range 0 .. 8#7_777#;
+  如果用4096表示不太好看，因为SSR是8进制的，最大到7777，所以我们用这个8#7777#来表示最大值，和4096一样。
+  只是表示的方法好看与否，和其他的没关系。
+  ```
+
 ##### 创建新的数据类型
 
 - 创建一个新类型，需要使用保留字 type，is,range。格式如下： 
@@ -1263,6 +1276,8 @@ type array_name is array (index specification) of type;
     end Swap;
   ```
 
+  -   块语句可以写identifier也可以不写，declare下面跟变量的定义什么的
+  -   快语句的主要作用为可以在declare下面定义一些局部变量，这样就可以在用的时候在定义，不用直接写到大函数的begin前面了。
   -   其中的Temp为局部变量，Swap 外的语句无法访问它，Temp也可写成Swap.Temp,以此从形式上区分局部变量和全局变量。块语句的用法，还是通过实例来讲解方便：
 
   ```
@@ -1969,6 +1984,162 @@ end PutResult;
   ```
 
 #### 类属单元
+
+- 代码重用是多年来软件开发一直强调的重点，也是程序员们的一个希望。Ada 里提供了类属单元(Generic unit)的功能,使我们有可能创建更为通用的子程序或程序包。
+- 一个类属单元可以是程序包或子程序，允许执行的运算不依赖特定数据类型。比方说一个是类属单元的 Swap 函数，它可以接受 Integer，Float 等各种数据类型的参数，而无需为不同数据类型的参数各写一个 Swap。使用一个类属单元需要设置它的特定数据类型，这个过程称之为实例化(instantiation)，如使用上面所说的 Swap 函数时，要配置它将要处理的数据类型。
+
+##### 类属子程序
+
+- 类属子程序即子程序为类属单元。下面通过一个 Swap 的例子来讲解：
+
+  ```
+  000 -- filename:Swap.adb
+  001 with Ada.Integer_Text_IO; use Ada.Integer_Text_IO;
+  002 procedure Swap is
+  003 generic
+  004 	type Element_Type is private;
+  005		procedure Generic_Swap(Left, Right : in out Element_Type);
+  006		procedure Generic_Swap(Left,Right:in out Element_Type) is
+  007			Temporary : Element_Type;
+  008		begin
+  009			Temporary := Left;
+  010			Left := Right;
+  012			Right := Temporary;
+  013 	end Generic_Swap;
+  014 procedure Swap is new Generic_Swap(Integer);
+  015		A, B : Integer;
+  016 begin
+  017     A := 5;
+  018     B := 7;
+  019		Swap(A, B);
+  020 end Swap;
+  ```
+
+- 14行实例化之后，就可以直接使用了，19行直接使用。
+
+- 实例化的参数是里面generic的类型，最后实际使用的时候还要使用函数定义时的类型和数量。
+
+- [003]-[004] 声明一个类属数据类型 Element_Type,[005]声明一个类属子程序 Generic_Swap，它的参数是类属类型(generic type)，[006]-[013] 是 Generic_Swap 函数的具体实现。但这些还不够，Element_Type 并不是什么整型、浮点型等具体数据类型，只是抽象意义上的类属类型，为形式参数。因此还需要[014] 创建实际的子程序 Swap，这里的 Integer 就是一个实际参数,表示 Swap 能接受 Integer 类型的参数，这个步骤称之为实例化。当然为了可以交换浮点等其它数据类型，也可以再添加：
+
+  ```
+  procedure Swap is new Generic_Swap(Float);
+  ```
+
+- 15行定义整形的A和B是第二行的Swap函数的定义，这个函数如果调用的话只能执行固定的参数，如果我们想在任何地方实例化这个，需要将类属子程序拆分出来，意思为将generic和end generic_swap这部分拆成一个单独的文件，这样我们就可以任意实例化这个类属子程序。
+
+- 拆出来也需要将5行声明写上，声明和定义可以写在一个文件里面。
+
+- 自己的实例
+
+  ```
+  with FDP_RETRY;
+  use  FDP_RETRY;
+  with FPL_OUTPUT;
+  
+  generic
+  
+    type MESSAGE_TYPE is private;
+    with procedure RECEIVE
+        (MESSAGE    :    out MESSAGE_TYPE;
+         FIFO_EMPTY :    out BOOLEAN;
+         PROCESSING :    out FDP_RETRY.PROCESSING_STATE_T);
+    type REPLY_DATA_T is private;
+    with function EXTRACT_ISSUER
+        (MESSAGE : in     MESSAGE_TYPE)
+        return STRING;
+    with procedure GET_LAST_SENT_ANSWER
+        (GROUP         : in     STRING;
+         ANSWER_FIFO   :    out FPL_OUTPUT.TC_FIFO_NAME_TYPE;
+         ANSWERED_DATA :    out REPLY_DATA_T);
+    with procedure SEND_AGAIN_ACK
+        (MESSAGE : in     REPLY_DATA_T;
+         GROUP   : in     STRING);
+  
+  procedure GENERIC_SECURED_RECEPTION
+      (MESSAGE :    out MESSAGE_TYPE;
+       VALID   :    out BOOLEAN);
+  
+  with BS_DEFINITIONS;
+  with DEBUG;
+  with STRING_UTIL;
+  procedure GENERIC_SECURED_RECEPTION
+      (MESSAGE :    out MESSAGE_TYPE;
+       VALID   :    out BOOLEAN) is
+  
+    FIFO_IS_EMPTY : BOOLEAN := FALSE;
+    GENERIC_SECURED_RECEPTION_A_IDENT :
+      constant STRING := "@(#) TAAATS PROGRAM FILE generic_secured_reception.a Release 1.1 2/13/98 00:07:27 ~";
+    STATE_OF_PROCESSING : FDP_RETRY.PROCESSING_STATE_T;
+    MY_MESSAGE          : MESSAGE_TYPE;
+  
+  begin  -- GENERIC_SECURED_RECEPTION
+    RECEIVE(MESSAGE    => MY_MESSAGE,
+            FIFO_EMPTY => FIFO_IS_EMPTY,
+            PROCESSING => STATE_OF_PROCESSING);
+  
+    VALID := not FIFO_IS_EMPTY and then STATE_OF_PROCESSING = FDP_RETRY.NEW_MESSAGE;
+    if not FIFO_IS_EMPTY
+    then
+      case STATE_OF_PROCESSING is
+        when FDP_RETRY.NEW_MESSAGE =>
+          MESSAGE := MY_MESSAGE;
+        when FDP_RETRY.MESSAGE_RECEIVED_UNDER_PROCESSING =>
+          null;
+        when FDP_RETRY.MESSAGE_RECEIVED_ANSWERED =>
+          declare
+  
+            ISSUER_GROUP : STRING (1 .. BS_DEFINITIONS.MAX_GROUP_LG);
+            REPLY_FIFO   : FPL_OUTPUT.TC_FIFO_NAME_TYPE;
+            REPLY_DATA   : REPLY_DATA_T;
+  
+          begin
+            STRING_UTIL.FILL_STRING
+                  (SOURCE => EXTRACT_ISSUER(MY_MESSAGE),
+                   TARGET => ISSUER_GROUP);
+            GET_LAST_SENT_ANSWER(GROUP         => ISSUER_GROUP,
+                                 ANSWER_FIFO   => REPLY_FIFO,
+                                 ANSWERED_DATA => REPLY_DATA);
+            SEND_AGAIN_ACK(MESSAGE => REPLY_DATA,
+                           GROUP   => ISSUER_GROUP);
+            DEBUG.DISPLAY("FPL: Auto-repeat of proc result after UBSS secured message repeat");
+          exception
+            when others =>
+              MESSAGE := MY_MESSAGE;
+              VALID := TRUE;
+          end;
+  
+      end case;
+    end if;
+  end GENERIC_SECURED_RECEPTION;
+  ```
+
+  ```
+  实例化
+  procedure RECEIVE_MMI_FLIGHT_PLAN_COMMAND_MSG is new GENERIC_SECURED_RECEPTION
+          (MESSAGE_TYPE         => IAC_MMI_TO_FDP_TYPES.MESSAGE_T,
+           RECEIVE              => MMI_TO_FDP_FLIGHT_PLAN_COMMAND_FIFO.RECEIVE,
+           REPLY_DATA_T         => IAC_FDP_TO_MMI_TYPES.MESSAGE_T,
+           EXTRACT_ISSUER       => RX_FIFO.EXTRACT_ISSUER,
+           GET_LAST_SENT_ANSWER => MMI_TO_FDP_FLIGHT_PLAN_COMMAND_FIFO.GET_LAST_SENT_ANSWER,
+           SEND_AGAIN_ACK       => SEND_AGAIN_MMI_ACK);
+  ```
+
+  - 从上面可以看出generic和函数声明的地方之间都是可以传进来的参数，所以with 的那些函数也是可以传进来的，例如上面的实例化。传进来的函数参数类型要和generic定义的一样。
+
+##### 类属程序包
+
+- 如果一个程序包内的子程序都需要成为类属子程序，并且实例化时一次性使整个程序包的子程序能处理所指定的数据类型，使用类属程序包就比较适合。将上例 swap 改动一下：
+
+  ```
+  000 -- filename:generic_swap.ads
+  001 generic
+  002 	type Element_Type is private;
+  003 package Generic_Swap is
+  004     procedure Generic_Swap(Left, Right : in out Element_Type);
+  005 end Generic_swap;
+  ```
+
+- 类属程序包实例化是将package实例化，然后我们就可以直接用里面的函数了，里面的函数不用单独实例化。
 
 #### 一些记录
 
