@@ -7209,9 +7209,27 @@ END     {
 ##### tail
 
 - 用于显示文本文件的末尾几行。
-- -f ：tail-f 命令可用于监视另一个进程正在写入的文件的增长。
+
+  ```shell
+  tail notes.log         # 默认显示最后 10 行
+  ```
+
+- -f ：常用于查阅正在改变的日志文件。**tail -f filename** 会把 filename 文件里的最尾部的内容显示在屏幕上，并且不断刷新，只要 filename 更新就可以看到最新的文件内容。
+
+  ```shell
+  tail -f notes.log
+  此命令显示 notes.log 文件的最后 10 行。当将某些行添加至 notes.log 文件时，tail 命令会继续显示这些行。 显示一直继续，直到您按下（Ctrl-C）组合键停止显示。
+  ```
+
 - -n Number：从首行或末行位置来读取指定文件，位置由 Number 变量的符号（+ 或 - 或无）表示，并通过行号Number 进行位移。
+  
   - tail -n +0表示从第一行就开始打印到最后，tail -n 20 和tail -n -20一样都是打印最后20行。
+  
+  - 显示文件 notes.log 的内容，从第 20 行至文件末尾:
+  
+    ```shell
+    tail -n +20 notes.log
+    ```
 
 ##### more、less
 
