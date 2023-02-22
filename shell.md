@@ -5388,6 +5388,24 @@ ${#array_name[@]}
   - 上面是两个脚本，shell脚本调用expect脚本。
   -  set 赋值，set host [lindex $argv 0] 就是将参数0赋值给变量host，其中，[] 括起命令，执行括号内命令后返回结果，lindex是取列表中的某个参数，$argv则是参数列表。
 
+##### grep
+
+```
+-A NUM, --after-context=NUM
+	Print NUM lines of trailing context after matching lines.  Places a line  containing  a  group  separator  (--)  between  		contiguous  groups  of  matches。打印匹配行得后面几行
+-B NUM, --before-context=NUM
+	Print  NUM  lines  of  leading  context  before  matching  lines.   Places  a  line  containing  a  group separator (--) 		between contiguous groups of matches.打印匹配行得前面几行
+-P, --perl-regexp
+	Interpret PATTERN as a Perl regular expression  正则匹配
+-i, --ignore-case
+-v, --invert-match
+	Invert the sense of matching, to select non-matching lines.
+-r，--recursive
+	Read all files under each directory, recursively  递归文件夹
+-n, --line-number
+    Prefix each line of output with the 1-based line number within its input file. 输出行号
+```
+
 ##### sed
 
 - **sed** 是一种流编辑器，它是文本处理中非常重要的工具，能够完美的配合正则表达式使用，功能不同凡响。处理时，把当前处理的行存储在临时缓冲区中，称为“模式空间”（pattern space），接着用sed命令处理缓冲区中的内容，处理完成后，把缓冲区的内容送往屏幕。接着处理下一行，这样不断重复，直到文件末尾。文件内容并没有 改变，除非你使用重定向存储输出。Sed主要用来自动编辑一个或多个文件；简化对文件的反复操作；编写转换程序等。
@@ -7549,10 +7567,6 @@ END     {
   		"variable": "\ue71b"
   	},
   ```
-
-##### grep
-
-- grep -B 连带显示查找到的行上面的几行，-B后面跟具体的数字几行
 
 #### 其他
 
