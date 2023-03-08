@@ -2162,3 +2162,8 @@ LOCAL_EVENT : FPL_LOCAL_EVENT_TYPES.EVENTS renames FPL_DISK.EVENT_LIST.TABLE(IND
 ```
 
 - 上面这种用法是让LOCAL_EVENT这个变量代替比较难写的FPL_DISK.EVENT_LIST.TABLE(INDEX)，FPL_DISK.EVENT_LIST.TABLE(INDEX)的类型就是FPL_LOCAL_EVENT_TYPES.EVENTS
+
+##### 关于with
+
+- with后面跟的不一定是一个程序包，也可以是一个procedure，这是经过在虚拟机上验证过的，我们可以在一个文件中写一个procedure，然后在主程序中with一下这个procedure，这样可以直接使用，不用use那个procedure。
+
