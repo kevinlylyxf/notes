@@ -983,6 +983,33 @@ type array_name is array (index specification) of type;
 
   - eta 从记录开始的字节偏移量 8 的第 0 位开始，一直到第 31 位；即它占用从字节 8 开始的 32 位。
 
+- 也可以不是record，也可以是枚举类型，例如
+
+  ```ada
+  type TITLES is
+        (NONE,
+         SYSTEM_MAPS,
+         SET_MAPS,
+         DAIW_MAPS,
+         DTZ_MAPS,
+         NTZ_MAPS,
+         RESTRICTED_MAPS,
+         SYSTEM_MAPS_LIST,
+         SYSTEM_MAPS_COLOURS);
+  
+    for TITLES use (NONE                => 0,
+                    SYSTEM_MAPS         => 1,
+                    SET_MAPS            => 2,
+                    DAIW_MAPS           => 3,
+                    DTZ_MAPS            => 4,
+                    NTZ_MAPS            => 5,
+                    RESTRICTED_MAPS     => 6,
+                    SYSTEM_MAPS_LIST    => 7,
+                    SYSTEM_MAPS_COLOURS => 8);
+  
+    for TITLES'SIZE use 32;
+  ```
+
 - 我们的代码的例子
 
   ```ada
