@@ -132,6 +132,164 @@
 - 在公司的电脑不能链接实验室的电脑，因为实验室电脑是局域网，要进行内网穿透才行，此时进行的是端口映射，ifconfig和实际我们要连的端口不一样。例如阿里云就是进行了内网穿透我们才能链接自己的小服务器。链接时我们不需要考虑IP地址问题，因为里面有各种机制，NAT转发什么的来确保IP地址不重复，而且我们链接是有用户名和密码。
 - 一个IP地址有多级路由的时候，如果不再一个子网内，ping不通。举例来说，我的mac电脑链接焦伟电脑放出来的wifi，我的电脑能ping通国强的电脑，但是国强的ping不通我的电脑。我的理解是如果我的电脑链接国强的电脑，其会一级一级的网上找，如果国强的电脑没有建一个小子网，我就能ping通，如果国强电脑那新建了一个子网，我就ping不通。意思是网络一级一级往上找，如果寻找的IP地址和自己一级一级上去的地址在一个直接子网内即对方IP没有新建一个子网然后往下，就可以ping通。反之国强想连我的，我的是在新建的子网，所以联不通，但是我用内网穿透，映射到一个直接子网内就能使用。如果国强那新建了一个子网，但是它也使用内网穿透映射到上面，我就能ping通，能不能找到内网里面的IP我们就不管了，应该能找到。
 
+#### 网关配置
+
+- 查看当前主机的路由表有两个命令`route -n`和`ip route show`
+
+  - ip route显示如下
+
+    ```
+    $ ip route show 
+    default via 192.168.56.2 dev eth0 
+    169.254.0.0/16 dev eth0  scope link  metric 1002 
+    192.168.56.0/24 dev eth0  proto kernel  scope link  src 192.168.56.11
+    
+    $ ip route show | column -t       # 格式化一下
+    default          via  192.168.56.2  dev    eth0
+    169.254.0.0/16   dev  eth0          scope  link    metric  1002
+    192.168.56.0/24  dev  eth0          proto  kernel  scope   link  src  192.168.56.1
+    ```
+
+    - 看环境路由表的时候，会看到一些如下的字段`proto kernel scope link src`
+    - `scope` *类型* 指的是路由前缀覆盖的目标地址范围。 `scope link`表示在设备的网段内允许通过该路由进行通信。 通过其他往网段的话的话，应该使用路由。
+    - `protocol`*类型* 是该路由的路由协议标识符。`proto kernel`的意思是: 在自动配置过程中由内核安装的路由。
+    - 这里可以明白`scope` 和 `protocol`应该是是需要分开理解的。 一个代表路由范围，另一个代表路由标识符
+    - proto和scope后面都可以跟一些其他的，不只是跟着link
+
+  - route -n显示如下
+
+    ```
+    $ route -n
+    Kernel IP routing table
+    Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+    0.0.0.0         192.168.79.2    0.0.0.0         UG    100    0        0 ens33
+    192.168.79.0    0.0.0.0         255.255.255.0   U     100    0        0 ens33
+    192.168.122.0   0.0.0.0         255.255.255.0   U     0      0        0 virbr0
+    ```
+
+    - Destination 目标网络(network)或者目标主机(host)
+
+    - Gateway: 网关地址
+
+    - Genmask: 子网掩码
+
+    - Flags: 标记，可能的标记如下
+
+      ```
+      U (route is up)： 路由是活动的
+      H (target is a host)： 目标是一个主机而非网络
+      G (use gateway)： 需要透过外部的主机（gateway)来转递封包
+      R (reinstate route for dynamic routing)： 使用动态路由时，对动态路由进行复位设置的标志
+      D (dynamically installed by daemon or redirect)： 由后台程序或转发程序动态安装的路由
+      M (modified from routing daemon or redirect)： 由后台程序或转发程序修改的路由
+      A (installed by addrconf)： 由addrconf安装的路由
+      C (cache entry)： 缓存的路由信息
+      !  (reject route)： 这个路由将不会被接受（主要用来抵御不安全的网络）
+      
+      如果只在内部使用的情况下，FLags只有U，如果需要外部来使用的话，一般为UG
+      Gateway为0.0.0.0是本主机有好几个网卡，这几个网卡内部联系使用的，并不用走到网关，所以是0.0.0.0
+      如果Gateway不是0.0.0.0，就需要外部使用，而且Flags一般是UG
+      
+      如果Destination为0.0.0.0的话一般是默认网关，所有的目的地址都走这，所以是，也可以用ip route show看一下是不是默认的，默认网关在ip route show中会明显标示出来。
+      ```
+
+    - Metric: 路由距离，到达指定网络所需的中转数。当前Linux内核并未使用，但是routing daemons可能会需要这个值
+
+    - Ref: 路由项引用次数（linux内核中没有使用）
+
+    - Use: 此路由项被路由软件查找的次数
+
+    - Iface: 当前路由会使用哪个接口来发送数据
+
+- route和ip route是两个命令，但是功能是一样的，都是配置网络的
+
+- 添加路由，路由类型分三种：主机路由、网络路由、默认路由
+
+  - route命令
+
+    - 添加到达目标主机的路由
+
+      ```
+      route add -host 10.1.111.111 gw 10.2.111.111 dev eth0
+      ```
+
+    - 添加到达目标网络的路由
+
+      ```
+      route add -net 10.1.0.0 netmask 255.255.0.0 gw 10.2.111.111 dev eth0
+      或者 route add -net 10.1.0.0/16 gw 10.2.111.111 dev eth0
+      ```
+
+    - 添加默认路由
+
+      ```
+      route add default gw 10.2.111.111
+      ```
+
+  - ip route命令，这个命令也可以在每一个后面使用dev eth这样的结构，为某个网卡添加路由
+
+    - 添加到达目标主机的路由记录
+
+      ```
+      ip route add 目标主机 via 网关 
+      ip route add 10.2.111.112 via 10.1.111.112. 后面的是添加的网关，前面的是需要的目标主机
+      ```
+
+    - 添加到达网络的路由记录
+
+      ```
+      ip route add 目标网络/掩码 via 网关
+      ip route add 192.168.56.0/24 via 192.168.56.2 dev eth0
+      ```
+
+    - 添加默认路由
+
+      ```
+      ip route add default via 网关
+      ```
+
+- 删除路由
+
+  - route命令
+
+    ```
+    1）删除到达目标主机的路由记录
+    route del -host 主机名
+    2）删除到达目标网络的路由记录
+    route del -net 目标网络/子网掩码
+    ip route del 192.168.56.0/24
+    3）删除默认路由
+    route del default
+    ```
+
+  - ip route命令
+
+    ```
+    ip route del 目标网络/掩码
+    ip route del default
+    ```
+
+- 添加永久静态路由
+
+  - `ip route`指令对路由的修改不能保存，重启就没了。把`ip route`指令写到`/etc/rc.local`也是徒劳的。 RHEL7 官网文档没有提到`/etc/sysconfig/static-routes`，经测试此文件已经无效； `/etc/sysconfig/network`配置文件仅仅可以提供全局默认网关，语法同 CentOS 6 一样： GATEWAY= ； 永久静态路由需要写到`/etc/sysconfig/network-scripts/route-interface`文件中，比如添加两条静态路由：
+
+    ```
+    [root@linux-node1 network-scripts]# cat /etc/sysconfig/network-scripts/route-eth0
+    10.18.196.0/255.255.254.0 via 192.168.56.11 dev eth0
+    
+    [root@linux-node1 network-scripts]# nmcli dev connect eth0 # 重启计算机，或者重新启用设备 eth0 才能生效。
+    
+    [root@linux-node1 network-scripts]# nmcli dev disconnect eth0 && nmcli dev connect eth0
+    # 一般直接连接一次设备即可，如果不成功就先断开设备再连接设备，注意必须两个指令一起运行
+    ```
+
+- 清除永久静态路由
+
+  ```
+  可以删除 route-eth0 文件或者注释掉文件里的相应静态路由条目，重启计算机。
+  想要让修改后的静态路由立即生效，只能用ip route del手工删除静态路由条目。
+  ```
+
 ### 公钥和私钥
 
 - 公钥（Public Key）与私钥（Private Key）是通过加密算法得到的一个密钥对（即一个公钥和一个私钥，也就是非对称加密方式）。公钥可对会话进行加密、验证数字签名，只有使用对应的私钥才能解密会话数据，从而保证数据传输的安全性。公钥是密钥对外公开的部分，私钥则是非公开的部分，由用户自行保管。
