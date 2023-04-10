@@ -201,6 +201,33 @@
 
     - Iface: 当前路由会使用哪个接口来发送数据
 
+  - route -n和ip route show显示对比
+
+    ```
+    wherfdp1ali:run > ip route show
+    10.192.0.0/10 dev eth3  proto kernel  scope link  src 10.217.22.1
+    172.30.0.0/16 via 10.200.0.239 dev eth3
+    172.31.0.0/16 via 10.200.0.239 dev eth3
+    192.168.11.0/24 dev eth1  proto kernel  scope link  src 192.168.11.1
+    192.168.110.0/24 via 10.200.0.1 dev eth3
+    192.168.111.0/24 dev eth0  proto kernel  scope link  src 192.168.111.1
+    192.168.117.0/24 via 10.200.0.239 dev eth3
+    192.168.211.0/24 dev eth2  proto kernel  scope link  src 192.168.211.1
+    wherfdp1ali:run > route -n
+    Kernel IP routing table
+    Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+    10.192.0.0      0.0.0.0         255.192.0.0     U     0      0        0 eth3
+    172.30.0.0      10.200.0.239    255.255.0.0     UG    0      0        0 eth3
+    172.31.0.0      10.200.0.239    255.255.0.0     UG    0      0        0 eth3
+    192.168.11.0    0.0.0.0         255.255.255.0   U     0      0        0 eth1
+    192.168.110.0   10.200.0.1      255.255.255.0   UG    0      0        0 eth3
+    192.168.111.0   0.0.0.0         255.255.255.0   U     0      0        0 eth0
+    192.168.117.0   10.200.0.239    255.255.255.0   UG    0      0        0 eth3
+    192.168.211.0   0.0.0.0         255.255.255.0   U     0      0        0 eth2
+    ```
+
+    - route -n中Gateway显示0.0.0.0的在ip route中显示proto和scope，不是0.0.0.0的就显示via dev eth这些
+
 - route和ip route是两个命令，但是功能是一样的，都是配置网络的
 
 - 添加路由，路由类型分三种：主机路由、网络路由、默认路由
