@@ -1637,6 +1637,239 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
 - 由于基于fork机制，所以管道只能用于父进程和子进程之间，或者拥有相同祖先的两个子进程之间 (有亲缘关系的进程之间)。为了解决这一问题，Linux提供了FIFO方式连接进程。FIFO又叫做命名管道(named PIPE)。
 - FIFO (First in, First out)为一种特殊的文件类型，它在文件系统中有对应的路径。当一个进程以读(r)的方式打开该文件，而另一个进程以写(w)的方式打开该文件，那么内核就会在这两个进程之间建立管道，所以FIFO实际上也由内核管理，不与硬盘打交道。之所以叫FIFO，是因为管道本质上是一个先进先出的队列数据结构，最早放入的数据被最先读出来，从而保证信息交流的顺序。FIFO只是借用了文件系统(file system,命名管道是一种特殊类型的文件，因为Linux中所有事物都是文件，它在文件系统中以文件名的形式存在。)来为管道命名。写模式的进程向FIFO文件中写入，而读模式的进程从FIFO文件中读出。当删除FIFO文件时，管道连接也随之消失。FIFO的好处在于我们可以通过文件的路径来识别管道，从而让没有亲缘关系的进程之间建立连接
 
+###### 管道的使用
+
+- 对于匿名管道来说，函数的创建如下
+
+  ```
+  int pipe(int fd[2]) 提供一个单向数据流，该函数返回两个文件描述符，fd[0]和fd[1]，前者用来打开读，后者用来打开写。
+  ```
+
+  - 一个进程（它将成为父进程）创建一个管道后调用fork派生一个自身的副本，父进程关闭这个管道的读出端，子进程关闭该管道的写入端，这样就在父子进程间形成了一个单向数据流
+
+  - 函数pipe返回的文件描述符是已经打开的，我们不能在用函数open打开这个文件描述符，只需要关闭父进程的读出端和子进程的写入端，相当于数据就可以从父进程流向子进程，也可以相反，由子进程流向父进程。
+
+  - 若需要一个双向的数据流，就得创建两个管道，每个方向一个，示例如下
+
+    ```c++
+    #include <iostream>
+    #include <unistd.h>
+    #include <stdio.h>
+    #include <string.h>
+    #include <stdlib.h>
+    #include <wait.h>
+    
+    using namespace std;
+    
+    int main()
+    {
+        const char* parent_talk[] = {"Hello", 
+                              "Can you tell me current data and time",
+                              "I have to go, Bye",
+                              NULL};
+        const char* child_talk[] = {"Hi",
+                             "No problem:",
+                             "Bye",
+                             NULL};
+    
+        int fd1[2], fd2[2];
+        int res1 = pipe(fd1);
+        int res2 = pipe(fd2);
+        if(res1 < 0){
+            printf("create pipe1 error\n");
+            exit(1);
+        }
+    
+        if(res2 < 0){
+            printf("create pipe2 error\n");
+            exit(1);
+        }
+    
+    
+        pid_t pid;
+        pid = fork();
+    
+        if(pid == 0){
+            close(fd1[1]);
+            close(fd2[0]);
+            char buffer[256];
+    
+            int i = 0;
+            const char *child = child_talk[i];
+            while(child){
+                read(fd1[0], buffer, 256);
+                printf("Parent:> %s\n", buffer);
+                if(i == 1){
+                    time_t t;
+                    time(&t);
+                    sprintf(buffer, "%s%s", child, ctime(&t));
+                    write(fd2[1], buffer, strlen(buffer) + 1);
+                }else{
+                    write(fd2[1], child, strlen(child) + 1);
+                }
+    
+                ++i;
+                child = child_talk[i];
+            }
+    
+            close(fd1[0]);
+            close(fd2[1]);
+        }else if(pid > 0){
+            char buffer[256];
+            close(fd1[0]);
+            close(fd2[1]);
+    
+            int i = 0;
+            const char *parent = parent_talk[i];
+            while(parent){
+                write(fd1[1], parent, strlen(parent) + 1);
+                read(fd2[0], buffer, 256);
+                printf("Child:> %s\n", buffer);
+                ++i;
+                parent = parent_talk[i];
+            }
+    
+            close(fd2[0]);
+            close(fd1[1]);
+    
+            int status;
+            wait(&status);
+        }else{
+            printf("create child error\n");
+        }
+    
+        return 0;
+    }
+    ```
+
+- 有名管道的创建，函数如下
+
+  ```
+  int mkfifo(const char *pathname, mode_t mode) ，该函数隐含指定权限为O_CREAT | O_EXCL，即就是mkfifo要么创建一个新的fifo，要么返回错误（因为所指定名字的fifo已经存在），若不想创建新的fifo，就直接用open打开一个已经存在的fiffo。
+  ```
+
+  - FIFO不能打开既用来读又用来写，因为FIFO是半双工的，所以如果两端都能通信，也需要创建两个FIFO，下面是两端通信的示例
+
+    ```
+    //头文件
+    #include <iostream>
+    #include <unistd.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <fcntl.h>
+    #include <sys/stat.h>
+    #include <string.h>
+    
+    using namespace std;
+    
+    const char *write_fifo_name = "write_fifo";
+    const char *read_fifo_name = "read_fifo";
+    
+    //服务器端的代码：
+    
+    #include "utility.h"
+    
+    int main()
+    {
+        int write_fd, read_fd;
+    
+        int res = mkfifo(write_fifo_name, O_CREAT|O_EXCL|0600);
+        if(res == -1){
+            printf("mkfifo error.\n");
+            exit(1);
+        }
+    
+        write_fd = open(write_fifo_name, O_WRONLY);  //只写方式打开写管道
+        if(write_fd == -1){    //以只写方式打开文件失败
+            printf("open write fifo error.\n");
+            unlink(write_fifo_name);   //解除文件的连接
+            exit(1);
+        }
+    
+        printf("waiting Client Connecct.....\n");
+        while((read_fd = open(read_fifo_name, O_RDONLY)) == -1){   //一直等待，直到打开读文件成功
+            sleep(1);
+        }
+        printf("client connect ok.\n");
+    
+        char sendbuf[256];
+        char recvbuf[256];
+    
+        //进行服务器和客户端的通信
+        while(1){
+            printf("Ser:>");
+            scanf("%s", sendbuf);   //输入服务器端的信息
+            if(strncmp(sendbuf, "quit", 4) == 0){   //比较是否要退出，若服务器端请求退出，则先解除文件再退出
+                unlink(write_fifo_name);  //解除文件
+                write(write_fd, sendbuf, strlen(sendbuf) + 1);   //告诉客户端服务器端要退出
+                break;
+            }
+            write(write_fd, sendbuf, strlen(sendbuf) + 1);  //将服务器端的信息写入发送缓冲区
+            read(read_fd, recvbuf, 256);   //读取接收缓冲区的客户端发送的数据
+            printf("Cli:>%s\n", recvbuf);
+        }
+    
+        return 0;
+    }
+    
+    //客户端的代码：
+    #include "utility.h"
+    
+    int main()
+    {
+        int write_fd, read_fd;
+    
+        int res = mkfifo(read_fifo_name, O_CREAT|O_EXCL|0600);
+        if(res == -1){
+            printf("make read fifo error.\n");
+            exit(1);
+        }       
+    
+        read_fd = open(write_fifo_name, O_RDONLY);   //只读方式打开写管道
+        if(read_fd == -1){     //打开写管道失败，就无法读取服务器端发来的数据
+            printf("server error.\n");
+            unlink(read_fifo_name);   //断开写连接
+            exit(1);
+        }
+    
+        write_fd = open(read_fifo_name, O_WRONLY);   //以只写方式打开读管道，准备写入客户端要发送的数据
+        if(write_fd == -1){
+            printf("client connect server error.\n");
+            exit(1);
+        }
+    
+        char sendbuf[256];
+        char recvbuf[256];
+        while(1){
+            read(read_fd, recvbuf, 256);    //客户端首先读取服务器端发来的数据
+            printf("Ser:>%s\n", recvbuf);
+            printf("Cli:>");
+            scanf("%s", sendbuf);     //客户端写入自己要发送给服务器端的数据
+            if(strncmp(sendbuf, "quit", 4) == 0){   //若是客户端要退出，则解除读管道，发送消息告诉服务器端客户端要退出
+                unlink(read_fifo_name);   //解除连接
+                write(write_fd, sendbuf, strlen(sendbuf) + 1);   //写入要退出的数据
+                break;
+            }
+            write(write_fd, sendbuf, strlen(sendbuf) + 1);    //将数据写入到要发送给服务器端的缓冲区中
+        }
+        return 0;
+    }
+    ```
+
+  - mkfifo创建的FIFO需要用open函数打开，在打开的时候就要确定是以读或者写的方式打开，客户端和服务器端都创建了一个FIFO，然后用open函数打开对方的FIFO，然后在进行读或者写。
+
+- 最后来简单的说一说管道和有名管道的区别：
+
+  - 有名管道可以进行无亲缘关系的进程间通信，但是管道只能用于有亲缘关系的进程间通信。
+  - 创建并打开一个管道只需要pipe函数就够了，但是创建并打开FIFO需要在调用mkfifo后再调用open函数。
+  - 管道在所有进程最终都关闭它之后自动消失，但是FIFO只有在调用unlink后才能从文件系统中删除。
+
+- pipe函数返回的是两个文件描述符fd[]，一个数组，直接就打开了，需要关闭一个，而mkfifo只是创建了这个文件，我们还需要自己用open函数打开，open函数返回文件描述符，这样最后我们只需要关闭open返回的这个文件描述符就可以了，因为open确定了以都或者写的方式打开，这样就能确定FIFO的数据流向。
+
+- 管道在所有进程都关闭这个管道的情况下会消失，FIFO需要用unlink在文件系统中删除。FIFO需要两个进程都关闭自己进程用open打开的文件描述符就可以消失，一端关闭是不会消失的，因为一端关闭我们也可以重新打开，并不是一端关闭就是关闭了。
+
+  - 如果两端都需要关闭，可以协商在写入端关闭之前写入数据，然后对方在读到数据之后也就关闭了，读端关闭是不能写入的，所以两端关闭只能由写入端来确定。
+
 ### 设计模式
 
 #### 创建型模式
