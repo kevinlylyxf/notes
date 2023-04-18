@@ -2166,19 +2166,119 @@ end PutResult;
   003 package Generic_Swap is
   004     procedure Generic_Swap(Left, Right : in out Element_Type);
   005 end Generic_swap;
+  
+  000 -- filename:generic_swap.adb
+  001 package body Generic_Swap is
+  002 	procedure Generic_Swap(Left, Right : in out Element_Type) is
+  003 		Temporary : Element_Type;
+  004 	begin
+  005 		Temporary := Left;
+  006 		Left := Right;
+  007 		Right := Temporary;
+  008 	end Generic_Swap;
+  009 end Generic_Swap;
+  
+  000 -- filename:integer_swap.ads
+  001 with generic_swap;
+  002 package Integer_Swap is new Generic_Swap(Integer);
+  
+  000 -- filename:swap.adb
+  001 with Integer_Swap;use Integer_Swap;
+  002 procedure swap is
+  003 	A, B : Integer;
+  004 begin
+  005 	A := 5;
+  006 	B := 7;
+  007 	Integer_Swap(A, B);
+  008 end swap;
   ```
 
 - 类属程序包实例化是将package实例化，然后我们就可以直接用里面的函数了，里面的函数不用单独实例化。
 
+- 上例的确是有点小题大做了，但说明问题还可以。注意一下 generic_swap.ads 的[001]-[002],在程序包 声明前面的位置声明类属类型，其后的子程序使用这个类属类型，其它方面和普通程序包一样。 integer_swap.ads 是新接触的，[002] 创建程序包 Integer_Swap,是 Generic_Swap 的 Integer 版，即 Integer_Swap 是 Generic_Swap 的一份拷贝，但类型 Element_Type 由 Integer 替换。Element_Type 也可以 由其它数据类型替换，只需按照上面的格式创建程序包即可。需要注意一下 integer_swap.ads 的第一句 with generic_swap,不能再加上 use generic_swap，因为类属程序包是不可用的。
+
+- 上例中还无法见出类属程序包的好处，因为只有一个 generic_swap 过程，但假如程序包内有很多子程 序的代码需要共用，则相当方便。预定义的很多程序包就是这样实现的，例如我们先前遇到的 Ada.Integer_Text_IO 之类的程序包，如果也是每个子程序重写一遍，工作量简直不敢想象，而它们的实现 仅是：
+
+  ```
+  with Ada.Text_IO;
+  package Ada.Integer_Text_IO is new Ada.Text_IO.Integer_IO (Integer);
+  ```
+
+  - 其它整型输出如 Ada.Short_Integer_Text_IO 也都类似，真正的需要实现的只是 Ada.Text_IO.Integer_IO。其它的浮点型输出、模数输出也都建立在各自的类属程序包上。
+
+
+##### 类属参数
+
+- 类属参数有 3 类：类型参数(type parameter)，值参数(value parameter)，子程序参数(subprogram parameter)
+
+###### 类型参数
+
+- 类属类型吸引人的地方大家都有所体会了，但有些朋友可能在上面的例子中就想到假如 Swap 的参数是数组或其它什么来着会怎样---不是说类属类型可以由其它类型替换吗？但毫无疑问，仅凭上面这么简单的实现，就想接受所有的数据类型是不可能的。为了防止实例化时出现不合适的数据类型，我们可以指定类型参数的类别；当然编译器也会自动找出错误，不允许我们进行非法操作。
+
+- 下面是类型参数的一些分类，各自有不同的限制条件：
+
+  ```
+  type T is private -- 限制最少，先前例子所采用的；
+  type T is limited private -- 比前者略多一点限制；
+  type T is (<>) -- T 一定要是离散类型；
+  type T is range <> -- T 一定要是整型；
+  type T is digits <> -- T 一定要为符点型；
+  type T is delta <> -- T 一定要定点型；
+  type T is array(index_type) of element_type --实际数组的成员类型一定要和形式数组的类型匹配；
+  type T is access X -- T 指向类型 X，X 可以预先定义的类属参数；
+  ```
+
+###### 值参数
+
+- 先前我们在类属部份都声明类型参数，供后面的程序使用，但是也可以直接声明某一变量：
+
+  ```
+  generic
+  	type element is private;
+  	size: positive := 200;
+  package stack is
+  	procedure push...
+  	procedure pop...
+  	function empty return boolean;
+  end stack;
+  package body stack is
+  	size:integer;
+  	theStack :array (1..size) of element;
+  	...
+  
+  实例化新的程序包：
+  package fred is new stack(element => integer, size => 50);
+  或者
+  package fred is new stack(integer,1000);
+  或者
+  package fred is new stack(integer);
+  如果值参数没有默认值，实例化时一定要提供一个值。值参数也可以为字符串类型：
+  ```
+
+###### 子程序参数
+
+- 我们也可以将一个子程序作为一个类属参数，见下：
+
+  ```
+  generic 
+  	type element is limited private;
+  	with function "="(e1,e2:element) return boolean;
+  	with procedure assign(e1,e2:element);
+  package stuff is...
+  
+  实例化一个程序包：
+  package things is new stuff(person,text."=",text.assign);
+  
+  也可以有一个默认子程序：
+  with procedure assign(e1,e2:element) is myAssign(e1,e2:person);   这个不是实例化，是一个类属，但是是默认和子程序
+  或者
+  with function "="(e1,e2:element ) return boolean is<>;  这个也是声明一个类属
+  这样实例化时，如果"="函数没有函数提供，则会根据 element 的类型，自动选择一个"="函数，如 element是 Integer 类型，则会使用 Integer 的 "=" 函数。
+  ```
+
+  
+
 #### 一些记录
-
-##### c类报文
-
-```
-\\192.168.117.200\Panda\ENGINEERING\1_SEV\1.7 Training Tasks\2019年9月 3周 GTMA管制教员培训（LJ）\2019年9月9日 MEL管制培训\GTMA 9 ECRs pdf
-```
-
-- 这是一组ECR文档，c类报文是TMA和ATC之间数据通信使用的。
 
 ##### and 和and then ，or 和 or else
 
