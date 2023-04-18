@@ -2191,6 +2191,8 @@ end PutResult;
   006 	B := 7;
   007 	Integer_Swap(A, B);
   008 end swap;
+  
+  Integer_Swap是直接用的模板里面的函数，因为模板在integer_swap.ads里面实例化完了，而且Integer_Swap自己是一个package，直接实例化的package，并不是包含在另一个package里面的，所以我们with然后在use可以直接使用里面的函数。
   ```
 
 - 类属程序包实例化是将package实例化，然后我们就可以直接用里面的函数了，里面的函数不用单独实例化。
