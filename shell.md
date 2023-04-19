@@ -4397,6 +4397,52 @@ ${#array_name[@]}
 
 - 列出打开的文件. 这个命令将会把所有当前打开的文件列出一份详细的表格, 包括文件的所有者信息, 尺寸, 与它们相关的信息等等. 当然, **lsof**也可以管道输出到 [grep](http://shouce.jb51.net/shell/textproc.html#GREPREF) 和(或)[awk](http://shouce.jb51.net/shell/awk.html#AWKREF)来分析它的结果.
 
+- **lsof**是系统管理工具。我大多数时候用它来从系统获得与[网络](http://linuxaria.com/tag/network)连接相关的信息，但那只是这个强大而又鲜为人知的应用的第一步。将这个工具称之为lsof真实名副其实，因为它是指“**列出打开文件（lists openfiles）**”。而有一点要切记，在Unix中一切（包括网络套接口）都是文件。
+
+- sof 查看端口占用语法格式：
+
+  ```
+  lsof -i:端口号
+  ```
+
+  - 查看服务器 8000 端口的占用情况：
+
+    ```
+    # lsof -i:8000
+    COMMAND   PID USER   FD   TYPE   DEVICE SIZE/OFF NODE NAME
+    nodejs  26993 root   10u  IPv4 37999514      0t0  TCP *:8000 (LISTEN)
+    ```
+
+  - FD表示文件描述符
+
+- 更多 lsof 的命令如下：
+
+  ```
+  lsof -i:8080：查看8080端口占用
+  lsof abc.txt：显示开启文件abc.txt的进程
+  lsof -c abc：显示abc进程现在打开的文件
+  lsof -c -p 1234：列出进程号为1234的进程所打开的文件
+  lsof -g gid：显示归属gid的进程情况
+  lsof +d /usr/local/：显示目录下被进程开启的文件
+  lsof +D /usr/local/：同上，但是会搜索目录下的目录，时间较长
+  lsof -d 4：显示使用fd为4的进程
+  lsof -i -U：显示所有打开的端口和UNIX domain文件
+  ```
+
+- netstat也可以查看端口占用情况
+
+  - netstat 查看端口占用语法格式：
+
+    ```
+    netstat -tunlp | grep 端口号
+    ```
+
+    - -t (tcp) 仅显示tcp相关选项
+    - -u (udp)仅显示udp相关选项
+    - -n 拒绝显示别名，能显示数字的全部转化为数字
+    - -l 仅列出在Listen(监听)的服务状态
+    - -p 显示建立相关链接的程序名
+
 ##### dmesg
 
 - 将所有的系统启动消息输出到stdout上. 方便出错,并且可以查出安装了哪些设备驱动和察看使用了哪些系统中断. **dmesg**命令的输出当然也可以在脚本中使用 [grep](http://shouce.jb51.net/shell/textproc.html#GREPREF), [sed](http://shouce.jb51.net/shell/sedawk.html#SEDREF), 或 [awk](http://shouce.jb51.net/shell/awk.html#AWKREF) 来进行分析.
@@ -7573,6 +7619,25 @@ END     {
 ##### tcpdump
 
 [网上讲解](https://blog.csdn.net/weixin_36338224/article/details/107035214)
+
+- 常用命令如下
+
+  ```
+  tcpdump -A -l -i eth1 tcp port 8204
+  ```
+
+- `-i`：指定要过滤的网卡接口，如果要查看所有网卡，可以 `-i any`
+- `-A`：以ASCII码方式显示每一个数据包(不显示链路层头部信息). 在抓取包含网页数据的数据包时, 可方便查看数据
+- `-s` : tcpdump 默认只会截取前 `96` 字节的内容，要想截取所有的报文内容，可以使用 `-s number`， `number` 就是你要截取的报文字节数，如果是 0 的话，表示截取报文全部内容。
+- `-l` : 基于行的输出，便于你保存查看，或者交给其它工具分析
+- `-q` : 简洁地打印输出。即打印很少的协议相关信息, 从而输出行都比较简短.
+- 显示数据包的头部
+  - -x：以16进制的形式打印每个包的头部数据（但不包括数据链路层的头部）
+  - -xx：以16进制的形式打印每个包的头部数据（包括数据链路层的头部）
+  - -X：以16进制和 ASCII码形式打印出每个包的数据(但不包括连接层的头部)，这在分析一些新协议的数据包很方便。
+  - -XX：以16进制和 ASCII码形式打印出每个包的数据(包括连接层的头部)，这在分析一些新协议的数据包很方便。
+- 在用-X以16进制打印包内容时，打印出来很多点，这些点表示不可见字符，因为有很多不可见字符，所以打印出来很多。
+  - -A是以ASCII方式显示，不知道具体的ASCII值，不可见字符也是打印点。
 
 #### 其他
 
