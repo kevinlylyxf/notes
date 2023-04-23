@@ -2012,6 +2012,86 @@ end PutResult;
   end parent_name;
   ```
 
+#### 访问类型(指针)
+
+##### 创建和使用访问类型
+
+- 如同声明其它数据类型一样，声明访问类型按照下面的格式：
+
+  ```
+  type new_type_name is access [all] type_name
+  ```
+
+  - new_type_name 是该访问类型名称，type_name 是其它数据类型。all为可选项
+
+    ```
+    type List_Node is
+    record
+    	Data : Integer;
+    end record;
+    
+    type List_Node_Access is access List_Node;
+    Current :List_Node_Access;
+    ```
+
+  - 创建了访问类型 List_Node_Access，及其变量 Current。变量 Current 的初始值为 null，也就是 Current不指向任何对象，访问值为 null。
+
+- 有关访问类型最常见的一个操作是创建一个对象，返回一个访问值指向这个对象，如同 C 下的malloc,Pascal 和 C++ 的 new，Ada 也有一个操作 new,如：
+
+  ```
+  Current := new List_Node;
+  Root := new List_Node;
+  ```
+
+  - 表示 Current 访问一个 List_Node，Root 访问另一个 List_Node，它们都指向 List_Node 类型的数据在内存中的地址。这些新创建的对象在内存中所占用的空间，不会像整型这些变量一样随着子程序的退出自动消失
+
+- 如果要访问真实的对象，而不是上述的引用，可以用“ .” 访问所指向对象的实际值
+
+  ```
+  Current.Data := 1;
+  Root.Data := 2;
+  ```
+
+  - 表示赋 1 给 Current 所指向的对象的成员 Data ，赋 2 给 Root 所指向的对象的成员 Data。
+
+- 访问类型的变量也可以不指向任何对象，而是 null，只需赋值为 null即可：
+
+  ```
+  Current := null;
+  ```
+
+- 因此也可以用 = 、 /= 来比较变量值是否为 null，以此来得知某访问类型的变量是否指向一个对象。如果没有指定其它初始值，访问类型的变量被创建时的默认值也为 null。
+
+- 访问类型变量的成员值也可以初始化,如：
+
+  ```
+  Current := new List_Node'(1);
+  Root := new List_Node'(Data =>2);
+  ```
+
+  - 这样的话 Current.Data 的值为 1，Root.Data 的值为 2。假如所指向对像有多个成员，初始化它的值时每个成员都要初始化。
+
+- ada释放指针
+
+  - Ada 提供了一个类属过程来释放一个对象所占用的内存空间，该过程在类属程序包Ada.Unchecked_Deallocation 内定义：
+
+    ```
+    generic
+    type Object (<>) is limited private;
+    type Name is access Object;
+    procedure Ada.Unchecked_Deallocation (X : in out Name);
+    需要传递参数有两个：一个数据类型 object,以及它的访问类型 Name。出于习惯，我们将回收内存的函数命名为 Free：
+    procedure Free is new Ada.Unchecked_Deallocation (List_Node, List_Node_Access);
+    或者
+    procedure Free is new Ada.Unchecked_Deallocation (Object=>List_Node,Name=>List_Node_Access );
+    ```
+
+    - 这样的话，我们就有了处理无用内存的过程 Free,将上一节中的节点释放，只需：
+
+      ```
+      Free (Current);
+      ```
+
 #### 类属单元
 
 - 代码重用是多年来软件开发一直强调的重点，也是程序员们的一个希望。Ada 里提供了类属单元(Generic unit)的功能,使我们有可能创建更为通用的子程序或程序包。
