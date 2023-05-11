@@ -7636,6 +7636,17 @@ END     {
 
 #### 网络相关
 
+##### 对于数据库的理解
+
+- 每一个数据库都有一个端口，这个端口就表明数据库是作为一个服务来存在的，在用的时候需要先起数据库服务。
+- 对于一些数据库提供了一些不同语言的API的理解
+  - 例如mysql提供了一些c++的接口，此时我们就可以编写自己的程序，使用数据库提供的API，每种操作增删改查都封装好了，我们只需要使用接口就行了
+  - 在数据库提供的API中，应该有连接数据库的API，在使用时我们先连接数据库，在用其他的API进行增删改查操作
+  - 不需要关注端口啊，socket这些，API都封装好了，我们只需要使用就可以了。我们的程序和数据库之间应该是通过socket连接的，但是这些具体的链接我们不需要写，API封装好了。
+  - 我们只需要先起数据库服务，然后编写自己的程序，然后通过API对数据库进行增删改查就可以了。
+  - 数据库作为一种server，我们通过socket连接，然后进行操作，我们不需要管怎么实现的，只需要使用他对外提供的API就可以。
+  - 作为数据库也是一个进程，我们自己的程序一般也有很多进程，我们自己的进程之间通信可以有很多中方式，例如共享内存、FIFO，这是我们内部设计的问题，但是我们自己的进程和数据库进程之间通信，我们是不需要关心的，已经确定好了，是通过socket通信的，数据库作为一种通用的服务是外挂在我们的进程之外的，我们只需要使用API操作他就可以了，不用考虑设计我们的进程和数据库进程之间的连接通信，也不用管怎么样比较好，因为已经确定了，想其他的没用了。
+
 ##### tcpdump
 
 [网上讲解](https://blog.csdn.net/weixin_36338224/article/details/107035214)
@@ -7974,3 +7985,103 @@ rename [options] expression replacement file...
 
 - nm命令如果不加参数是用来查看目标文件或者可执行文件ELF的符号表的，所以要查看动态库的符号表时不加参数就会出错。如果要查看动态库的符号表需要加参数`nm -D`
 
+##### /dev/zero和/dev/null
+
+- 在类Unix操作系统中，设备节点并不一定要对应物理设备。没有这种对应关系的设备被称之为伪设备。操作系统运用了它们实现多种多样的功能，/dev/null和/dev/zero就是这样的设备，类似的还有/dev/urandom、/dev/tty等。
+
+- 检查下/dev/null和/dev/zero两个文件的属性：
+
+  ```bash
+  [root@localhost ~]# ll /dev/null /dev/zero 
+  crw-rw-rw- 1 root root 1, 3 Nov 10 05:39 /dev/null
+  crw-rw-rw- 1 root root 1, 5 Nov 10 05:39 /dev/zero
+  ```
+
+  - 可以看出这两个文件是字符设备文件。
+
+###### /dev/null
+
+- 在类Unix系统中，/dev/null（空设备文件或黑洞文件）是一个特殊的设备文件，所有写入其中的数据，都会被丢弃的无影无踪，/dev/null通常被用于丢弃不需要的数据输出，或作为用于输入流的空文件。这些操作通常由重定向完成。
+
+- 清空文件：
+
+  ```bash
+  cat /dev/null >/etc/hosts     将从/dev/null读取到的数据写入到/etc/hosts，表示清空hosts文件。
+  cat/etc/hosts                /etc/hosts显示没有数据了
+  ```
+
+- 将无用的输出流写入到/dev/null丢弃：
+
+  ```ruby
+  [root@localhost ~]# curl www.baidu.com -I | head -1
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                   Dload  Upload   Total   Spent    Left  Speed
+    0   277    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  HTTP/1.1 200 OK
+  执行上述命令时，会凭空多出来几行无用信息，此时就可以将错误信息定向到/dev/null，以此来丢弃无用信息。
+  [root@localhost ~]# curl www.baidu.com -I 2> /dev/null  | head -1
+  HTTP/1.1 200 OK
+  ```
+
+###### /dev/zero
+
+- 和/dev/null类似，/dev/zero也是一个特殊的字符设备文件，当我们使用或读取它的时候，它会提供无限连续不断的空的数据流（特殊的数据格式流）。
+
+- /dev/zero文件的常见应用场景有二：
+  a./dev/zero文件覆盖其他文件信息。
+  b.产生指定大小的空文件，例如：交换文件、模拟虚拟文件系统等。
+
+- 产生指定大小的空文件:
+
+  ```kotlin
+  [root@localhost ~]# dd if=/dev/zero of=/test.data bs=1M count=2  #<==生成块大小1M，含有2个块的文件。
+  2+0 records in
+  2+0 records out
+  2097152 bytes (2.1 MB) copied, 0.0902584 s, 23.2 MB/s
+  [root@localhost ~]# ll -h /test.data 
+  -rw-r--r-- 1 root root 2.0M Nov 11 14:34 /test.data  #<==一共2M大小。
+  [root@localhost ~]# file /test.data 
+  /test.data: data  #<==特殊的数据文件格式。
+  ```
+
+- 提示：在使用dd命令产生空文件时常用/dev/zero作为字符流的源。
+
+- 利用/dev/zero文件覆盖其他文件信息:
+
+  ```csharp
+  [root@localhost ~]# echo abcde > test.txt  #<==生成一个新文件写入abcde字符串。
+  [root@localhost ~]# dd if=/dev/zero of=test.txt bs=1M count=10  #<==用空的字符流覆盖存在的test.txt文件。
+  10+0 records in
+  10+0 records out
+  10485760 bytes (10 MB) copied, 0.056705 s, 185 MB/s
+  [root@localhost ~]# cat test.txt   #<==数据丢失了。
+  ```
+
+###### /dev/urandom
+
+- 除了 /dev/null 和 /dev/zero 之外，还有一个很重要的文件，即 /dev/urandom，它是“随机数设备”，它的本领就是可以生成理论意义上的随机数。
+
+- 如果我们想清除硬盘里的某些机密数据，就可以使用 /dev/urandom 这个随机数生成器来产生随机数据，写到磁盘上，以确保将磁盘原始数据完全覆盖掉。
+
+  ```
+  [root@roclinux ~]# dd if=/dev/urandom of=/dev/sda
+  ```
+
+##### dd
+
+###### dd和cp的区别
+
+- ‍cp与dd的区别在于cp可能是以字节方式读取文件，而dd是以扇区方式记取。显然dd方式效率要高些。
+
+- dd最大的用处是他可以进行格式转换和格式化。dd是对块进行操作的，cp是对文件操作的。
+
+- 比如有两块硬盘，要将第一块硬盘里的数据复制到第二块硬盘上
+
+  ```
+  dd if=/dev/hda of=/dev/hdc
+  ```
+
+  - hda和hdc硬盘上数据的布局是一摸一样的（扇区级别，每个扇区上的数据都是一样的）
+
+- cp只是将第一硬盘上的数据复制到第二个硬盘上，由于系统写硬盘不是顺序写的，哪里有足够的空间放就放到哪，所以第二个硬盘相同的扇区号上的数据和第一块硬盘是可能不一样的。
+- dd命令可以用来进行整个partition或者disk的备份

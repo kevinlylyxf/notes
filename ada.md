@@ -369,8 +369,8 @@ DEBUG.DISPLAY("M4029_3 : Unknown field " & FIELD'img & ", ignore it!" );
 
   ```
   type Color is (red, white, blue);
-  Color'Pos (White) = 2
-  Color'Val (1) = red
+  Color'Pos (White) = 1
+  Color'Val (0) = red 
   ```
 
 ###### 浮点类型属性
