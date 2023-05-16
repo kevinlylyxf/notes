@@ -1010,6 +1010,8 @@ type array_name is array (index specification) of type;
     for TITLES'SIZE use 32;
   ```
 
+  - 因为我们的枚举和c语言的枚举不一样，c语言的枚举是一个整形，所以上面这是让我们的枚举变成整形，最后在cdc中占用4个字节。可以看一下iac_ssr_code_cdc_types.a文件ECR_SKYNETX_36
+
 - 我们的代码的例子
 
   ```ada
@@ -2378,3 +2380,30 @@ LOCAL_EVENT : FPL_LOCAL_EVENT_TYPES.EVENTS renames FPL_DISK.EVENT_LIST.TABLE(IND
 
 - with后面跟的不一定是一个程序包，也可以是一个procedure，这是经过在虚拟机上验证过的，我们可以在一个文件中写一个procedure，然后在主程序中with一下这个procedure，这样可以直接使用，不用use那个procedure。
 
+#### ADA与C的接口
+
+```
+function SET_EXTERNAL_CONF
+    (FDEXM_RECEIVING_CHECKING_PERIOD : in SYSTEM.ADDRESS;
+     HB_TRANSMISSION_PERIOD          : in SYSTEM.ADDRESS)
+
+     return INTEGER_32;
+
+  pragma INTERFACE (C, SET_EXTERNAL_CONF);
+  pragma INTERFACE_NAME (SET_EXTERNAL_CONF, "COM_DPR_SetExternalConf");
+```
+
+- 如果在ADA中想用一个函数，但是函数是用c写的，我们就按上面这种方法，只需要声明一个ADA函数，然后在写上pragma这两航就可以，不需要写ADA函数的实现，相当于调用ADA函数时，直接用的C函数。如果c里面的变量类型为指针，则ada声明时需要用SYSTEM.ADDRESS
+
+- 那个C的函数我们是需要自己写的。
+
+- 另外如果变量类型为指针，我们不能直接使用其他文件中定义的全局变量，必须将那个变量在本文件中重新定义一份。
+
+  ```
+    C_ERROR_CODE := SET_EXTERNAL_CONF
+         (FDEXM_RECEIVING_CHECKING_PERIOD => FDEXM_RECEIVING_CHECKING_PERIOD'ADDRESS,
+          HB_TRANSMISSION_PERIOD          => HB_TRANSMISSION_PERIOD'ADDRESS
+          );
+  ```
+
+  - 对于示例中的接口函数，不能直接使用dpr_common中定义的全局变量，必须在本文件中定义一个，然后'ADDRESS
