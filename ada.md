@@ -585,6 +585,15 @@ type array_name is array (index specification) of type;
   - Var :Marix;---Var有 100x100个元素，分别为 Var(1,1),Var(1,2)....Var(100,99),Var(100,100)。
 
   - 上例的Matrix是二维数组，多维数组的 index_specification 由多个范围组成，每个范围由,隔开。
+  
+  - 二维数组的初始化，用两个other
+  
+    ```
+    FSN_UID_ARRAY : FSN_UID_T(FPL_PARAMETERS.ALPHABETIC'FIRST .. FPL_PARAMETERS.ALPHABETIC'LAST, SN_RANGE_T'FIRST .. SN_RANGE_T'LAST)              := ( others => (others => FPL_BRICK.NUMBER_DEF) );
+    
+    ```
+  
+    
 
 ##### 访问和设置数组
 
