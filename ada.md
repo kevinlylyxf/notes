@@ -2395,6 +2395,19 @@ LOCAL_EVENT : FPL_LOCAL_EVENT_TYPES.EVENTS renames FPL_DISK.EVENT_LIST.TABLE(IND
 
 - with后面跟的不一定是一个程序包，也可以是一个procedure，这是经过在虚拟机上验证过的，我们可以在一个文件中写一个procedure，然后在主程序中with一下这个procedure，这样可以直接使用，不用use那个procedure。
 
+##### 定义某个具体的CHARACTER
+
+```
+RESET_FIELD_STRING : constant STRING(1 .. 1) := ( 1 => CHARACTER'VAL(163));
+
+ADA中CHARACTER是一个枚举类型，所以可以使用VAL属性来取某一个值。
+
+ANY_ARG : constant CHARACTER := ASCII.NUL   对于一些前面的控制字符，已经定义好了我们可以直接使用，后面的一些没有定义，只能使用VAL来取。
+NUL : constant Character := Character'Val (0);
+
+CRCRLF : constant STRING := ASCII.CR & ASCII.CR & ASCII.LF
+```
+
 #### ADA与C的接口
 
 ```

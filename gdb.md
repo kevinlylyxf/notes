@@ -262,6 +262,8 @@
 
 对于使用 display 命令查看的目标变量或表达式，都会被记录在一张列表（称为自动显示列表）中。通过执行info dispaly命令，可以打印出这张表。对于不需要再打印值的变量或表达式，可以将其删除或者禁用。undisplay num , delete display num，num可以是变量的名称也可以是info dispaly查出来的num编号。enable display num激活当前处于禁用状态的变量或表达式
 
+- print和display中的fmt参数是一样的，使用方法也一样。
+
 - print 命令还有更高级的功能和用法，例如以指定的格式输出变量或者表达式的值、输出数组中指定区间内的所有元素。print [options --] [/fmt] expr  ，options 参数和 /fmt 或者 expr 之间，必须用`--`（ 2 个 - 字符）分隔。当 print 命令不指定任何 options 参数时，print 和 /fmt 之间不用添加空格，例如以十六进制的形式输出 num 整形变量的值，执行命令为 (gdb) print/x num。
 
 | options 参数           | 功 能                                                        |
