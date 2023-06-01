@@ -998,6 +998,56 @@ type array_name is array (index specification) of type;
 
   - eta 从记录开始的字节偏移量 8 的第 0 位开始，一直到第 31 位；即它占用从字节 8 开始的 32 位。
 
+- 变体记录和c的接口
+
+  ```
+  type MESSAGE_T(KIND : MESSAGE_KIND_T := ACK) is
+      record
+        HEADER         : IAC_MESSAGE_HEADER.HEADER_FOR_MMI_MESSAGE_T;
+        IPCS           : ARTTS.ARTTS_QUEUEING.TC_IPCS_HEADER;
+        NUMBER         : IAC_FLIGHT_PLAN_TYPES.FLIGHT_PLAN_NUMBER_T;
+        MODIF_TIME     : ARTTS.ARTTS_TIME.TC_TIME_UNIVERSAL_TIME;
+        ETO_MODIF_TIME : ARTTS.ARTTS_TIME.TC_TIME_UNIVERSAL_TIME;
+  
+        case KIND is
+          when ACK              =>
+            DATA                  : DATA_T;
+          when FLIGHT_DATA      =>
+            FP_DATA               : DATA_T;
+            CDC_INFOS             : IAC_FDP_TO_MMI_PROP_TYPES.FIELDS_FOR_MMI_T;
+          when FORECAST         =>
+            FORECAST_INFO         : FORECAST_INFO_T;
+          when SUMMARY          =>
+            SUMMARY_INFO          : SUMMARY_INFO_T;
+          when FLIGHT_PLAN_LIST =>
+            FLIGHT_PLAN_LIST_INFO : FLIGHT_PLAN_LIST_INFO_T;
+          when MSG_SEARCH_KIND  =>
+            MSG_SEARCH_LIST_INFO  : MSG_SEARCH_LIST_INFO_T;
+        end case;
+      end record;
+      
+  for MESSAGE_T use
+      record at mod 4;
+        KIND                  at 0                           range 0 .. 7;
+        HEADER                at 4                           range 0 .. 191;
+        IPCS                  at 28                          range 0 .. 1_663;
+        MODIF_TIME            at 236                         range 0 .. 95;
+        ETO_MODIF_TIME        at 248                         range 0 .. 95;
+        NUMBER                at 260                         range 0 .. 15;
+        DATA                  at START_OF_DATA               range 0 .. DATA_T_SIZE                * STANDARD_TYPES.OCTET - 1;
+        FP_DATA               at START_OF_DATA               range 0 .. DATA_T_SIZE                * STANDARD_TYPES.OCTET - 1; 
+        CDC_INFOS             at START_OF_DATA + DATA_T_SIZE range 0 .. CDC_INFOS_SIZE             * STANDARD_TYPES.OCTET - 1; 
+        FORECAST_INFO         at START_OF_DATA               range 0 .. FORECAST_INFO_SIZE         * STANDARD_TYPES.OCTET - 1; 
+        SUMMARY_INFO          at START_OF_DATA               range 0 .. SUMMARY_INFO_SIZE          * STANDARD_TYPES.OCTET - 1; 
+        FLIGHT_PLAN_LIST_INFO at START_OF_DATA               range 0 .. FLIGHT_PLAN_LIST_INFO_SIZE * STANDARD_TYPES.OCTET - 1; 
+        MSG_SEARCH_LIST_INFO  at START_OF_DATA               range 0 .. MSG_SEARCH_LIST_INFO_SIZE  * STANDARD_TYPES.OCTET - 1; 
+    end record;
+  
+  因为记录是变体的，即里面的东西是可变的，所以在设置时，case后面的一些字段都是从同一个字节开始的。
+  ```
+
+  
+
 - 也可以不是record，也可以是枚举类型，例如
 
   ```ada
