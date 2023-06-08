@@ -459,7 +459,7 @@ type array_name is array (index specification) of type;
 - 字段说明
 
   - array_name是该数组类型的名称
-  - index specification指明该数组类型的元素下标
+  - index specification指明该数组类型的元素下标，这个小括号是一定要加的
   - type是一个已经定义了的数据类型，表示每个元素的数据类型。
 
 - 通常情况下，数组类型的使用方式和下例相同
@@ -528,7 +528,7 @@ type array_name is array (index specification) of type;
   Path_Name :String := "/root/";
   ```
 
-  - 这样 Path_Name 的长度就自动成为6。但如果
+  - 这样 Path_Name 的长度就自动成为6，数组的下标是从1开始的。但如果
 
   ```
   Path_Name :String(1..10) := "/root/";
@@ -593,7 +593,6 @@ type array_name is array (index specification) of type;
     
     ```
   
-    
 
 ##### 访问和设置数组
 
@@ -749,9 +748,66 @@ type array_name is array (index specification) of type;
 
 ##### 数组使用注意事项
 
+###### 数组初始化
+
 - 数组在使用时，可以定义一个很大的，但不初始化，只将前面一些初始化，后面没初始化的可能就是一些垃圾值，这样在循环中判断到后面一些值时，可能就会产生CONSTRAINT_ERROR异常，这个异常不只指数组越界异常，当某变量值超过其类型的取值范围时也可以引发。所以在后面的一些使用时，不是数组越界，而是一堆垃圾值导致超过类型的取值范围引发。
   - 上面这种情况，一般在定义数组时，定义一个表示数组最后一个有效值的索引LAST_INDEX，这样在循环中我们只需要循环到这个值就可以了。
   - 或者可以数组全部初始化，然后判断是否等于默认值就可以判断是否有效了。
+
+###### 关于数组的下标
+
+- 在不指定STRING数组下标时
+
+  ```
+  procedure MAIN is                                                                                             
+  	STR1 : STRING := "abcdedf";                                                                                               
+  	STR2 : STRING := STR1(3 .. 5);                                                                                  
+  begin                                                                                                                       
+  	for INT in STR2'range  loop                                                                                         
+  		Put_Line(INT'img);
+  	end loop;
+  	Put(STR2(3 .. 5));
+  end MAIN;
+  
+  打印值
+  3
+  4
+  5
+  cde
+  ```
+
+  - 说明如果数组没有指明下标，被赋值的STRING就是给定值的数组下标，例如上面STR2的数组下标为3 .. 5
+
+- 指定STRING的数组下标时
+
+  ```
+  procedure MAIN is                                                                                             
+  	STR1 : STRING := "abcdedf";                                                                                               
+  	STR2 : STRING(1 .. 3) := STR1(3 .. 5);                                                                                  
+  begin                                                                                                                       
+  	for INT in STR2'range  loop                                                                                         
+  		Put_Line(INT'img);
+  	end loop;
+  	Put(STR2(1 .. 3));
+  end MAIN;
+  
+  打印值
+  1
+  2
+  3
+  cde
+  ```
+
+  - 在指定数组下标后，数组下标就按照指定的数组下标来，例如上面STR2在声明时指定1 .. 3，所以STR2的数组下标就是1 .. 3
+
+- 赋值时数组下标倒置
+
+  ```
+  STR1 : STRING := "abcdedf";                                                                                                   
+  STR2 : STRING := STR1(3 .. 0);
+  ```
+
+  - 这样倒置的话STR2为空，没有任何值。且数组没有大小，数组无任何值。
 
 #### 记录
 
