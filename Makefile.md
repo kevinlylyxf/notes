@@ -5,6 +5,9 @@
 - clean 不是一个文件，它只不过是一个动作名字，有点像 C 语言中的 lable 一样，其冒号后什么也没有，那么，make 就不会自动去找文件的依赖性，也就不会自动执行其后所定义的命令。要执行其后的命令，就要在 make 命令后明显得指出这个lable 的名字。这样的方法非常有用，我们可以在一个 makefile 中定义不用的编译或是和编译无关的命令，比如程序的打包，程序的备份，等等。
 - makefile中使用变量，$(objects)，这种方式来使用变量，makefile变量理解成字符串。其中可以用空格分隔。
 - 在makefile中要使用shell 命令必须加shell 例如$( shell pwd),不加的话是空值
+  - 这样做是要将shell中的命令输出结果赋值给一个变量，然后在用那个变量
+  - 如果不用输出结果传给一个变量，直接使用就行了，例如删除文件，直接rm就可以了
+
 - Makefile中-D选项指定预定义宏，这个宏会作用到源文件中，在源文件中直接使用即可。
 - make很强大，它可以自动推导文件以及文件依赖关系后面的命令，于是我们就没必要去在每一个[.o]文件后都写上类似的命令，因为，我们的 make 会自动识别，并自己推导命令。只要 make 看到一个[.o]文件，它就会自动的把[.c]文件加在依赖关系中，如果 make找到一个 whatever.o，那么 whatever.c，就会是 whatever.o 的依赖文件。并且 cc -c  whatever.c 也会被推导出来，于是，我们的 makefile 再也不用写得这么复杂。
 - 每个 Makefile 中都应该写一个清空目标文件（.o 和执行文件）的规则，这不仅便于重编译，也很利于保持文件的清洁。
@@ -19,30 +22,36 @@
 
 - 在 Makefile 使用 include 关键字可以把别的 Makefile 包含进来，这很像 C 语言的#include，被包含的文件会原模原样的放在当前文件的包含位置。include 的语法是：include filename  
 
-  filename 可以是当前操作系统 Shell 的文件模式（可以保含路径和通配符） 在 include前面可以有一些空字符，但是绝不能是[Tab]键开始。include 和<filename>可以用一个或多个空格隔开。举个例子，你有这样几个 Makefile：a.mk、b.mk、c.mk，还有一个文件叫foo.make，以及一个变量$(bar)，其包含了 e.mk 和 f.mk，那么，下面的语句：  
+  - filename 可以是当前操作系统 Shell 的文件模式（可以包含路径和通配符） 在 include前面可以有一些空字符，但是绝不能是[Tab]键开始。include 和<filename>可以用一个或多个空格隔开。举个例子，你有这样几个 Makefile：a.mk、b.mk、c.mk，还有一个文件叫foo.make，以及一个变量$(bar)，其包含了 e.mk 和 f.mk，那么，下面的语句：  
 
-  include foo.make *.mk $(bar)
-  等价于：
-  include foo.make a.mk b.mk c.mk e.mk f.mk 
-
-  -include filename的作用是无论include过程中出现什么错误，都不要报错继续执行。不管是否找到filename文件
+    ```
+    include foo.make *.mk $(bar)
+    等价于：
+    include foo.make a.mk b.mk c.mk e.mk f.mk 
+    
+    -include filename的作用是无论include过程中出现什么错误，都不要报错继续执行。不管是否找到filename文件
+    ```
 
 - 环境变量MAKEFILES。如果你的当前环境中定义了环境变量 MAKEFILES，那么，make 会把这个变量中的值做一个类似于 include 的动作。这个变量中的值是其它的 Makefile，用空格分隔。只是，它和 include不同的是，从这个环境变中引入的 Makefile 的“目标”不会起作用，如果环境变量中定义的文件发现错误，make 也会不理。不推荐使用，看到奇怪的错误时可以看看这个环境变量。
 - make的工作方式
 
-1. 读入所有的 Makefile。
-2. 读入被 include 的其它 Makefile。
-3. 初始化文件中的变量。
-4. 推导隐晦规则，并分析所有规则。
-5. 为所有的目标文件创建依赖关系链。
-6. 根据依赖关系，决定哪些目标要重新生成。
-7. 执行生成命令。
+  ```
+  1. 读入所有的 Makefile。
+  2. 读入被 include 的其它 Makefile。
+  3. 初始化文件中的变量。
+  4. 推导隐晦规则，并分析所有规则。
+  5. 为所有的目标文件创建依赖关系链。
+  6. 根据依赖关系，决定哪些目标要重新生成。
+  7. 执行生成命令。
+  ```
 
 ##### 书写规则
 
 - 一般来说，make 会以 UNIX 的标准 Shell，也就是/bin/sh 来执行命令。
 
 - make支持三个通配符，*  ？ [...]，~代表家目录，如果文件名中有通配符，可以使用\来转义。如果要让通配符在变量中展开，也就是让objects的值就是所有[.o]的文件名的集合，可以使用objects := $(wildcard *.o)，其中wildcard是关键字。objects = *.o这样不对，这样不能展开。如果不使用变量通配符就能直接这么用。
+  - 不使用通配符可以直接这样用说的是不使用通配符可以直接用=赋值， `objects=a.o b.o c.o`
+
 
 - 文件搜寻：当 make 需要去找寻文件的依赖关系时，你可以在文件前加上路径，但最好的方法是把一个路径告诉 make，让 make 在自动去找。
 
@@ -67,18 +76,18 @@
 
 - 伪目标：为了避免和文件重名的这种情况，我们可以使用一个特殊的标记“.PHONY”来显示地指明一个目标是“伪目标”，向 make 说明，不管是否有这个文件，这个目标就是“伪目标”。“伪目标”并不是一个文件，只是一个标签，由于“伪目标”不是文件，所以 make 无法生成它的依赖关系和决定它是否要执行。我们只有通过显示地指明这个“目标”才能让其生效。
 
-  伪目标一般没有依赖的文件。但是，我们也可以为伪目标指定所依赖的文件。伪目标同样可以作为“默认目标”，只要将其放在第一个。一个示例就是，如果你的 Makefile 需要一口气生成若干个可执行文件，但你只想简单地敲一个 make 完事，并且，所有的目标文件都写在一个 Makefile 中，那么你可以使用“伪目标”这个特性：
+  - 伪目标一般没有依赖的文件。但是，我们也可以为伪目标指定所依赖的文件。伪目标同样可以作为“默认目标”，只要将其放在第一个。一个示例就是，如果你的 Makefile 需要一口气生成若干个可执行文件，但你只想简单地敲一个 make 完事，并且，所有的目标文件都写在一个 Makefile 中，那么你可以使用“伪目标”这个特性：
 
-  ```
-  all : prog1 prog2 prog3
-  .PHONY : all
-  prog1 : prog1.o utils.o
-  cc -o prog1 prog1.o utils.o
-  prog2 : prog2.o
-  cc -o prog2 prog2.o
-  prog3 : prog3.o sort.o utils.o
-  cc -o prog3 prog3.o sort.o utils.o
-  ```
+    ```
+    all : prog1 prog2 prog3
+    .PHONY : all
+    prog1 : prog1.o utils.o
+    cc -o prog1 prog1.o utils.o
+    prog2 : prog2.o
+    cc -o prog2 prog2.o
+    prog3 : prog3.o sort.o utils.o
+    cc -o prog3 prog3.o sort.o utils.o
+    ```
 
   Makefile 中的第一个目标会被作为其默认目标。我们声明了一个“all”的伪目标，其依赖于其它三个目标。由于伪目标的特性是，总是被执行的，所以其依赖的那三个目标就总是不如“all”这个目标新。所以，其它三个目标的规则总是会被决议。也就达到了我们一口气生成多个目标的目的。“.PHONY : all”声明了“all”这个目标为“伪目标”。
 
