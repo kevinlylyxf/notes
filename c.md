@@ -1658,7 +1658,146 @@ int main(){
     num_140=2
     ```
 
-    
+
+##### 结构体变量引用
+
+- 定义了结构体变量之后就可以在程序中对它进行引用，但是结构体变量的引用同一般变量的引用不一样。因为结构体变量中有多个不同类型的成员，所以结构体变量不能整体引用，只能一个成员一个成员地进行引用。
+
+- 不能将一个结构体变量作为一个整体进行引用，只能分别单独引用它内部的成员，引用方式为：
+
+  ```
+  结构体变量名.成员名
+  ```
+
+  - 如果成员名是一个变量名，那么引用的就是这个变量的内容；如果成员名是一个数组名，那么引用的就是这个数组的首地址。
+
+- “.”是“成员运算符”，它在所有运算符中优先级最高，因此可以将 student1.num 作为一个整体来看待。我们可以直接对变量的成员进行操作，例如：
+
+  ```
+  student1.num = 1207041;
+  ```
+
+- 如果结构体类型中的成员也是一个结构体类型，则要用若干个“.”，一级一级地找到最低一级的成员。因为只能对最低级的成员进行操作。
+
+- 在 C 语言中，结构体变量的首地址就是结构体第一个成员的首地址。所以 &student1 就等价于第一个成员 name 的首地址，而 name 是一个数组，数组名表示的就是数组的首地址。所以 &student1 和 student1.name 是等价的。但是要注意的是，它们的等价指的仅仅是“它们表示的是同一个内存空间的地址”，但它们的类型是不同的。&student1 是结构体变量的地址 ，是 struct STUDENT* 型的；而 student1.name 是数组名，所以是 char* 型的。类型的不同导致它们在程序中不能相互替换。
+
+  ```
+  struct STUDENT
+  {
+      char name[20];
+      int num;
+      int year;
+      int month;
+      int day;
+      float score;
+  };
+  ```
+
+- 实例
+
+  ```
+  # include <stdio.h>
+  struct AGE
+  {
+      int year;
+      int month;
+      int day;
+  };
+  struct STUDENT
+  {
+      char name[20];
+      int num;
+      struct AGE birthday;  //就有点类似于C++中的封装了
+      float score;
+  };
+  int main(void)
+  {
+      struct STUDENT student1 = {"小明", 1207041, {1989, 3, 29}, 100};
+      printf("name : %s\n", student1.name);
+      printf("birthday : %d-%d-%d\n", student1.birthday.year, student1.birthday.month, student1.birthday.day);
+      printf("num : %d\n", student1.num);
+      printf("score : %.1f\n", student1.score);
+      return 0;
+  }
+  ```
+
+  - 程序中，虽然我们前面说“&student1 和 student1.name是等价的”，但第 18 行不能像下面这样写。
+
+    ```
+    printf("name : %s\n", &student1);
+    ```
+
+    - 原因是 %s 要求输出参数要么是字符数组名，要么是字符指针变量名，总之是 char* 型的。而 &student1 和 student1.name 在前面讲过，虽然它们是等价的，但它们的等价指的仅仅是“它们表示的是同一个内存空间的地址”，但它们的类型是不同的。&student1 是 struct STUDENT* 型的，而 student1.name 是 char* 型的，所以只能写 student1.name。
+    - 但是有的编译器写 &student1 就可以通过，而有的编译器则只会产生警告。这种“可错可不错”的写法大家不要使用，按规范书写可移植性才强。
+
+##### 结构体变量初始化
+
+- 结构体变量的初始化方式有两种，可以在定义的时候或定义之后对结构体变量进行初始化。
+
+- 一般情况下我们都是在定义的时候对它进行初始化，因为那样比较方便。如果定义之后再进行初始化，那就只能一个一个成员进行赋值，就同数组一样。
+
+- 在定义结构体变量时对其进行初始化，只要用大括号“{}”括起来，然后按结构体类型声明时各项的顺序进行初始化即可。各项之间用逗号分隔。如果结构体类型中的成员也是一个结构体类型，则要使用若干个“{}”一级一级地找到成员，然后对其进行初始化。
+
+  ```
+  # include <stdio.h>
+  struct AGE
+  {
+      int year;
+      int month;
+      int day;
+  };
+  struct STUDENT
+  {
+      char name[20];
+      int num;
+      struct AGE birthday;
+      float score;
+  };
+  int main(void)
+  {
+      struct STUDENT student1 = {"小明", 1207041, {1989, 3, 29}, 100};
+      return 0;
+  }
+  ```
+
+  - 注意，同字符、字符数组的初始化一样，如果是字符那么就用单引号括起来，如果是字符串就用双引号括起来。
+
+- 第二种方式是定义后再初始化
+
+  ```
+  # include <stdio.h>
+  # include <string.h>
+  struct AGE
+  {
+      int year;
+      int month;
+      int day;
+  };
+  struct STUDENT
+  {
+      char name[20];  //姓名
+      int num;  //学号
+      struct AGE birthday;  /*用struct AGE结构体类型定义结构体变量birthday, 即生日*/
+      float score;  //分数
+  };
+  int main(void)
+  {
+      struct STUDENT student1;  /*用struct STUDENT结构体类型定义结构体变量student1*/
+      strcpy(student1.name, "小明");  //不能写成&student1
+      student1.num = 1207041;
+      student1.birthday.year = 1989;
+      student1.birthday.month = 3;
+      student1.birthday.day = 29;
+      student1.score = 100;
+      printf("name : %s\n", student1.name);  //不能写成&student1
+      printf("num : %d\n", student1.num);
+      printf("birthday : %d-%d-%d\n", student1.birthday.year, student1.birthday.month, student1.birthday.day);
+      printf("score : %.1f\n", student1.score);
+      return 0;
+  }
+  ```
+
+  
 
 
 ##### 枚举
