@@ -609,6 +609,54 @@ int main(){
 
   - 因为结构体里面就是这些基础类型来组合的，所以在只初始化了某些结构体数组的元素时，剩下的按照默认初始化。即结构体里面的基础类型按照上面所示的初始化。
 
+  - 结构体数组如果只定义不初始化，数据是一些乱码的值。
+
+    ```
+    #include <stdio.h>
+    #include <string.h>
+    #include "test.h"
+    typedef struct Person{
+        int age;
+        char name[64];
+    }T_person;
+    int main(int argc, char *argv[])
+    {
+        /* T_person a[10] = {{18, "xiaoming"}}; */
+        T_person a[5];
+        for(int i = 0; i < 5; i++){
+            printf("%d age is %d\n", i,a[i].age);
+            printf("%d name is %s\n", i, a[i].name);
+        }
+        return 0;
+    }
+    
+    输出结果
+    0 age is 0
+    0 name is
+    1 age is 0
+    1 name is d
+    2 age is 591450232
+    2 name is
+    3 age is 0
+    3 name is
+    4 age is 0
+    4 name is
+    可以看到第二个和第三个数据已经乱码了
+    
+    如果将注释的放开，将没初始化的语句注释掉，结果如下
+    0 age is 18
+    0 name is xiaoming
+    1 age is 0
+    1 name is
+    2 age is 0
+    2 name is
+    3 age is 0
+    3 name is
+    4 age is 0
+    4 name is
+    未初始化的结构体数组中的结构体元素全部按默认初始化。可以验证如果只初始化一部分结构体数组的元素，剩余的按照基本数据类型默认初始化。
+    ```
+
 ##### 二维数组
 
 - 二维数组定义的一般形式是：
