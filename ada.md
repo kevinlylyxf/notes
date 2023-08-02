@@ -1336,6 +1336,7 @@ type array_name is array (index specification) of type;
   ```
 
   - reverse 是可选的.
+  - for循环后面跟随的range也可以用一个subtype写一个类型，此时直接写这个类型，就不用手写范围了  1 .. ---
 
 -   注意一下，*index* 是for循环中的局部变量，无需额外声明，只需填入一个合法的标识符即可，在for循环内，不能修改*index*的值。*index*的值一般情况下是递增加1，如 **for** i **in** 1..100,i的初值为1，每循环一次加1，直至加到100，循环100次结束；有时也需要倒过来，如i初值为100,减到1，则为 **for** i **in reverse** 1..100。但*range*中较大值在前则该循环不进行，如 **for** i **in [reverse]**100..1,循环内语句会略过---即变成了空语句。
 
