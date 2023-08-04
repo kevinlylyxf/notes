@@ -1102,8 +1102,6 @@ type array_name is array (index specification) of type;
   因为记录是变体的，即里面的东西是可变的，所以在设置时，case后面的一些字段都是从同一个字节开始的。
   ```
 
-  
-
 - 也可以不是record，也可以是枚举类型，例如
 
   ```ada
@@ -1132,6 +1130,12 @@ type array_name is array (index specification) of type;
   ```
 
   - 因为我们的枚举和c语言的枚举不一样，c语言的枚举是一个整形，所以上面这是让我们的枚举变成整形，最后在cdc中占用4个字节。可以看一下iac_ssr_code_cdc_types.a文件ECR_SKYNETX_36
+  - 这个枚举这样写就是确定在内存中占用的字节数和具体每一个元素代表的值，和c语言的枚举类型对应起来。如果c语言不需要，只是我们内部ada使用，也就不用写后面的for use了。
+  - 枚举类型的for use使用是确定占用内存数，和每一个元素代表的整形值，record也是确定占用多少字节，和结构中每一个元素占用的大小。这两个要区分开，两个的写法也不一样，record可以包含枚举。但是枚举也需要像这样写好，然后在record中在确定字节数。
+
+- 在我们ada和c的通信中，有两种类型，一种就是我们直接通过ada写进文件或者内存中，然后c在直接按照c的读出来即可，只要按照for use这种数据大小对应好就行。上面这种主要就是fifo和cdc中，ada和c是各干各的，不会说ada调用c的接口写进去。
+
+  - 第二种就是写进ACF文件中，c定义了一个结构，和ada的不一样，然后我们ada调用c的接口写进去，这时候也是需要内存对应好的，例如c里面bool类型是4个字节，ada中boolean是1个字节，这时候就需要转换一下，将ada中的转换为c的bool，然后写进去。因为结构是c定好的，我们只能按照c的结构来。ada调用c的接口，形参类型都是指针。
 
 - 我们的代码的例子
 
@@ -2548,7 +2552,7 @@ function SET_EXTERNAL_CONF
   pragma INTERFACE_NAME (SET_EXTERNAL_CONF, "COM_DPR_SetExternalConf");
 ```
 
-- 如果在ADA中想用一个函数，但是函数是用c写的，我们就按上面这种方法，只需要声明一个ADA函数，然后在写上pragma这两航就可以，不需要写ADA函数的实现，相当于调用ADA函数时，直接用的C函数。如果c里面的变量类型为指针，则ada声明时需要用SYSTEM.ADDRESS
+- 如果在ADA中想用一个函数，但是函数是用c写的，我们就按上面这种方法，只需要声明一个ADA函数，然后在写上pragma这两行就可以，不需要写ADA函数的实现，相当于调用ADA函数时，直接用的C函数。如果c里面的变量类型为指针，则ada声明时需要用SYSTEM.ADDRESS
 
 - 那个C的函数我们是需要自己写的。
 
@@ -2562,3 +2566,6 @@ function SET_EXTERNAL_CONF
   ```
 
   - 对于示例中的接口函数，不能直接使用dpr_common中定义的全局变量，必须在本文件中定义一个，然后'ADDRESS
+  
+  - 应该是我们只能用INTEGER_32类型的变量，dpr_common中的变量一般是subtype的，所以我们不能直接这样用，我们需要在本文件中定义一个INTEGER_32的变量，然后将dpr_common中的那个值赋值过来，这样就可以用了。如果dpr_common中的类型本来就是INTEGER_32就不用这样了，可以直接用ADDRESS取地址。
+  - 上面好像也不对，用的时候测试着用吧，先直接取地址，不行再本地在定义一个INTEGER_32类型的值在赋值过来。
