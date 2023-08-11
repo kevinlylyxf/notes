@@ -310,6 +310,19 @@
 
 - Ada 中的基本数据类型就讲到这里，实际上本节是基于上一节内容的扩展，说穿了还是创建数据类型。Ada 在数据类型处理上提供的强大功能在接下的章节里我们将会接触的更多，在这方面 Ada 的确比其它大部份语言做的好多了，熟悉 C ,Pascal的朋友大概会感到相当有意思。
 
+- 对于ada中离线配置的是字符串，而内部数据存储是枚举类型，按如下方式解决
+
+  ```
+  begin
+    PRINT_TARGET := FPL_PARAMETERS.STRIP_PRINT_TARGETS'VALUE(ELEMENT.TEXT(ELEMENT.FIRST .. ELEMENT.LAST));
+  exception
+    when others =>
+      ERROR.ID := ADAPT_ERROR_MNG.INVALID_PRINT_STRIP_TARGET;
+  end;
+  ```
+
+  - 用VALUE数据类型属性将字符串转换为枚举类型，如果字符串跟枚举类型中的一样就能转过去，否则就会出现异常，此时我们捕获异常，设置ID属性，就能根据ID属性进行后续的判断了。
+
 ##### 数据类型属性
 
 - 数据类型属性，表示某个数据类型的具体特征---取值范围，最小值，最大值，某数在该类型中的位置 …… 应该说是相当有用的-----起码不像 C 语言，还要翻翻系统手册才能知道某个数据类型的具体定义。这些属性的用法和调用函数一样，也可以认为它们就是预定义的函数----虽然不怎么准确，有些返回值为通用类型(universal type)和字符串型。
@@ -590,7 +603,6 @@ type array_name is array (index specification) of type;
   
     ```
     FSN_UID_ARRAY : FSN_UID_T(FPL_PARAMETERS.ALPHABETIC'FIRST .. FPL_PARAMETERS.ALPHABETIC'LAST, SN_RANGE_T'FIRST .. SN_RANGE_T'LAST)              := ( others => (others => FPL_BRICK.NUMBER_DEF) );
-    
     ```
   
 
@@ -1288,6 +1300,7 @@ type array_name is array (index specification) of type;
   ```
 
   - 与前面的例子完全等效。
+  - ada中的case和c语言中的switch不一样，ada中的when条件可以是一个值，也可以是一个范围，从上面就可以看到。相当于in运算符也可以，所以我们可以用数字，然后用范围作为when的条件，也可以用枚举，然后用枚举的范围做一个when的条件，也可以直接用一个值，不用范围。两者可以交叉使用。
 
 ##### loop语句
 
