@@ -1799,7 +1799,30 @@ end PutResult;
     procedure Put (Item : in String);
     ```
 
-  -   编译器会自动选择合适的子程序，如果Put后面的参数为 Character类型，则调用**procedure** Put (Item : **in** Character);为 String 类型，则调用**procedure** Put (Item : **in** String)。这样在用户层上使用子程序简便了许多，很多常见的子程序:Get,Put_Line,Line, Page都是这样实现的----虽然在预定义程序包内针对不同参数都有一个子程序与之相对应,用户却只要记住一个名称就可以了。
+  - 编译器会自动选择合适的子程序，如果Put后面的参数为 Character类型，则调用**procedure** Put (Item : **in** Character);为 String 类型，则调用**procedure** Put (Item : **in** String)。这样在用户层上使用子程序简便了许多，很多常见的子程序:Get,Put_Line,Line, Page都是这样实现的----虽然在预定义程序包内针对不同参数都有一个子程序与之相对应,用户却只要记住一个名称就可以了。
+
+- 如果重载的子程序参数类型是同一个类型的subtype，这样重载也不会成功，相当于重复定义
+
+  ```
+  subtype A is INTEGER_32;
+  subtype B is INTEGER_32;
+  
+  procedure SET(VAL1 : A) is
+  begin
+     null;
+  end SET;
+  
+  procedure SET(VAL1 : B) is
+  begin
+     null;
+  end SET;
+  ```
+
+  - 上面这种定义不成功，因为A和B都是从INTEGER_32 subtype，相当于重复定义了。
+
+    ```
+    error: duplicate body for "SET" declared
+    ```
 
 - 运算符重载
 
