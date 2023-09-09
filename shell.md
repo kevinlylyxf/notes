@@ -4311,6 +4311,22 @@ ${#array_name[@]}
      3 #+  也就是拷贝所有更新的文件和之前不存在的文件
   ```
 
+- 参数 -p, 可以保持源文件的时间属性。否则新文件为当前时间
+
+  - 例如不加-p选项拷贝文件，拷贝后的软件为当前时间
+
+    ```
+    $ls -al fdp_main
+    -rwxr-xr-x 1 system EUROCAT 42258724 Sep  7 08:03 fdp_main    源文件
+    
+    $ls -al fdp_main
+    -rwxr-xr-x 1 system EUROCAT 42258724 Sep  9 02:25 fdp_main   cp拷贝的文件，不加参数-p拷贝
+    $ls -al fdp_main
+    -rwxr-xr-x 1 system EUROCAT 42258724 Sep  7 08:03 fdp_main   cp拷贝的文件，加了参数-p拷贝
+    ```
+
+- scp命令也是一样有一个-p参数，用法和cp的-p参数一样。
+
 ##### sort
 
 - sort 是 Linux 的排序命令，而且可以依据不同的数据类型来进行排序。sort 将文件的每一行作为一个单位，相互比较。比较原则是从首字符向后，依次按 ASCII 码值进行比较，最后将它们按升序输出。
