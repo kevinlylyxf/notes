@@ -554,7 +554,7 @@ type array_name is array (index specification) of type;
   - 则会引起错误(看上去很正确)，因为还缺4个字符，应为
 
   ```
-  Path_Name :String(1..10) := "/root/ ";
+  Path_Name :String(1..10) := "/root/    ";
   ```
 
   - 或采用从理论上讲麻烦点实际上根本不会这么做的方案：
@@ -684,10 +684,10 @@ type array_name is array (index specification) of type;
 - 整个数组的值可以赋给另一个数组，但这两个数组需要是同1种数组类型，如果是无约束数组，数组的元素的个数要相等。如：
 
   ```
-  My_Name : String (1..10) := "Dale ";
-  Your_Name : String (1..10) := "Russell ";
-  Her_Name : String (21..30) := "Liz ";
-  His_Name : String (1..5) := "Tim ";
+  My_Name : String (1..10) := "Dale      ";
+  Your_Name : String (1..10) := "Russell   ";
+  Her_Name : String (21..30) := "Liz        ";
+  His_Name : String (1..5) := "Tim  ";
   Your_Name := My_Name;
   Your_Name := Her_Name; -- 合法的,它们的元素个数和类型相同
   His_name := Your_name; -- 会产生错误,类型虽然相同，但长度不同
