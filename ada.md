@@ -107,7 +107,7 @@
 
   -  type_name 为新类型的名称，是一个合法标识符；range range_specification 表示该类型的取值范围，是可选的，没有的话表示新类型 type_name 的取值范围和 old_type 一样。
 
-- 再将先前的例子改一下： 
+- 再将先前的例子改一下：
 
   ```
   000 — putwage.adb
@@ -1381,7 +1381,7 @@ type array_name is array (index specification) of type;
   - reverse 是可选的.
   - for循环后面跟随的range也可以用一个subtype写一个类型，此时直接写这个类型，就不用手写范围了  1 .. ---
 
--   注意一下，*index* 是for循环中的局部变量，无需额外声明，只需填入一个合法的标识符即可，在for循环内，不能修改*index*的值。*index*的值一般情况下是递增加1，如 **for** i **in** 1..100,i的初值为1，每循环一次加1，直至加到100，循环100次结束；有时也需要倒过来，如i初值为100,减到1，则为 **for** i **in reverse** 1..100。但*range*中较大值在前则该循环不进行，如 **for** i **in [reverse]**100..1,循环内语句会略过---即变成了空语句。
+- 注意一下，*index* 是for循环中的局部变量，无需额外声明，只需填入一个合法的标识符即可，在for循环内，不能修改*index*的值。*index*的值一般情况下是递增加1，如 **for** i **in** 1..100,i的初值为1，每循环一次加1，直至加到100，循环100次结束；有时也需要倒过来，如i初值为100,减到1，则为 **for** i **in reverse** 1..100。但*range*中较大值在前则该循环不进行，如 **for** i **in [reverse]**100..1,循环内语句会略过---即变成了空语句。
 
   -   仍旧是通过修改testrange来了解for:
 
@@ -1410,6 +1410,15 @@ type array_name is array (index specification) of type;
   ```
 
   - 如果不输入0，在输入10次整数后，该程序会自动结束。
+
+- for循环中如果循环中的range错误即FIRST>LAST，则不进入循环，例如
+
+  ```
+  for I in 3 .. 0 loop
+  end loop;
+  ```
+
+  - 这个循环进不去
 
 ##### while循环
 
