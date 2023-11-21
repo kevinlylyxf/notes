@@ -1939,6 +1939,25 @@ end PutResult;
 
   - 这个程序和先前那个完全一样，只是"分了家"而已。这样分离程序有时能更好的分解程序的任务，使程序结构更为清楚。注意一下overload.adb的[014] 和 overload-put.adb的 [001]，这两句就是分离子程序的主要语句。
 
+- 一个package里面如何函数过多，也可以这样用separate分离开，例如
+
+  ```
+  fpl/event_processor/fpl_event_processor.a
+  package FPL_EVENT_PROCESSOR is
+  	procedure PROCESS_ONE_EVENT
+        (RECEIVED_EVENT : in     FPL_EVENT_TYPES.EVENTS);
+    
+  fpl/event_processor/fpl_event_processor_b.a
+  package body FPL_EVENT_PROCESSOR is
+  	procedure PROCESS_ONE_EVENT
+        (RECEIVED_EVENT : in     FPL_EVENT_TYPES.EVENTS) is separate;
+  
+  fpl/event_processor/evp_process_one_event_s.a
+  separate (FPL_EVENT_PROCESSOR)
+  procedure PROCESS_ONE_EVENT
+      (RECEIVED_EVENT : in     FPL_EVENT_TYPES.EVENTS) is
+  ```
+
 ##### 子程序的内嵌扩展
 
 - 子程序可以在调用地点被内嵌扩展，以提高程序效率，它的格式为：
