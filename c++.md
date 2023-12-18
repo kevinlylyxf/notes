@@ -958,6 +958,214 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 上面的json_temp作为一个临时指针变量往json_array里面放，如果json_temp在外面申请的话，说明接进去的就是一直是一块空间，但是我们接的每一个都是一块空间，所以需要在里面每次接到json_array的时候都要申请json_temp.
 
+##### XML
+
+###### XML语法
+
+- XML（可扩展标记语言）是一种用于存储和传输数据的标记语言。它使用标签来定义数据的结构和语义。以下是一些XML的基本语法规则：
+
+  - 元素（Element）:
+
+    ```
+    XML文档由元素构成，每个元素有一个开始标签和一个结束标签。
+    例如：<element>content</element>
+    ```
+
+  - 标签（Tag）
+
+    ```
+    开始标签和结束标签包围元素的内容。
+    例如：<name>John</name>
+    ```
+
+  - 属性（Attribute）
+
+    ```
+    元素可以包含属性，属性提供有关元素的额外信息。
+    例如：<person age="30">John</person>
+    ```
+
+    - 在 XML 中，属性值通常用引号括起来，但并非必须。根据 XML 规范，属性值可以用单引号或双引号括起来，或者干脆不使用引号，只要满足以下条件，但是基本上都引起来，避免因为空格等字符引起错误
+
+  - 根元素（Root Element）
+
+    ```
+    每个XML文档必须有一个根元素，它包含所有其他元素。
+    <root>
+      <element>content</element>
+    </root>
+    ```
+
+  - 嵌套（Nesting）
+
+    ```
+    元素可以嵌套在其他元素内部
+    <book>
+      <title>XML Basics</title>
+      <author>John Doe</author>
+    </book>
+    
+    ```
+
+  - 空元素
+
+    ```
+    可以用一个单一的标签表示没有内容的元素。
+    例如：<empty />
+    ```
+
+  - 注释（Comment）
+
+    ```
+    可以在XML文档中包含注释，注释以 <!-- 开始，以 --> 结束。
+    例如：<!-- This is a comment -->
+    ```
+
+  - CDATA节
+
+    ```
+    用于包含不应被解析器解释的文本数据
+    <![CDATA[This is some unescaped <data>]]>
+    ```
+
+  - XML声明
+
+    ```
+    位于文档的开头，用于指定XML版本和字符集
+    <?xml version="1.0" encoding="UTF-8"?>
+    ```
+
+  - 实体引用
+
+    ```
+    使用实体引用来表示一些保留字符，如 < 表示为 &lt;，> 表示为 &gt;
+    ```
+
+    - 必须以分号结尾
+
+    - 在 XML 中，如果你想在文本中包含一些特殊字符（比如 `<`, `>`, `&`），你需要使用实体引用（Entity Reference）来转义这些字符，以防止它们被解析器误解为 XML 标记。以下是一些常用的 XML 转义字符：
+
+      ```
+      &lt; 代表 <（小于号）
+      &gt; 代表 >（大于号）
+      &amp; 代表 &（和号）
+      &quot; 代表 "（双引号）
+      &apos; 代表 '（单引号）
+      ```
+
+    - 例如，如果你要在 XML 中表示文本 "3 < 5"，你应该这样写：
+
+      ```
+      <comparison>3 &lt; 5</comparison>
+      ```
+
+###### 其他记录
+
+- xml中只有元素属性没有元素
+
+  - 在XML中，元素可以是空的，也就是说，它们可以只包含属性而没有实际的文本内容。以下是一个例子：
+
+    ```
+    <person name="John" age="30" />
+    ```
+
+  - 在这个例子中，`person` 元素没有包含实际的文本内容，而是只有两个属性：`name` 和 `age`。这种形式的元素常常被称为“空元素”或“自闭合元素”。
+
+- 为什么会有空元素
+
+  - 空元素（自闭合元素）在XML中有其实际的应用场景和优势，主要体现在以下几个方面：
+
+    1. **表示标记的存在**:
+       - 有时候，一个元素本身就是一个标记，不需要包含任何文本内容。使用空元素可以更清晰地表示这样的情况。
+    2. **属性传递**:
+       - 空元素经常用于传递属性信息而无需实际的文本内容。这样的元素可以轻量地表示一些关键信息，如配置、设置等。
+    3. **符合某些规范和标准**:
+       - 在一些规范和标准中，定义了元素只包含属性而没有实际文本内容的情况。使用空元素可以使XML符合这些规范。
+    4. **简化结构**:
+       - 有时，为了简化XML文档结构，可以使用空元素来表示某个元素存在但不包含实际内容。
+
+  - 例如，在表示一个网页的元数据时，你可能会使用空元素来传递一些信息
+
+    ```
+    <html>
+      <head>
+        <title>My Web Page</title>
+        <meta charset="UTF-8" />
+        <meta name="author" content="John Doe" />
+        <link rel="stylesheet" href="styles.css" />
+      </head>
+      <body>
+        <!-- 页面内容 -->
+      </body>
+    </html>
+    ```
+
+    - 在上述示例中，`meta` 元素就是一个空元素，用于传递一些元数据，而不需要实际的文本内容。这样可以使XML文档更清晰、简洁。
+
+- xml中CDATA如何理解
+
+  - CDATA（Character Data）是XML中的一个特殊标记，用于包含不应由XML解析器解释的文本数据。CDATA节内的文本将被视为纯文本，而不会被解释为XML标记。这对于包含大量特殊字符、代码或其他格式化信息的文本非常有用。
+
+  - CDATA节的语法如下：
+
+    ```
+    <![CDATA[ your text here ]]>
+    ```
+
+    - 其中，`your text here` 是你希望放入CDATA节的文本内容。CDATA节通常用于包含包含字符（如 `<`, `>`, `&`）的文本，以避免与XML标记发生冲突。
+
+  - 下面是一个示例，演示了CDATA的用法
+
+    ```
+    <description><![CDATA[This is a <b>bold</b> statement.]]></description>
+    ```
+
+    - 在这个例子中，`<b>bold</b>` 不会被解释为XML标记，而是作为纯文本保存在CDATA节中。如果不使用CDATA，XML解析器可能会尝试解释 `<b>` 和 `</b>`，导致错误或不正确的结果。
+
+  - 使用CDATA的一些常见情况包括
+
+    - 包含HTML代码：当XML文档中需要包含HTML代码片段时，使用CDATA可以防止HTML代码被XML解析器解释。
+    - 包含程序代码：如果在XML中包含程序代码片段（如JavaScript、SQL等），使用CDATA可以确保代码不被解释为XML标记。
+    - 包含特殊字符：当文本包含大量特殊字符时，使用CDATA可以减少转义字符的使用，使文本更易读。
+
+  - 需要注意的是，虽然CDATA提供了一种途径来包含不应被解释的文本数据，但过度使用它可能导致数据变得难以维护。在一些情况下，选择适当的字符转义方法可能更为清晰。
+
+- 写一个带缩进的xml结构
+
+  ```
+  <BookList>
+      <Book>
+          <Title>"Sapiens: A Brief History of Humankind"</Title>
+          <Author>Yuval Noah Harari</Author>
+          <PublicationDate>2014-02-10</PublicationDate>
+      </Book>
+      <Book>
+          <Title>"To Live"</Title>
+          <Author>Yu Hua</Author>
+          <PublicationDate>1993-05-01</PublicationDate>
+      </Book>
+      <Book>
+          <Title>"The Three-Body Problem"</Title>
+          <Author>Liu Cixin</Author>
+          <PublicationDate>2008-01-01</PublicationDate>
+      </Book>
+  </BookList>
+  ```
+
+  - 从上面可以看到带缩进的时候，缩进里面的内容就是实际的元素内容，例如Title就是Book里面的内容，所有Book不用在写元素内容了。不能这样写
+
+    ```
+    <BookList>
+        <Book>ABCD
+            <Title>"Sapiens: A Brief History of Humankind"</Title>
+            <Author>Yuval Noah Harari</Author>
+            <PublicationDate>2014-02-10</PublicationDate>
+        </Book>
+    </BookList>
+    ```
+
+    - 上面的写法元素Book带ABCD是错误的，但是可以写为元素属性
+
 ##### Json
 
 - JSON作为数据传输的格式，有几个显著的优点：
