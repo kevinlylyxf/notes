@@ -1497,6 +1497,113 @@ int main(){
    char *str = (char *)malloc(sizeof(char) * 30);
   ```
 
+- void 指针是一种特殊的指针，表示为“无类型指针”，在 ANSI C 中使用它来代替“char*”作为通用指针的类型。由于 void 指针没有特定的类型，因此它可以指向任何类型的数据。也就是说，任何类型的指针都可以直接赋值给 void 指针，而无需进行其他相关的强制类型转换
+
+  ```
+  void *p1;
+  int *p2;
+  …
+  p1 = p2;
+  ```
+
+- 虽然如此，但这并不意味着可以无需任何强制类型转换就将 void 指针直接赋给其他类型的指针，因为“空类型”可以包容“有类型”，而“有类型”则不能包容“空类型”。说明有类型可以赋值给void类型，但是void类型不能赋值给有类型，下面这种赋值是错误的
+
+  ```
+  void *p1;
+  int *p2;
+  …
+  p2 = p1;
+  ```
+
+  - 由此可见，要将 void 指针赋值给其他类型的指针，必须进行强制类型转换，下面这种写法是正确的
+
+    ```
+    void *p1;
+    int *p2;
+    …
+    p2 = (int*)p1;
+    ```
+
+- 避免对void指针进行算术操作
+
+  - ANSI C 标准规定，进行算法操作的指针必须确定知道其指向数据类型大小，也就是说必须知道内存目的地址的确切值。
+
+  - 而对于 void 指针，编译器并不知道所指对象的大小，所以对 void 指针进行算术操作都是不合法的，下面这种写法是错误的
+
+    ```
+    void * p;
+    p++;      // ANSI：错误
+    p+= 1;      // ANSI：错误
+    ```
+
+  - 但值得注意的是，GNU 则不这么认为，它指定“void*”的算法操作与“char*”一致。因此下列语句在 GNU 编译器中都是正确的：
+
+    ```
+    void * p;
+    p++;      // GUN：正确
+    p+=1;      // GUN：正确
+    ```
+
+    - 所以上面的memcpy转换成`void *`类型是在GNU标准下是正确的
+
+- 如果函数的参数可以是任意类型指针，应该将其参数声明为 void*
+
+  - 前面提到，void 指针可以指向任意类型的数据，同时任何类型的指针都可以直接赋值给 void 指针，而无需进行其他相关的强制类型转换。因此，在编程中，如果函数的参数可以是任意类型指针，那么应该使用 void 指针作为函数的形参，这样函数就可以接受任意数据类型的指针作为参数。
+
+  - 比较典型的函数有内存操作函数 memcpy 和 memset，如下面的代码所示：
+
+    ```c
+    void *memset(void *buffer, int b, size_t size)
+    {
+        assert(buffer!=NULL);
+        char* retAddr = (char*)buffer;
+        while (size--> 0)
+        {
+            *(retAddr++) = (char)b;
+        }
+        return retAddr;
+    }
+    void *memcpy (void *dst,  const void *src,  size_t size)
+    {
+        assert((dst!=NULL) && (src!=NULL));
+        char *temp_dest = (char *)dst;
+        char *temp_src = (char *)src;
+        char* retAddr = temp_dest;
+        size_t i = 0;
+        /* 解决数据区重叠问题*/
+        if ((retAddr>temp_src) && (retAddr<(temp_src+size)))
+        {
+            for (i=size-1; i>=0; i--)
+            {
+                *(temp_dest++) = *(temp_src++);
+            }
+        }
+        else
+        {
+            for (i=0; i<size; i++)
+            {
+                *(temp_dest++) = *(temp_src++);
+            }
+        }
+        *(retAddr+size)='\0';
+        return retAddr;
+    }
+    ```
+
+  - 进行如下形式的调用：
+
+    ```
+    int dst[100];
+    int src[100];
+    memcpy(dst, src, 100*sizeof(int));
+    ```
+
+    - 因为参数类型是 void*，所以上面的调用都是正确的
+
+- 总体来说，记住void类型的指针可以指向任意类型的指针，但是在实际使用时要注意将void类型指针转换为我们需要的指针类型进行计算，不能直接用void类型指针进行计算
+
+  - 外面的实参传进void类型的指针形参时，在函数内部，这个指针就是void类型的，在使用时注意转换或者直接在GNU标准下按照一个字节一个字节的进行计算。
+
 ##### 空(null)指针和NULL指针的区别
 
 - 对于空（null）指针的概念，在 C 标准中明确地定义：值为 0 的整型常量表达式，或强制（转换）为“void*”类型的此类表达式，称为空指针常量。当将一个空指针常量赋予一个指针或与指针作比较时，将把该常量转换为指向该类型的指针，这样的指针称为空指针。空指针在与指向任何对象或函数的指针作比较时保证不会相等。
