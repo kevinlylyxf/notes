@@ -209,7 +209,7 @@
 
 
     - 例如可以查看预定义的CXX和CC的值
-
+    
       ```
       make -p | grep CXX
       LINK.cc = $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(TARGET_ARCH)
@@ -225,7 +225,7 @@
       COMPILE.S = $(CC) $(ASFLAGS) $(CPPFLAGS) $(TARGET_MACH) -c
       COMPILE.c = $(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
       ```
-
+    
     - 通过上面也可以看到make -p可以查看预定义的隐含规则
 
 
@@ -242,15 +242,67 @@
 ##### 使用变量
 
 - 如果要使用$，需要用$$来表示
+
 - 简单赋值 ( := ) 编程语言中常规理解的赋值方式，只对当前语句的变量有效。
+
 - 递归赋值 ( = ) 赋值语句可能影响多个变量，所有目标变量相关的其他变量都受影响。
+
 - 追加变量值：+=   objects = main.o foo.o bar.o utils.o  ;objects += another.o，前面的要一样，都是objects。如果变量之前没有定义过，那么，“+=”会自动变成“=”，如果前面有变量定义，那么“+=”会继承于前次操作的赋值符。如果前一次的是“:=”，那么“+=”会以“:=”作为其赋值符
+
 - ?=表示如果变量前面赋过值，就跳过此赋值操作。如果没有赋值则使用此语句赋值，这种情况下和=类似。
+
 - override指示符，表示如果不希望通过make命令行参数来设置变量，可以在变量前面写上override，其不能被覆盖。
+
 - makefile中使用环境变量，外面export之后就可以直接用了，意思是设置了环境变量makefile就可以直接使用，makefile中跟普通变量一样使用。变量是字符串，其+= :=可以使用，但是也可以像脚本里面那样直接放在一起使用$(CC )g++，g++是后面放上去的。
+
 - ar命令最常见的用法是将目标文件打包为静态链接库 ar -ru $@ $^ ranlib $@ ranlib更新静态库的符号索引表。
+
 - -O0-3编译优化选项。
+
 - -Wall显示默认的警告信息。
+
+- makefile中打印变量的值用echo
+
+  ```
+  # 定义一个变量
+  MY_VARIABLE := Hello, Makefile!
+  
+  # 默认目标，会执行echo命令来打印变量的值
+  all:
+      @echo $(MY_VARIABLE)
+  ```
+
+- 在Makefile中，`+=`操作符会在变量后面追加内容，并且默认会在追加的内容之前添加一个空格
+
+  ```
+  # 初始定义变量
+  MY_VARIABLE := Hello
+  
+  # 使用+=追加内容，会添加空格
+  MY_VARIABLE += World
+  
+  # 打印变量的值
+  all:
+      @echo $(MY_VARIABLE)
+  ```
+
+  - 在这个例子中，输出结果是`Hello World`，中间有一个空格。
+
+  - 如果你不希望添加空格，可以通过其他方式来处理，例如使用`$(strip ...)`函数来去除空格：
+
+    ```
+    # 初始定义变量
+    MY_VARIABLE := Hello
+    
+    # 使用+=追加内容，去除空格
+    MY_VARIABLE += World
+    
+    # 打印变量的值
+    all:
+        @echo $(strip $(MY_VARIABLE))
+    ```
+
+    - 在这个例子中，输出结果将是`HelloWorld`，没有额外的空格。
 
 ##### 编译过程理解
 
