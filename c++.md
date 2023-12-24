@@ -1777,7 +1777,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - 为了解决合作开发时的命名冲突问题，[C++](http://c.biancheng.net/cplus/) 引入了命名空间（Namespace）的概念。
 
   - 
-    
+
     ```c++
     namespace name{
         //variables, functions, classes
@@ -1797,6 +1797,32 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     using namespace Li;
     fp = fopen("one.txt", "r");  //使用小李定义的变量 fp
     Han::fp = fopen("two.txt", "rb+");  //使用小韩定义的变量 fp
+    ```
+
+  - 在源文件中，你通常也需要写命名空间，特别是如果你的类的成员函数实现也在命名空间中。命名空间可以保持源文件中的一致性，并确保在整个代码库中的一致性
+
+    ```
+    #ifndef MYNAMESPACE_H
+    #define MYNAMESPACE_H
+    
+    namespace MyNamespace {
+        class MyClass {
+        public:
+            void printMessage();
+        };
+    }
+    #endif // MYNAMESPACE_H
+    ```
+
+    ```
+    #include "MyNamespace.h"
+    #include <iostream>
+    
+    namespace MyNamespace {
+        void MyClass::printMessage() {
+            std::cout << "Hello from MyNamespace::MyClass!" << std::endl;
+        }
+    }
     ```
 
 - 前置双冒号的含义：这样可以确保从全局命名空间进行解析，而不是从当前所在的命名空间开始。例如，如果您有两个不同的类，称为Configuration，那么：
@@ -1833,6 +1859,48 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   - 没有在命名空间中定义的变量或者函数就是全局命名空间，在一个命名空间中明确使用全局的变量时，可以使用::来指明是全局的
 
   - std::cout和::std::cout的区别。只有::std::cout才真正明确你所指的对象，但幸运的是，没有人会创建自己的类/结构或名称空间，称为"std"，也没有人会创建任何称为"cout"的东西，因此在实践中只使用std::cout是可以的。::表示从全局空间中查找，全局空间包含命令空间，所以::std表示全局空间中的std命名空间，这样写比较稳妥，但是直接写std::cout也是正确的
+
+- 在C++中，如果一个类没有指定命名空间，它将属于全局命名空间。全局命名空间是默认的命名空间，不需要显式声明。这意味着如果你创建一个类而没有指定命名空间，该类将自动放置在全局命名空间中。
+
+  - 要注意全局命令空间和std命名空间不一样，全局的理解就和c语言定义函数是一样的，是一个全局的
+
+    ```
+    // MyClass.h
+    #ifndef MYCLASS_H
+    #define MYCLASS_H
+    
+    class MyClass {
+    public:
+        void printMessage();
+    };
+    
+    #endif // MYCLASS_H
+    
+    // MyClass.cpp
+    #include "MyClass.h"
+    #include <iostream>
+    
+    void MyClass::printMessage() {
+        std::cout << "Hello from MyClass!" << std::endl;
+    }
+    
+    // main.cpp
+    #include "MyClass.h"
+    
+    int main() {
+        // 创建类实例并调用成员函数
+        MyClass obj;
+        obj.printMessage();
+    
+        return 0;
+    }
+    ```
+
+    - 在这个例子中，`MyClass` 类没有显式地指定命名空间，因此它属于全局命名空间。在 `main.cpp` 中，我们可以直接使用 `MyClass` 类，而不需要使用任何命名空间限定符。如果你没有使用命名空间，这样的类会放置在全局命名空间中。
+
+- 在C++中，在类的定义中使用 `using namespace std;` 不会将这个类放置在 `std` 命名空间中。`using namespace std;` 只是在类的成员函数中引入了 `std` 命名空间，以便在函数中可以直接使用 `std` 中的标识符而不用写全限定名。
+
+  - 而且一般只在源文件中使用`using namespace std;`头文件中一般不使用，而且头文件中使用了也是将这个命名空间引入使用其中的函数定义，而不是将这个类定义到std空间，将一个类定义到一个命名空间只能用namespace name{}这个包含
 
 - 和C语言一样，C++ 头文件仍然以`.h`为后缀，它们所包含的类、函数、宏等都是全局范围的。后来 C++ 引入了命名空间的概念，计划重新编写库，将类、函数、宏等都统一纳入一个命名空间，这个命名空间的名字就是`std`。std 是 s[tan](http://c.biancheng.net/ref/tan.html)dard 的缩写，意思是“标准命名空间”。C++ 开发人员想了一个好办法，保留原来的库和头文件，它们在 C++ 中可以继续使用，然后再把原来的库复制一份，在此基础上稍加修改，把类、函数、宏等纳入命名空间 std 下，就成了新版 C++ 标准库。这样共存在了两份功能相似的库，使用了老式 C++ 的程序可以继续使用原来的库，新开发的程序可以使用新版的 C++ 库。
 
@@ -2290,7 +2358,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     	return 0;
     }
     
-    类的前向声明只能用于定义指针、引用、以及用于函数形参的指针和引用前向声明的类是不完全的类型，因为只进行了声明而没有定义。
+    类的前向声明只能用于定义指针、引用、以及用于函数形参的指针和引用，前向声明的类是不完全的类型，因为只进行了声明而没有定义。
     前向声明的作用：在预处理时，不需要包含#include"xxx",相对节约编译时间方便的解决两种类类型互相使用的问题。
     ```
 
