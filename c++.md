@@ -1801,7 +1801,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 在源文件中，你通常也需要写命名空间，特别是如果你的类的成员函数实现也在命名空间中。命名空间可以保持源文件中的一致性，并确保在整个代码库中的一致性
 
-    ```
+    ```c++
     #ifndef MYNAMESPACE_H
     #define MYNAMESPACE_H
     
@@ -1814,7 +1814,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     #endif // MYNAMESPACE_H
     ```
 
-    ```
+    ```c++
     #include "MyNamespace.h"
     #include <iostream>
     
@@ -1864,7 +1864,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 要注意全局命令空间和std命名空间不一样，全局的理解就和c语言定义函数是一样的，是一个全局的
 
-    ```
+    ```c++
     // MyClass.h
     #ifndef MYCLASS_H
     #define MYCLASS_H
@@ -1898,7 +1898,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
     - 在这个例子中，`MyClass` 类没有显式地指定命名空间，因此它属于全局命名空间。在 `main.cpp` 中，我们可以直接使用 `MyClass` 类，而不需要使用任何命名空间限定符。如果你没有使用命名空间，这样的类会放置在全局命名空间中。
 
-- 在C++中，在类的定义中使用 `using namespace std;` 不会将这个类放置在 `std` 命名空间中。`using namespace std;` 只是在类的成员函数中引入了 `std` 命名空间，以便在函数中可以直接使用 `std` 中的标识符而不用写全限定名。
+- 在C++中，在类的声明和定义中使用 `using namespace std;` 不会将这个类放置在 `std` 命名空间中。`using namespace std;` 只是在类的成员函数中引入了 `std` 命名空间，以便在函数中可以直接使用 `std` 中的标识符而不用写全限定名。
 
   - 而且一般只在源文件中使用`using namespace std;`头文件中一般不使用，而且头文件中使用了也是将这个命名空间引入使用其中的函数定义，而不是将这个类定义到std空间，将一个类定义到一个命名空间只能用namespace name{}这个包含
 
@@ -1924,7 +1924,23 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   ```
 
   - C语言对 const 的处理和普通变量一样，会到内存中读取数据；C++ 对 const 的处理更像是编译时期的`#define`，是一个值替换的过程。
+
   - C语言中的 const 变量在多文件编程时的表现和普通变量一样，除了不能修改，没有其他区别。C++ 对 const 的特性做了调整，C++ 规定，全局 const 变量的作用域仍然是当前文件，但是它在其他文件中是不可见的，这和添加了`static`关键字的效果类似。由于 C++ 中全局 const 变量的可见范围仅限于当前源文件，所以可以将它放在头文件中，这样即使头文件被包含多次也不会出错
+
+    - 通过在头文件中使用 `extern const`，你可以在头文件中声明一个全局 `const` 变量，并在一个源文件中定义它。其他源文件可以通过声明来引用它，而不会导致多个实例的问题。
+
+      ```c++
+      // header.h
+      extern const int globalConstVar;
+      
+      // file1.cpp
+      const int globalConstVar = 42;
+      
+      // file2.cpp
+      #include "header.h"
+      
+      在这个例子中，globalConstVar 在 file1.cpp 中被定义，而在 file2.cpp 中被引用。
+      ```
 
 - 用 new[] 分配的内存需要用 delete[] 释放
 
@@ -1950,33 +1966,28 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - C++ 规定，在给定的作用域中只能指定一次默认参数。所以声明和定义中的默认形参要分开，即在声明时写上默认形参，定义时不用写默认形参
 
-    ```
+    ```c++
     // example.h
-    
     #ifndef EXAMPLE_H
     #define EXAMPLE_H
     
     #include <string>
-    
     // 函数声明
     void printMessage(const std::string& message = "Hello, World!");
-    
     #endif // EXAMPLE_H
     
     
     // example.cpp
-    
     #include "example.h"
     #include <iostream>
-    
     // 函数定义
     void printMessage(const std::string& message) {
         std::cout << message << std::endl;
     }
     ```
-
+    
     - 在源文件中，你不需要再次提供默认参数的值。默认参数的值应该只在函数声明（头文件）中提供一次，而不是在函数定义（源文件）中重复。这是因为默认参数的值实际上是与函数声明相关的一部分。
-
+  
 - 函数重载：参数列表不同包括参数的个数不同、类型不同或顺序不同，仅仅参数名称不同是不可以的。函数返回值也不能作为重载的依据。函数重载过程中要避免二义性
 
 #### 类和对象
@@ -1991,6 +2002,29 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   
   Student *pStu = new Student;
   在栈上创建出来的对象都有一个名字，比如 stu，使用指针指向它不是必须的。但是通过 new 创建出来的对象就不一样了，它在堆上分配内存，没有名字，只能得到一个指向它的指针，所以必须使用一个指针变量来接收这个指针，否则以后再也无法找到这个对象了，更没有办法使用它。也就是说，使用 new 在堆上创建出来的对象是匿名的，没法直接使用，必须要用一个指针指向它，再借助指针来访问它的成员变量或成员函数。
+      
+  在用new时直接用类名+括号，然后括号里面是实际的参数就可以了，不用像声明一个类时写一个实际的对象，例如上面的stu，不用写new Student stu(),而是new Student()，在释放时，需要用delete + 实际的new的时候的指针，例如下面myObject
+  
+  #include <iostream>
+  
+  class MyClass {
+  public:
+      MyClass(int value) : data(value) {
+          std::cout << "Constructor called with value: " << value << std::endl;
+      }
+  private:
+      int data;
+  };
+  
+  int main() {
+      // 使用 new 关键字创建 MyClass 类的实例，并返回指向该实例的指针
+      MyClass* myObject = new MyClass(42);
+  
+      // 记得在不需要对象时释放内存
+      delete myObject;
+      return 0;
+  }
+  
   ```
 
 - 有了对象指针后，可以通过箭头`->`来访问对象的成员变量和成员函数，这和通过[结构体指针](http://c.biancheng.net/view/246.html)来访问它的成员类似
@@ -2007,6 +2041,8 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - [C++](http://c.biancheng.net/cplus/)通过 public、protected、private 三个关键字来控制成员变量和成员函数的访问权限，它们分别表示公有的、受保护的、私有的，被称为成员访问限定符。所谓访问权限，就是你能不能使用该类中的成员。
 - C++ 中的 public、private、protected 只能修饰类的成员，不能修饰类，C++中的类没有共有私有之分。
 - 在类的内部（定义类的代码内部），无论成员被声明为 public、protected 还是 private，都是可以互相访问的，没有访问权限的限制。
+  - 这个相当于说在头文件和源文件中都不算外部，都可以访问，所以声明为private的变量和函数也可以在源文件中通过::来定义和初始化
+
 - 在类的外部（定义类的代码之外），只能通过对象访问成员，并且通过对象只能访问 public 属性的成员，不能访问 private、protected 属性的成员。
 - 类的声明和成员函数的定义都是类定义的一部分，在实际开发中，我们通常将类的声明放在头文件中，而将成员函数的定义放在源文件中。
 - 成员变量大都以`m_`开头，这是约定成俗的写法，不是语法规定的内容。以`m_`开头既可以一眼看出这是成员变量，又可以和成员函数中的形参名字区分开。
@@ -2107,14 +2143,14 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     
   - 通过传递对象指针就完成了成员函数和成员变量的关联。这与我们从表明上看到的刚好相反，通过对象调用成员函数时，不是通过对象找函数，而是通过函数找对象。
     - 成员函数是全局的，所以我们应该是先调用函数，然后将对象的指针传进去，这样就能通过这个指针访问成员变量或者其他成员函数了
-    - 只要通过类对象能调用，就说明成员函数时public的，否则也不能通过对象调用，也不能将对象指针传进成员函数中。
+    - 只要通过类对象能调用，就说明成员函数是public的，否则也不能通过对象调用，也不能将对象指针传进成员函数中。
     - 只要我们能调用，调用之后就相当于进入了类的内部，此时就没有什么权限的限制了，我们可以通过一些检测，来让不合理的数据输入规避，不要让不合理的数据修改成员变量的值。
     
   - 这一切都是隐式完成的，对程序员来说完全透明，就好像这个额外的参数不存在一样。
   
   - 通过gdb调试程序时，看到每一个成员函数都会有一个this指针参数，调用每一个类成员函数都会有
   
-    ```
+    ```c++
     #0  ChannelUDP::DispatchMessage (this=0x1f61860, message=...) at /sde/s_int_r/skynetx/src/feed/engine/channel_udp.cc:134
     
     #1   in Message::DispatchMessage (this=0x1f21d00) at /sde/s_int_r/skynetx/src/feed/engine/message.cc:196
@@ -2148,21 +2184,56 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - 调用没有参数的构造函数也可以省略括号，在栈上创建对象可以写作`Student stu`，不能写括号，写括号是一个函数定义。在堆上创建对象可以写作`Student *pstu = new Student()`或`Student *pstu = new Student`，它们都会调用构造函数 Student()。调用的是默认构造函数。默认构造函数有（）。
 
+  - 如果构造函数没有形参，则在栈上创建对象不能带括号，在堆上创建对象带不带括号都可以，如果构造函数有形参，则在栈上和堆上都要带上括号，因为相当于函数调用，需要传进去参数。这些是经过验证的。
+
 - 定义构造函数时并没有在函数体中对成员变量一一赋值，其函数体为空（当然也可以有其他语句），而是在函数首部与函数体之间添加了一个冒号`:`，后面紧跟`m_name(name), m_age(age), m_score(score)`语句，这个语句的意思相当于函数体内部的`m_name = name; m_age = age; m_score = score;`语句，也是赋值的意思。
+
+  - 初始化列表就相当于一个赋值函数，赋值的对象是成员变量，如果我们的成员变量需要用传进来的值，则构造函数需要对应的形参，如果成员变量初始化为默认值，则不需要形参，直接赋值就可以了，就相当于一个赋值的过程，只不过赋值的是默认值。例如赋值为false或者赋值为1这种，我们不需要外面传进来赋值，直接自己赋值就可以。
 
 - 使用构造函数初始化列表并没有效率上的优势，仅仅是书写方便，尤其是成员变量较多时，这种写法非常简单明了。
 
   - 构造函数初始化列表可以写在头文件中， 也可以分开写在源文件中，写在源文件中跟成员函数一样的写法，因为是函数，所以最后要加{}
 
     ```c++
+    头文件中
+    Person(const std::string& name, int age);
+    
+    源文件中
     Person::Person(const std::string& name, int age) : name(name), age(age) {
         // 可选的构造函数体
     }
     ```
-
-    - 注意构造函数初始化列表并不是直接赋值的，也是有形参列表的，这只是一种简单的写法，冒号后面的相当于函数体中的复制了，其数据也是来源于形参的
+    
+    - 注意构造函数初始化列表并不是直接赋值的，也是有形参列表的，这只是一种简单的写法，冒号后面的相当于函数体中赋值，其数据也是来源于形参的。如果初始化的数据不需要传进来的实参即是一些默认值，则不需要实参
+    
+      ```c++
+      Engine::Engine(const std::string &strSettingsFile, const std::string &strStoragePath) :
+        m_strSettingsFile(strSettingsFile),
+        m_strStoragePath(strStoragePath),
+        m_bRunning(false),
+        m_bDumpCores(false),
+        m_eDNCStatus(kDNC_Single),
+        m_nReceptionGroupId(-1),
+        m_nCommandFifoPriority(0),
+        m_nCommandFifoId(-1),
+        m_nIOCFifoPriority(0),
+        m_nIOCFifoId(-1),
+        m_nTimerFifoPriority(0),
+        m_strNetRCFileName(kDefaultNetRCFile),
+        m_strSemaphoreFileName(kDefaultSemaphoreFile),
+        m_MaintenanceTimer(kMaintenanceTimerDelay, this),
+        m_nStatsTimeout(0),
+        m_uiIdOffset(0)
+      {
+      
+      }
+      ```
+    
+      - 
 
 - 初始化列表可以用于全部成员变量，也可以只用于部分成员变量
+
+  - 相当于可以有一部分用初始化列表，可以一部分在函数体内部赋值。
 
 - 成员变量的初始化顺序与初始化列表中列出的变量的顺序无关，它只与成员变量在类中声明的顺序有关
 
@@ -2181,13 +2252,13 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   }
   ```
 
-  - 上面这种是错误的，只能在构造函数里面初始化类里面定义的变量，如果没有在构造函数里面初始化，我们也可以写成函数，在函数里面为这个赋值，总之，在类定义的时候直接这样写是错误的，注意上面这只是类的定义
+  - 上面这种是错误的，只能在构造函数里面初始化类里面定义的变量，如果没有在构造函数里面初始化，我们也可以写成函数，在函数里面为这个赋值，总之，在类声明的时候直接这样写是错误的，注意上面这只是类的声明
 
-- 一个类的对象作为另一个类的数据成员时如何构造函数
+- 一个类的对象作为另一个类的数据成员时如何书写构造函数
 
   - 一个类的对象作为另一个类的数据成员。
 
-  - 一个类中的数据成员除了可以是int, char, float等这些基本的数据类型外，还可以是某一个类的一个对象。用子对象创建新类。
+  - 一个类中的数据成员除了可以是int, char, float等这些基本的数据类型外，还可以是复合数据类型例如类。
 
     ```
     class School{
@@ -2203,13 +2274,66 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     其中，参数表1提供初始化成员1所需的参数，参数表2提供初始化成员2所需的参数，依此类推。并且这几个参数表的中的参数均来自参数表0，另外，初始化X的非对象成员所需的参数，也由参数表0提供。
     ```
 
-    - 只要把类对象当作普通对象一样看待就行了，其在类里面只是一种声明，我们在实例化这个类的时候会调用构造函数来给类里面的对象赋值，如果一个类里面有另一个类的对象，那么这个类就会自动调用另一个类的构造函数
+    - 只要把类对象当作普通对象一样看待就行了，其在类里面只是一种声明，我们在实例化这个类的时候会调用构造函数来给类里面的对象赋值，如果一个类里面有另一个类的对象，如果另一个类构造函数没有形参，那么这个类就会自动调用另一个类的构造函数，也不用在初始化列表中写出来了，这时候用的是默认构造函数，因为会默认初始化，如果有形参的话，就需要用构造函数初始化列表来调用另一个类的构造函数，如果没有形参的话，最好也在初始化列表里面写一下，只是括号没有没有参数值就可以了。
+    
+    - 当一个类A包含类B的对象作为成员时，在类A的构造函数中，你应该在构造函数的初始化列表中初始化类B的对象
+    
+      ```c++
+      #include <iostream>
+      // 定义类B
+      class B {
+      public:
+          B(int bValue) : bMember(bValue) {
+              // 构造函数体
+          }
+      
+          void printB() {
+              std::cout << "Value of B: " << bMember << std::endl;
+          }
+      
+      private:
+          int bMember;
+      };
+      
+      // 定义类A，包含类B的成员
+      class A {
+      public:
+          // 构造函数，使用初始化列表初始化成员变量
+          A(int aValue, int bValue) : aMember(aValue), bObject(bValue) {
+              // 构造函数体
+          }
+      
+          void printA() {
+              std::cout << "Value of A: " << aMember << std::endl;
+              bObject.printB(); // 调用类B的成员函数
+          }
+      
+      private:
+          int aMember;
+          B bObject;  // 类B作为类A的成员
+      };
+      
+      int main() {
+          // 创建类A的对象，同时创建了类B的对象
+          A aObject(10, 20);
+      
+          // 调用类A的成员函数，输出成员变量的值
+          aObject.printA();
+      
+          return 0;
+      }
+      
+      ```
+    
+      - 上面只是用了源文件，没有用源文件头文件分开的方式书写的，只是一个简单的示例
+      - 这只是类的声明，如果类A包含类B，则我们需要在构造函数初始化列表中用B的对象来显示调用类B的构造函数，例如上面类A的构造函数中用类B的对象bObject来显示调用类B的构造函数，并不是写的B(bValue)
+      - 在实际声明一个类对象时例如`A aObject(10, 20);`也是用实际的对象来调用构造函数的，例如这个是用aObject来调用类A的构造函数的，只是这个过程是隐藏的过程，但是在一个类A里面包含类B的时候，我们需要显示的写出来。
 
 - 在继承之外，在C++中一个类成员函数调用另一个类成员的方法主要有：类的组合，友元类，类的前向声明，单例模式等，下面主要讲讲这4种方法的实现
 
   - 利用类的组合
 
-    ```
+    ```c++
     组合通俗来讲就是类B有类A的属性，如声明一个Person类，再声明一个Teacher类，Person类对象有年龄和姓名成员，而Teacher类对象成员也有年龄和姓名属性，所以我们可以将类Person的对象作为类Teacher的成员变量，那么就实现了Teacher类对象也有这两个属性。如下所示:
     #include<iostream>
     #include<string>
@@ -2251,12 +2375,12 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     	return 0;
     }
     
-    如上所示，就是在类Teacher初始化的时候直接将类对象传进来，而不是想继承一样，传参数，直接调用类的构造函数，这个是直接传的参数，就跟其他属性一样，直接将参数传进来，直接赋值过去。
+    如上所示，就是在类Teacher初始化的时候直接将类对象传进来，而不是像继承一样，传参数，直接调用类的构造函数，这个是直接传的参数，就跟其他属性一样，直接将参数传进来，直接赋值过去。
     ```
 
   - 友元类
 
-    ```
+    ```c++
     友元类就是在类A中声明一个类B，那么就称类B是类A的友元类，这时类B的对象可以访问类A的一切成员,包括私有成员。如下所示:
     #include<iostream>
     #include<string>
@@ -2302,7 +2426,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 前向声明
 
-    ```
+    ```c++
     使用前面两种方法，如果将两个类在不同的头文件中声明，则需要在第二个类中包含第一个类的头文件，但使用类的前向声明则不用使用#include"xxx"，具体实现如下：
     代码段1：在person.h头文件
     #pragma once
@@ -2364,7 +2488,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 单例模式
 
-    ```
+    ```c++
     单例模式是程序设计模式中最常用的模式之一，其主要思想是将类的构造函数声明为私有的防止被外部函数实例化，内部保存一个private static的类指针保存唯一的实例，实例的实现由一个public的类方法代劳，该方法返回单例类唯一的实例。
     采用单例模式的对象在进程结束才被释放。关于单例模式的详细内容大家可以去看单例模式的知识。下面是一个典型的单例例子：
     #include<iostream>
@@ -2433,7 +2557,6 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     }
     ```
 
-    
 
 
 ##### 析构函数
@@ -2494,7 +2617,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 区分参数和成员变量，当成员变量与参数同名时，可以使用 `this` 指针来明确指出是成员变量：
 
-    ```
+    ```c++
     class MyClass {
     public:
         int x;
@@ -2508,7 +2631,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 返回对象自身的引用，在某些情况下，可以使用 `this` 返回对象自身的引用，以支持链式调用：
 
-    ```
+    ```c++
     class MyClass {
     public:
         int x;
@@ -2525,7 +2648,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 在成员函数中访问成员，在成员函数中可以使用 `this` 指针直接访问对象的其他成员，而无需使用对象名称
 
-    ```
+    ```c++
     class MyClass {
     public:
         int x;
@@ -2539,7 +2662,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 在重载运算符中的使用，在一些重载运算符的实现中，可能需要直接访问对象的成员，这时 `this` 指针会派上用场
 
-    ```
+    ```c++
     class Complex {
     public:
         double real, imag;
@@ -2561,6 +2684,12 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - static 成员变量必须在类声明的外部初始化type class::name = value;
 
+  ```
+   int Timer::s_nFifoPriority  = 0;
+  ```
+
+  - 即使static变量声明为private，也可以在源文件中这样初始化，只是不能通过对象或者类在外部访问，在声明和定义时没有外部一说，只有在使用时才有外部一说
+
 - static 成员变量既可以通过对象来访问，也可以通过类来访问
 
 - static 成员变量不占用对象的内存，而是在所有对象之外开辟内存，即使不创建对象也可以访问。
@@ -2568,6 +2697,8 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - 初始化时可以赋初值，也可以不赋值。如果不赋值，那么会被默认初始化为 0。全局数据区的变量都有默认的初始值 0，而动态数据区（堆区、栈区）变量的默认值是不确定的，一般认为是垃圾值。
 
 - 静态成员变量既可以通过对象名访问，也可以通过类名访问，但要遵循 private、protected 和 public 关键字的访问权限限制
+
+  - static成员变量声明为private，除了可以在对应的源文件中可以初始化，在使用时是不能通过类名或者对象来访问的
 
 - 在类中，static 除了可以声明[静态成员变量](http://c.biancheng.net/view/2227.html)，还可以声明静态成员函数。普通成员函数可以访问所有成员（包括成员变量和成员函数），静态成员函数只能访问静态成员。
 
@@ -2609,7 +2740,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
       
   在使用时，XSecSystem::getXdb().db()->QuerySecuritySettings(&arr)
   ```
-  
+
   ```c++
   class XUIMgr
   {
@@ -2650,7 +2781,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
       
   XUIClientOps * client = g_mgr->clientOps();通过g_mgr来访问里面的成员函数clientOps，得到里面的类XUIClientOps，然后调用里面的方法。可以用临时变量client，不用每次用到里面的类就写上g_mgr->clientOps()，这样比较麻烦，虽然每次得到的都是同一个类对象
   ```
-  
+
   ```c++
   class XPolicySystem
   {
@@ -2712,9 +2843,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
       XPolicySystem::system().init()
       XPolicySystem::system().getBusMessage().sendBroadcast(XPolicySystem::system().getBusHandle(), broadcast_data)
   ```
-  
-  
-  
+
 - 静态对象在编译时就放在了全局静态区，这种方法只是将那个静态对象拿到，方便后续的使用，而且这个静态对象就一个，使用时不用重复定义，拿到这个直接用就可以
 
 - 这样做的好处是持久化了一些我们想要的东西，而且我们想用的就是一个，不会每次都申请一个新的使用，其保存在内存中。不会丢失，除非关闭软件或者断电
