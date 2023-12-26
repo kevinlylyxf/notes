@@ -3259,6 +3259,122 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   - 在上述例子中，如果文件 "c.h" 包含了文件 "a.h"，则会形成循环依赖，因为 "a.h" 包含了 "b.h"，而 "b.h" 又包含了 "c.h"，形成了一个循环。
 - 总体来说要避免头文件的相互包含，也避免头文件嵌套引用造成的循环依赖的问题。
 
+##### 类的自引用和互相引用
+
+- 总的来看，自引用是一个类里面有一个自身类的指针变量，以前总是想这个会递归调用，实例化时会一直创建下去，但是不会，因为自身类的变量是一个指针，我们可以在实例化时将这个指针置为NULL，这样就不会递归创建下去了。
+
+  - 就把这个指针想象成一个普通变量就可以了，不要想这个是一个自身类类型的，就会递归调用下去，递归创建。指针占用的内存大小是固定的，如果需要用这个指针的话，因为指针指向的是另一块空间，所以需要实例化一个，然后将这个指针指向新的实例化的内存。
+
+  - 就相当于链表一样，其实类的自引用就跟链表定义差不多，我们只是声明了一个自身类类型的指针，需要指向其他空间形成一个链表结构时，申请一块空间，然后让这个指针指向新申请的就可以了，如果不需要置为NULL
+
+    ```c
+    struct Node {
+        int data;
+        struct Node* next;
+    };
+    ```
+
+  - 自引用必须用的是指针，如果是一个实际的对象的话，因为创建对象就需要知道完整的类类型，也需要完整的空间大小，所以会导致循环调用，但是指针占用的是固定的，可以不用，不用就是NULL，需要就指向其他空间就可以了。
+
+- 互相引用跟这个想法差不多，也是类里面有一个对方类的指针变量，这样也不会递归调用创建对象的，如果需要用对方类的方法或者干什么的时候，实例化一个对方类对象，然后这个对象的指针为NULL，将自身类里面对方类的指针变量指向这个新实例化的对象就可以，这样就可以使用对方类的成员函数了。类似于A里面有一个B的指针，B里面有一个A的指针，我们需要用B的方法时，我们实例化一个B，B里面A的指针置为NULL，然后让A里面的B指针指向实例化的B就可以了
+
+  ```c++
+  // ClassA.h
+  #ifndef CLASSA_H
+  #define CLASSA_H
+  
+  class ClassB;  // 前向声明 ClassB
+  
+  class ClassA {
+  public:
+      ClassA(int value);
+      void setB(ClassB* b);
+      void print();
+  
+  private:
+      int data;
+      ClassB* ptrB;
+  };
+  
+  #endif // CLASSA_H
+  
+  
+  // ClassB.h
+  #ifndef CLASSB_H
+  #define CLASSB_H
+  
+  class ClassA;  // 前向声明 ClassA
+  
+  class ClassB {
+  public:
+      ClassB(int value);
+      void setA(ClassA* a);
+      void print();
+  
+  private:
+      int data;
+      ClassA* ptrA;
+  };
+  
+  #endif // CLASSB_H
+  ```
+
+- 总的来看只要记住指针不会循环或者递归调用创建对象就可以了，他就是一个指针，用的时候就指向其它空间就可以，不用的时候置为NULL
+
+###### 自引用
+
+- 当一个类包含自身类指针的成员变量时，这通常用于创建递归数据结构，比如树或图。这样的设计允许你在一个类的实例中引用另一个相同类型的实例，从而构建层次结构。
+
+  ```c++
+  #include <iostream>
+  #include <vector>
+  
+  class TreeNode {
+  public:
+      TreeNode(int value) : value(value) {}
+  
+      // 添加子节点
+      void addChild(TreeNode* child) {
+          children.push_back(child);
+      }
+  
+      // 打印树的结构
+      void printTree(int indent = 0) {
+          std::cout << std::string(indent, ' ') << "Node " << value << std::endl;
+          for (TreeNode* child : children) {
+              child->printTree(indent + 2);
+          }
+      }
+  
+  private:
+      int value;
+      std::vector<TreeNode*> children;
+  };
+  
+  int main() {
+      // 创建一棵树
+      TreeNode root(1);
+      TreeNode child1(2);
+      TreeNode child2(3);
+  
+      root.addChild(&child1);
+      root.addChild(&child2);
+  
+      // 在Child 1中添加子节点
+      TreeNode child1_1(4);
+      child1.addChild(&child1_1);
+  
+      // 在Child 2中添加子节点
+      TreeNode child2_1(5);
+      child2.addChild(&child2_1);
+  
+      // 输出树的结构
+      root.printTree();
+  
+      return 0;
+  }
+  ```
+
 #### 引用
 
 - 《C++ primer》中有一句，因为引用本身不是一个对象，所以不能定义引用的引用。
@@ -3827,6 +3943,8 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - 包含纯虚函数的类称为抽象类（Abstract Class）。之所以说它抽象，是因为它无法实例化，也就是无法创建对象。原因很明显，纯虚函数没有函数体，不是完整的函数，无法调用，也无法为其分配内存空间。
 - 抽象类通常是作为基类，让派生类去实现纯虚函数。派生类必须实现纯虚函数才能被实例化。
 - 通过抽象基类的指针可以指向子类。类似于向上转型。虽然抽象基类不能被实例，但是仍然能定义指针。
+  - 实例化和定义指针不是一个概念，指针就是占用固定空间的一块内存，实例化是需要一个完整的定义的。所以抽象基类可以定义指针，不可以实例化。
+
 
 ##### 虚函数表
 
