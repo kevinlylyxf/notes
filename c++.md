@@ -3494,6 +3494,8 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - 变量是要占用内存的，虽然我们称 r 为变量，但是通过`&r`获取到的却不是 r 的地址，而是 a 的地址，这会让我们觉得 r 这个变量不占用独立的内存，它和 a 指代的是同一份内存。int &r = a;
 
+  - 所以通过取引用变量的地址，得到的是被引用变量的地址。例如上面对引用变量r取地址&r，得到的结果是a的地址
+
 - 其实引用只是对指针进行了简单的封装，它的底层依然是通过指针实现的，引用占用的内存和指针占用的内存长度一样，在 32 位环境下是 4 个字节，在 64 位环境下是 8 个字节，之所以不能获取引用的地址，是因为编译器进行了内部转换
 
   ```
@@ -4174,7 +4176,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
       friend Complex operator+(const Complex &c1, const Complex &c2);
       
    Complex c3 = 28.23 + c1;这句话是正确的。
-   它说明 Complex 类型可以和 double 类型相加，这很奇怪，因为我们并没有对针对这两个类型重载 +，这究竟是怎么做到的呢？
+   它说明 Complex 类型可以和 double 类型相加，这很奇怪，因为我们并没有针对这两个类型重载 +，这究竟是怎么做到的呢？
    其实，编译器在检测到 Complex 和 double（小数默认为 double 类型）相加时，会先尝试将 double 转换为 Complex，或者反过来将 Complex 转换为 double（只有类型相同的数据才能进行 + 运算），如果都转换失败，或者都转换成功（产生了二义性），才报错。本例中，编译器会先通过构造函数Complex(double real);将 double 转换为 Complex，再调用重载过的 + 进行计算，整个过程类似于下面的形式：
    也就是说，小数被转换成了匿名的 Complex 对象。在这个转换过程中，构造函数Complex(double real);起到了至关重要的作用，如果没有它，转换就会失败，Complex 也不能和 double 相加。
    Complex(double real);在作为普通构造函数的同时，还能将 double 类型转换为 Complex 类型，集合了“构造函数”和“类型转换”的功能，所以被称为「转换构造函数」。换句话说，转换构造函数用来将其它类型（可以是 bool、int、double 等基本类型，也可以是数组、指针、结构体、类等构造类型）转换为当前类类型。
@@ -4187,6 +4189,8 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   - 编译器明明可以把 28.23 先转换成 Complex 类型再相加呀，也就是下面的形式：Complex c3 = Complex(28.23).operator+(c1);
 
     为什么就是不转换呢？没错，编译器不会转换，原因在于，C++ 只会对成员函数的参数进行类型转换，而不会对调用成员函数的对象进行类型转换。
+    
+    - C++ 只会对成员函数的参数进行类型转换是说，在进行替换时，转换为`c1.operator+(Complex(15.6));`这种形式，相当于调用了complex的成员函数operate+，所以对成员函数的参数进行类型转换。小数在前面时，相当于世调用成员函数的对象来调用成员函数，所以不会进行对调用成员函数的对象即小数进行类型转换。
 
 - 为什么要以成员函数的形式重载+=。我们首先要明白，运算符重载的初衷是给类添加新的功能，方便类的运算，它作为类的成员函数是理所应当的，是首选的。不过，类的成员函数不能对称地处理数据，程序员必须在（参与运算的）所有类型的内部都重载当前的运算符。以上面的情况为例，我们必须在 Complex 和 double 内部都重载 + 运算符，这样做不但会增加运算符重载的数目，还要在许多地方修改代码，这显然不是我们所希望的
 
@@ -4261,6 +4265,47 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   ```
 
 - 重载的形式是上面的形式，在实际使用时i在括号里面arr[i]，此时会转换为arr.operator\[ ](i);
+
+- 在C++中，重载`[]`运算符时，通常返回值应该是引用。这是因为`[]`运算符通常用于访问类或结构体中的元素，并通过返回引用可以实现对元素的直接访问和修改。
+
+  - 当你返回引用时，你允许使用者通过该引用对数组或容器中的元素进行读取和写入操作，而不是返回元素的副本。这样可以提高效率，并且可以确保修改操作影响到原始数据。
+
+  - 返回引用是为了直接访问并且可以修改原始数据
+
+    ```c++
+    #include <iostream>
+    
+    class MyArray {
+    private:
+        int data[5];
+    
+    public:
+        // 重载[]运算符
+        int& operator[](int index) {
+            if (index >= 0 && index < 5) {
+                return data[index];
+            } else {
+                // 处理越界情况，这里简单返回第一个元素的引用
+                std::cerr << "Index out of bounds!" << std::endl;
+                return data[0];
+            }
+        }
+    };
+    
+    int main() {
+        MyArray arr;
+    
+        // 使用[]运算符进行元素的访问和修改
+        arr[2] = 42;
+        std::cout << "Element at index 2: " << arr[2] << std::endl;
+    
+        // 处理越界情况
+        std::cout << "Element at index 10: " << arr[10] << std::endl;
+    
+        return 0;
+    }
+    ```
+
 
 ##### 重载++和--
 
