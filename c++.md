@@ -2655,6 +2655,8 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - this 是 const 指针，它的值是不能被修改的，一切企图修改该指针的操作，如赋值、递增、递减等都是不允许的。
 
+  - 可以得出this指针的定义为指针常量，类似于`int * const p=&a;`即指针指向的数据可以变，但是指针指向的位置不能变，即this指针的指向不能被改变，指向的对象的内容可以被修改。
+
 - this 只能在成员函数内部使用，用在其他地方没有意义，也是非法的。
 
   - 这说明this就是在类的声明和定义中使用，理解是在类的内部使用的，所以外面没有this指针这一说法，内部就是类的声明和定义的时候
@@ -3453,6 +3455,169 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 引用静态成员变量不占用类的大小，是在全局区存放的，所以可以直接声明一个static类型的自引用对象，不需要用指针，看一下static一节和单例
 
+###### 互相引用
+
+- 类之间可以互相引用，其中会衍生出很多设计模式，总体来看就是我在A类中使用了B类的一个指针对象，当我想用B里面的东西时，我就可以通过A里面的这个指针来取用，或者用来更新B里面的东西，或者用形参的方式传递给B来更新A里面的东西。总的来说就是为了用相关的资源。
+
+- 所有的指针用的对象要不就是在堆上，要不就是在栈上，而且这层栈还没有销毁，一般如果指针用的对象在栈上的话，则类A实例化和类B实例化在一层栈上，而且将B的地址赋值给A里面的B指针变量。例如我们在一层栈上实例化了一个A，此时我们调用另一个函数，而且将A对象传递给这个函数，在这个函数中实例化了一个B，这个B在栈上，而且将B的地址赋值给A中的B指针变量，当这个函数调用结束后，此时B对象没了，而这个A里面B指针变量还有值，这样是不对的，要是在堆上就没有这个问题了。
+
+- 总体来说要注意互相引用时，在栈上的对象消失的问题
+
+- 下面写一个简单的例子
+
+  - 假设我们有两个类：`Person` 和 `Address`。每个 `Person` 对象都有一个关联的 `Address` 对象，并且每个 `Address` 对象也知道它所属于的 `Person` 对象。
+
+  ```c++
+  #include <iostream>
+  #include <string>
+  
+  class Address;  // 前向声明
+  
+  // 人物类
+  class Person {
+  public:
+      Person(const std::string& name, int age) : name(name), age(age), address(nullptr) {}
+  
+      // 设置地址，这里用到了Address类的前向声明
+      void setAddress(Address* newAddress) {
+          address = newAddress;
+      }
+  
+      void displayInfo() const {
+          std::cout << "Name: " << name << ", Age: " << age << std::endl;
+          if (address) {
+              std::cout << "Address: " << address->getFullAddress() << std::endl;
+          }
+      }
+  
+  private:
+      std::string name;
+      int age;
+      Address* address;  // 人物类持有一个地址对象的指针
+  };
+  
+  // 地址类
+  class Address {
+  public:
+      Address(const std::string& city, const std::string& street) : city(city), street(street), person(nullptr) {}
+  
+      // 设置居住在该地址的人物，这里用到了Person类的前向声明
+      void setResident(Person* newPerson) {
+          person = newPerson;
+      }
+  
+      std::string getFullAddress() const {
+          return city + ", " + street;
+      }
+  
+      void displayResidentInfo() const {
+          if (person) {
+              std::cout << "Resident: " << person->displayInfo() << std::endl;
+          }
+      }
+  
+  private:
+      std::string city;
+      std::string street;
+      Person* person;  // 地址类持有一个人物对象的指针
+  };
+  
+  int main() {
+      // 创建一个人物和一个地址
+      Person person("John Doe", 30);
+      Address address("Cityville", "123 Main Street");
+  
+      // 设置人物的地址和地址的居民
+      person.setAddress(&address);
+      address.setResident(&person);
+  
+      // 显示人物和地址的信息
+      std::cout << "Person Info:" << std::endl;
+      person.displayInfo();
+  
+      std::cout << "\nAddress Info:" << std::endl;
+      std::cout << "Full Address: " << address.getFullAddress() << std::endl;
+      address.displayResidentInfo();
+  
+      return 0;
+  }
+  ```
+
+  - 我们在person对象里面设置了address变量，当我们使用时就可以用address里面的函数来显示。我们不用在person类里面重写一个函数来显示address的内容，注意address变量是一个完整的类对象，所以调用address里面的函数时，用的是那个address类里面的成员变量。
+
+- 观察者模式
+
+  - 观察者模式是一种行为设计模式，其中一个对象（称为主题）维护其依赖项（称为观察者）的列表，并在状态变化时通知它们。以下是一个简单的 C++ 实现观察者模式的例子：
+
+  ```c++
+  #include <iostream>
+  #include <vector>
+  
+  // 观察者基类
+  class Observer {
+  public:
+      virtual void update(const std::string& message) = 0;
+  };
+  
+  // 具体观察者类
+  class ConcreteObserver : public Observer {
+  public:
+      ConcreteObserver(const std::string& name) : name(name) {}
+  
+      // 实现观察者的更新方法
+      void update(const std::string& message) override {
+          std::cout << name << " received message: " << message << std::endl;
+      }
+  
+  private:
+      std::string name;
+  };
+  
+  // 主题类
+  class Subject {
+  public:
+      // 注册观察者
+      void addObserver(Observer* observer) {
+          observers.push_back(observer);
+      }
+  
+      // 移除观察者
+      void removeObserver(Observer* observer) {
+          // 这里省略了从列表中移除观察者的代码
+      }
+  
+      // 通知所有观察者
+      void notifyObservers(const std::string& message) {
+          for (auto observer : observers) {
+              observer->update(message);
+          }
+      }
+  
+  private:
+      std::vector<Observer*> observers;
+  };
+  
+  int main() {
+      // 创建观察者
+      ConcreteObserver observer1("Observer 1");
+      ConcreteObserver observer2("Observer 2");
+  
+      // 创建主题
+      Subject subject;
+  
+      // 注册观察者到主题
+      subject.addObserver(&observer1);
+      subject.addObserver(&observer2);
+  
+      // 主题状态变化，通知观察者
+      subject.notifyObservers("Hello, observers!");
+  
+      return 0;
+  }
+  ```
+
+  
+
 #### 引用
 
 - 《C++ primer》中有一句，因为引用本身不是一个对象，所以不能定义引用的引用。
@@ -4032,6 +4197,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - 包含纯虚函数的类称为抽象类（Abstract Class）。之所以说它抽象，是因为它无法实例化，也就是无法创建对象。原因很明显，纯虚函数没有函数体，不是完整的函数，无法调用，也无法为其分配内存空间。
 - 抽象类通常是作为基类，让派生类去实现纯虚函数。派生类必须实现纯虚函数才能被实例化。
 - 在 C++ 中，如果基类中定义了一个纯虚函数（pure virtual function），子类必须重新声明并提供实现。相当于在头文件必须重新声明一下
+- 我们在基类中定义纯虚函数，但是并不是所有的函数都是纯虚函数，所以定义抽象类也有源文件，需要定义那些不是纯虚函数，因为这样写就是相当于为了继承的，为了子类可以少写东西，所以在基类中要把非纯虚函数都定义上，这样子类就可以不用写了。纯虚函数不能在基类源文件中定义，因为必须要在子类中实现纯虚函数。纯虚函数必须要在子类的头文件中声明一下。
 - 通过抽象基类的指针可以指向子类。类似于向上转型。虽然抽象基类不能被实例，但是仍然能定义指针。
   - 实例化和定义指针不是一个概念，指针就是占用固定空间的一块内存，实例化是需要一个完整的定义的。所以抽象基类可以定义指针，不可以实例化。
 
@@ -4399,6 +4565,9 @@ stopwatch stopwatch::operator++(int n){
 - 拷贝构造函数只有一个参数，它的类型是当前类的引用，而且一般都是 const 引用。
 
 - 为什么必须是当前类的引用：如果拷贝构造函数的参数不是当前类的引用，而是当前类的对象，那么在调用拷贝构造函数时，会将另外一个对象直接传递给形参，这本身就是一次拷贝，会再次调用拷贝构造函数，然后又将一个对象直接传递给了形参，将继续调用拷贝构造函数……这个过程会一直持续下去，没有尽头，陷入死循环。
+
+  - 如果拷贝构造函数的参数是按值传递的（而不是引用），那么在调用拷贝构造函数时，会触发另一个拷贝构造函数，导致无限递归调用。这是因为拷贝构造函数的目的是创建对象的副本，而按值传递会触发拷贝构造函数，而拷贝构造函数的调用又需要创建对象的副本，导致无限循环。
+  - 相当于为了调用拷贝构造函数需要创建一个副本，而创建这个副本依然需要调用拷贝构造函数，调用的时候依然要创建一个副本，而创建副本依然要调用拷贝构造函数，所以会无限循环下去。
 
 - 为什么是const引用：拷贝构造函数的目的是用其它对象的数据来初始化当前对象，并没有期望更改其它对象的数据，添加 const 限制后，这个含义更加明确了。另外一个原因是，添加 const 限制后，可以将 const 对象和非 const 对象传递给形参了，因为非 const 类型可以转换为 const 类型。如果没有 const 限制，就不能将 const 对象传递给形参，因为 const 类型不能转换为非 const 类型，这就意味着，不能使用 const 对象来初始化当前对象了。
 
