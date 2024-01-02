@@ -2730,6 +2730,28 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - 在[C++](http://c.biancheng.net/cplus/)中，我们可以使用静态成员变量来实现多个对象共享数据的目标。静态成员变量是一种特殊的成员变量，它被关键字`static`修饰
 
+- 在 C++ 中，`static` 关键字的位置对于静态成员函数而言没有影响，两种写法是等效的，没有区别。
+
+  ```c++
+  class MyClass {
+  public:
+      static void myStaticFunction1();
+      void static myStaticFunction2();
+  };
+  
+  // 定义静态成员函数
+  void MyClass::myStaticFunction1() {
+      // 函数体的实现
+  }
+  
+  void MyClass::myStaticFunction2() {
+      // 函数体的实现
+  }
+  
+  ```
+
+  - 在上述示例中，`myStaticFunction1` 和 `myStaticFunction2` 的声明是等效的。在定义时，你可以使用任意一种形式，它们都表示这是一个静态成员函数。一般来说，大多数人更倾向于使用 `static void` 的顺序，因为更符合自然语言的表达方式，但这主要是个人或团队的编码风格问题。
+
 - static 成员变量属于类，不属于某个具体的对象，即使创建多个对象，也只为 m_total 分配一份内存，所有对象使用的都是这份内存中的数据。当某个对象修改了 m_total，也会影响到其他对象。
 
 - static 成员变量必须在类声明的外部初始化type class::name = value;
@@ -2777,6 +2799,10 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - 静态成员函数与普通成员函数的根本区别在于：普通成员函数有 this 指针，可以访问类中的任意成员；而静态成员函数没有 this 指针，只能访问静态成员（包括静态成员变量和静态成员函数）。
 
 - 和静态成员变量类似，静态成员函数在声明时要加 static，在定义时不能加 static。静态成员函数可以通过类来调用（一般都是这样做），也可以通过对象来调用
+
+  - 在 C++ 中，如果一个类中声明了一个 `static` 成员函数，你在定义这个成员函数的时候应该省略 `static` 关键字。`static` 关键字只需要在类的声明中指明，而在定义时不需要重复。静态成员函数只属于类本身，而不是类的实例，因此在定义时不需要再次标明 `static`。
+
+  - 静态成员变量在源文件中初始化也不需要加static关键字
 
 - 静态成员函数不能访问类里面的非成员变量和非成员函数，所以我们可以在类里面可以定义一个静态成员函数写一个返回静态类对象，然后用静态类对象来访问成员变量，这样整个类对象在程序运行期间都是一样的，这样就不用在用到类时重复声明了。静态类对象也是一个完整的对象，包含类里面定义的所有成员变量和成员函数，只是静态类对象只会初始化一份，我们可以用这个唯一化的静态类对象来访问成员函数和成员变量
 
@@ -3462,6 +3488,34 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - 所有的指针用的对象要不就是在堆上，要不就是在栈上，而且这层栈还没有销毁，一般如果指针用的对象在栈上的话，则类A实例化和类B实例化在一层栈上，而且将B的地址赋值给A里面的B指针变量。例如我们在一层栈上实例化了一个A，此时我们调用另一个函数，而且将A对象传递给这个函数，在这个函数中实例化了一个B，这个B在栈上，而且将B的地址赋值给A中的B指针变量，当这个函数调用结束后，此时B对象没了，而这个A里面B指针变量还有值，这样是不对的，要是在堆上就没有这个问题了。
 
 - 总体来说要注意互相引用时，在栈上的对象消失的问题
+
+- 在类的互相引用中，可以使用this指针传递类对象引用形参
+
+  ```c++
+  class Channel{
+  	virtual void DispatchMessage(Message &message) = 0;
+  }；
+  
+  class Message{
+     void DispatchMessage(); 
+  }；
+  void Message::DispatchMessage()
+  {
+    ++m_nStatsTrigger;
+  
+    // Dispatch the message to all target channels
+    for (ChannelVector::iterator i = m_Channels.begin(); i != m_Channels.end(); ++i)
+    {
+      // By default we have no transmission header or footer
+      m_nHeaderOffset = m_nMessageOffset;
+      m_nTransmitLength = m_nFooterOffset - m_nHeaderOffset;
+  
+      (*i)->DispatchMessage(*this);
+    }
+  }
+  ```
+
+  - Message类里面有一个DispatchMessage函数，里面会调用Channel类中的DispatchMessage函数，Channel类中的DispatchMessage形参是Message类引用，所以在Message类中调用Channel类中的函数时，可以用`*this`来传递Message类对象
 
 - 下面写一个简单的例子
 
@@ -4754,6 +4808,36 @@ stopwatch stopwatch::operator++(int n){
 
 - 那么，如果我们想把当前类类型转换为其它类型怎么办呢？很简单，增加一个普通的成员函数即可，例如，string 类使用 c_str() 函数转换为 C 风格的字符串，complex 类使用 real() 和 imag() 函数来获取复数的实部和虚部。
 
+- 类型转换函数一般也定义为成员函数
+
+  ```c++
+  #include <iostream>
+  
+  class MyClass {
+  private:
+      int data;
+  
+  public:
+      MyClass(int value) : data(value) {}
+  
+      // 类型转换函数，将 MyClass 转换为整数
+      operator int() const {
+          return data;
+      }
+  };
+  
+  int main() {
+      MyClass myObject(42);
+  
+      // 调用类型转换函数将 MyClass 转换为整数
+      int result = myObject;
+  
+      std::cout << "Converted value: " << result << std::endl;
+  
+      return 0;
+  }
+  ```
+
 ##### 类型转换的本质
 
 - 在 C/C++ 中，不同的数据类型之间可以相互转换：无需用户指明如何转换的称为自动类型转换（隐式类型转换），需要用户显式地指明如何转换的称为强制类型转换（显式类型转换）
@@ -4784,9 +4868,11 @@ stopwatch stopwatch::operator++(int n){
 
 - static_cast 只能用于良性转换，这样的转换风险较低，一般不会发生什么意外，例如：
 
-  - 原有的自动类型转换，例如 short 转 int、int 转 double、const 转非 const、向上转型等；
+  - 原有的自动类型转换，例如 short 转 int、int 转 double
   - void [指针](http://c.biancheng.net/c/80/)和具体类型指针之间的转换，例如`void *`转`int *`、`char *`转`void *`等；
   - 有转换构造函数或者类型转换函数的类与其它类型之间的转换，例如 double 转 Complex（调用转换构造函数）、Complex 转 double（调用类型转换函数）。
+  - 用于类层次结构中父类和子类之间指针和引用的转换。
+    - 对于以上第（4）点，存在两种形式的转换，即上行转换（子类到父类）和下行转换（父类到子类）。对于static_cast，上行转换时安全的，而下行转换时不安全的，为什么呢？因为static_cast的转换时粗暴的，它仅根据类型转换语句中提供的信息（尖括号中的类型）来进行转换，这种转换方式对于上行转换，由于子类总是包含父类的所有数据成员和函数成员，因此从子类转换到父类的指针对象可以没有任何顾虑的访问其（指父类）的成员。而对于下行转换为什么不安全，是因为static_cast只是在编译时进行类型坚持，没有运行时的类型检查，具体原理在dynamic_cast中说明。
 
 - 需要注意的是，static_cast 不能用于无关类型之间的转换，因为这些转换都是有风险的，例如：
 
@@ -4810,9 +4896,65 @@ stopwatch stopwatch::operator++(int n){
     
     ```
 
-- const_cast 比较好理解，它用来去掉表达式的 const 修饰或 volatile 修饰。换句话说，const_cast 就是用来将 const/volatile 类型转换为非 const/volatile 类型。
+- const_cast 比较好理解，`const_cast` 是 C++ 中的一个类型转换操作符，主要用于在指针或引用上添加或移除 `const` 修饰符，主要是去除const属性，添加const属性很少用
+
+  - 去掉const属性：常用，因为不能把一个const变量直接赋给一个非const变量，必须要转换。
+
+    ```c++
+     //去掉const属性的指针
+    class MyClass {
+    public:
+        int data;
+    
+        MyClass(int value) : data(value) {}
+    };
+    
+    int main() {
+        const MyClass obj(42);
+        const MyClass* constPtr = &obj;
+    
+        // 使用 const_cast 将 const 指针转换为非 const 指针
+        MyClass* nonConstPtr = const_cast<MyClass*>(constPtr);
+    
+        // 修改非 const 指针所指向的对象
+        nonConstPtr->data = 100;
+    
+        // 输出结果是不确定的，因为修改了原本被视为常量的对象
+        std::cout << obj.data << std::endl;
+    
+        return 0;
+    }
+    
+    //去掉const属性的引用
+    class A {
+    public:
+        int m_iNum;
+    
+        A() : m_iNum(1) {}
+    };
+    
+    int main() {
+        const A a1;
+        const A &constRef = a1;
+        A &nonConstRef = const_cast<A&>(constRef);
+    
+        // 这里修改了常量对象 a1
+        nonConstRef.m_iNum = 200;
+    
+        // 输出结果是不确定的，因为修改了常量对象
+        std::cout << a1.m_iNum << std::endl;
+    
+        return 0;
+    }
+    ```
+
+  - 加上const属性：一般很少用，因为可以把一个非const变量直接赋给一个const变量，比如：const int* k = j;
 
 - dynamic_cast 用于在类的继承层次之间进行类型转换，它既允许向上转型（Upcasting），也允许向下转型（Downcasting）。向上转型是无条件的，不会进行任何检测，所以都能成功；向下转型的前提必须是安全的，要借助 RTTI 进行检测，所有只有一部分能成功。dynamic_cast 与 static_cast 是相对的，dynamic_cast 是“动态转换”的意思，static_cast 是“静态转换”的意思。dynamic_cast 会在程序运行期间借助 RTTI 进行类型转换，这就要求基类必须包含虚函数；static_cast 在编译期间完成类型转换，能够更加及时地发现错误。
+
+  - dynamic_cast主要用于类层次结构中父类和子类之间指针和引用的转换，由于具有运行时类型检查，因此可以保证下行转换的安全性，何为安全性？即转换成功就返回转换后的正确类型指针，如果转换失败，则返回NULL，之所以说static_cast在下行转换时不安全，是因为即使转换失败，它也不返回NULL。
+
+  - 对于上行转换，dynamic_cast和static_cast是一样的。
 
 - dynamic_cast 的语法格式为：dynamic_cast <newType> (expression)
 
@@ -4822,7 +4964,34 @@ stopwatch stopwatch::operator++(int n){
 
 - 向上转型时，只要待转换的两个类型之间存在继承关系，并且基类包含了虚函数（这些信息在编译期间就能确定），就一定能转换成功。因为向上转型始终是安全的，所以 dynamic_cast 不会进行任何运行期间的检查，这个时候的 dynamic_cast 和 static_cast 就没有什么区别了。
 
-  - Derived *pd1 = **new** Derived(35, 78); Base \*： = dynamic_cast<Derived\*>(pd1);向上转型就是让子类的对象指针转换为基类，注意只能是指针，向下转型有风险，但是也类似
+  - `Derived *pd1 = new Derived(35, 78); Base *pd2= dynamic_cast<Derived*>(pd1);`向上转型就是让子类的对象指针转换为基类，注意只能是指针，向下转型有风险，但是也类似
+
+- 向下转型
+
+  - 由于需要进行向下转换，因此需要定义一个**父类类型的指针Base \*P**，但是由于子类继承于父类，父类指针可以指向父类对象，也可以指向子类对象，这就是重点所在。如果 **P**指向的确实是子类对象，则dynamic_cast和static_cast都可以转换成功，如下所示：
+
+    ```
+    Base *P = new Derived();  
+    Derived *pd1 = static_cast<Derived *>(P);  
+    Derived *pd2 = dynamic_cast<Derived *>(P); 
+    ```
+
+    - 以上转换都能成功
+
+  - 但是，如果 **P** 指向的不是子类对象，而是父类对象，如下所示：
+
+    ```
+    Base *P = new Base;  
+    Derived *pd3 = static_cast<Derived *>(P);  
+    Derived *pd4 = dynamic_cast<Derived *>(P);  
+    ```
+
+    - 在以上转换中，static_cast转换在编译时不会报错，也可以返回一个子类对象指针（假想），但是这样是不安全的，在运行时可能会有问题，因为子类中包含父类中没有的数据和函数成员，这里需要理解转换的字面意思，转换是什么？转换就是把对象从一种类型转换到另一种类型，如果这时用 pd3 去访问子类中有但父类中没有的成员，就会出现访问越界的错误，导致程序崩溃。而dynamic_cast由于具有运行时类型检查功能，它能检查P的类型，由于上述转换是不合理的，所以它返回NULL。
+
+- C++中层次类型转换中无非两种：上行转换和下行转换
+
+  - 对于上行转换，static_cast和dynamic_cast效果一样，都安全；
+  - 对于下行转换：你必须确定要转换的数据确实是目标类型的数据，即需要注意要转换的父类类型指针是否真的指向子类对象，如果是，static_cast和dynamic_cast都能成功；如果不是static_cast能返回，但是不安全，可能会出现访问越界错误，而dynamic_cast在运行时类型检查过程中，判定该过程不能转换，返回NULL。
 
 - reinterpret 是“重新解释”的意思，顾名思义，reinterpret_cast 这种转换仅仅是对二进制位的重新解释，不会借助已有的转换规则对数据进行调整，非常简单粗暴，所以风险很高。
 
@@ -4840,6 +5009,7 @@ stopwatch stopwatch::operator++(int n){
     ```
 
   - 可以想象，用一个 float 指针来操作一个 char 数组是一件多么荒诞和危险的事情，这样的转换方式不到万不得已的时候不要使用。将`A*`转换为`int*`，使用指针直接访问 private 成员刺穿了一个类的封装性，更好的办法是让类提供 get/set 函数，间接地访问成员变量。
+
 
 #### 异常
 
