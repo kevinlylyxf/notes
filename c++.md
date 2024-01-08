@@ -3969,7 +3969,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - 将派生类指针赋值给基类指针。与对象变量之间的赋值不同的是，对象指针之间的赋值并没有拷贝对象的成员，也没有修改对象本身的数据，仅仅是改变了指针的指向。
   - 将派生类指针赋值给基类指针时，通过基类指针不能使用派生类的成员变量，也不能使用派生类的成员函数
-  
+
     ```c++
     class A{
     public:
@@ -3988,13 +3988,40 @@ int snprintf ( char * str, size_t size, const char * format, ... );
         return 0;
     }
     ```
-  
+
     - 上面代码编译报错`‘class A’ has no member named ‘b’`
     - 证明通过将派生类指针赋值给基类指针时，也只能访问基类定义的成员变量和成员函数
-  
+
   - 编译器通过指针的类型来访问成员函数。对于 pa，它的类型是 A，不管它指向哪个对象，使用的都是 A 类的成员函数
-  
+
   - 编译器通过指针来访问成员变量，指针指向哪个对象就使用哪个对象的数据；编译器通过指针的类型来访问成员函数，指针属于哪个类的类型就使用哪个类的函数。
+
+
+##### 向下转型
+
+- 在C++中，向下转型（Downcasting）是指从基类指针或引用转换为派生类指针或引用。向下转型是一种较为危险的操作，因为它要求基类指针或引用实际上指向的是派生类的对象。为了确保安全，可以使用 `dynamic_cast` 运算符进行运行时类型检查。
+
+- 如果基类指针指向的原本就是派生类对象，我们就可以将基类指针转换为派生类指针，然后就可以通过转换完的指针访问派生类中特有的函数和成员
+
+- 可以参考下面类型转换运算符一节
+
+- 设计模式
+
+  - 可以在基类中写一个虚函数，然后在子类中重写这个虚函数，此函数的作用是`return this`，这样也相当于向下转型了
+
+    ```c++
+    class TiXmlNode : public TiXmlBase{
+    public:
+    	virtual const TiXmlElement*     ToElement()     const { return 0; }
+    }
+    
+    class TiXmlElement : public TiXmlNode{
+    public:
+    	virtual const TiXmlElement*     ToElement()     const { return this; }
+    }
+    ```
+
+    - 这样我们可以用TiXmlNode的指针调用ToElement函数返回TiXmlElement对象，因为TiXmlNode指针指向的原本就是TiXmlElement的对象，这样相当于向下转型了
 
 #### 多态与虚函数
 
