@@ -3996,6 +3996,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 编译器通过指针来访问成员变量，指针指向哪个对象就使用哪个对象的数据；编译器通过指针的类型来访问成员函数，指针属于哪个类的类型就使用哪个类的函数。
 
+- 一般情况下向上转型和向下转型都是用指针和引用，向上转型虽然可以用对象赋值，但是很少用，而且对象赋值不能形成多态，也不好用。
 
 ##### 向下转型
 
@@ -4173,6 +4174,52 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   此时可以看到，通过父类的指针调用多态的接口，子类的接口能访问子类的自己定义的变量，这样就可以访问子类的变量，这样是通过接口访问的，这样能行
   ```
   
+
+- 在基类中有两个虚函数func1和func2，子类均重写了，如果在子类的func1函数中调用了基类的func1，而基类的func1调用了func2，最终调用的func2是子类的
+
+  ```c++
+  #include <iostream>
+  
+  class Base {
+  public:
+      virtual void func1() {
+          std::cout << "Base::func1()" << std::endl;
+          func2();  // 在基类中调用 func2
+      }
+  
+      virtual void func2() {
+          std::cout << "Base::func2()" << std::endl;
+      }
+  };
+  
+  class Derived : public Base {
+  public:
+      void func1() override {
+          std::cout << "Derived::func1()" << std::endl;
+          Base::func1();  // 在子类中调用基类的 func1
+      }
+  
+      void func2() override {
+          std::cout << "Derived::func2()" << std::endl;
+      }
+  };
+  
+  int main() {
+      Derived derivedObj;
+  
+      // 通过基类指针调用虚函数
+      Base* basePtr = &derivedObj;
+      basePtr->func1();
+  
+      return 0;
+  }
+  
+  Derived::func1()
+  Base::func1()
+  Derived::func2()
+  ```
+
+  - 从上面的执行结果可以来看，所有的虚函数都是会动态绑定的，绑定的都是指针指向的对象类型中的虚函数。在基类func1中调用了func2，而指针指向的对象是子类，所以func2最终调用的是子类的。
 
 ##### 虚析构函数
 
@@ -5036,6 +5083,49 @@ stopwatch stopwatch::operator++(int n){
     ```
 
   - 可以想象，用一个 float 指针来操作一个 char 数组是一件多么荒诞和危险的事情，这样的转换方式不到万不得已的时候不要使用。将`A*`转换为`int*`，使用指针直接访问 private 成员刺穿了一个类的封装性，更好的办法是让类提供 get/set 函数，间接地访问成员变量。
+
+- 在一个长数组中将4个字节解释为整形
+
+  ```c++
+  #include <iostream>
+  
+  int main() {
+      char byteArray[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+  
+      // 使用类型强制转换将从第五个字节开始的四个字节的char数组转换为int
+      int intValue = *reinterpret_cast<int*>(byteArray + 4);
+  
+      std::cout << "Integer value: " << intValue << std::endl;
+  
+      return 0;
+  }
+  ```
+
+  - 上面强转的时候转换为`int *` 会自动转换4个字节吗
+
+    - 是的，当你使用 `reinterpret_cast<int*>(byteArray + 4)` 进行强制转换时，它将从 `byteArray` 数组的第五个字节开始的四个字节视为一个整数。
+    - 因为int占用四个字节，所以在类型强转的时候，会自动寻找四个字节然后解释为int类型
+    - 将char类型的指针转换为int类型的指针后，用*来取对应的数据就可以了，因为是int类型，所以会将4个字节的数据解释为int来赋值给intValue
+
+  - 上面中的intValue也可以用指针，但是用指针之后就不能通过此指针赋值了，因为会修改底层的数据，原来的数据就破坏了，我们是从一个大数组中解析，并不需要修改数组中的数据
+
+    ```c++
+    #include <iostream>
+    
+    int main() {
+        char byteArray[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+    
+        // 使用指针和强制类型转换将从第五个字节开始的四个字节的char数组转换为int
+        int* ptr = reinterpret_cast<int*>(byteArray + 4);
+    
+        // 通过指针间接访问转换后的int值
+        std::cout << "Integer value through pointer: " << *ptr << std::endl;
+    
+        return 0;
+    }
+    ```
+
+    - 上面是用指针来接收强转之后的数据，因为ptr是int类型的指针，所以最后在输出时，会将这个指针开始的四个字节解释为int然后输出。
 
 
 #### 异常
