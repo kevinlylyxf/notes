@@ -1882,6 +1882,415 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
   - 原型：Prototype
   - 单例：Singleton
 
+##### 简单工厂
+
+- 简单工厂模式是一种创建型设计模式，其主要目的是通过一个工厂类，根据客户端的请求来创建不同类型的对象。简单工厂模式属于工厂模式的一种，它封装了对象的创建过程，使得客户端代码不需要直接实例化具体的产品类，从而达到解耦的目的。
+
+- 简单工厂模式包含以下几个主要角色：
+
+  - **产品接口（Product Interface）：** 定义了产品的通用接口，产品类们实现这个接口。
+
+    ```c++
+    class Product {
+    public:
+        virtual void display() = 0;
+        virtual ~Product() {}
+    };
+    ```
+
+  - **具体产品（Concrete Products）：** 实现了产品接口的具体产品类。
+
+    ```c++
+    class ConcreteProductA : public Product {
+    public:
+        void display() override {
+            // 具体产品 A 的实现
+        }
+    };
+    
+    class ConcreteProductB : public Product {
+    public:
+        void display() override {
+            // 具体产品 B 的实现
+        }
+    };
+    ```
+
+  - **简单工厂类（Simple Factory）：** 负责根据客户端的请求创建不同类型的产品对象。这个类通常包含一个静态方法用于对象的创建。
+
+    ```c++
+    class SimpleFactory {
+    public:
+        static Product* createProduct(char productType) {
+            switch (productType) {
+                case 'A':
+                    return new ConcreteProductA();
+                case 'B':
+                    return new ConcreteProductB();
+                default:
+                    return nullptr; // 可以根据需求返回默认产品或抛出异常
+            }
+        }
+    };
+    ```
+
+  - **客户端（Client）：** 使用简单工厂类来创建具体的产品对象。
+
+    ```c++
+    int main() {
+        Product* productA = SimpleFactory::createProduct('A');
+        if (productA) {
+            productA->display();
+            delete productA;
+        }
+    
+        Product* productB = SimpleFactory::createProduct('B');
+        if (productB) {
+            productB->display();
+            delete productB;
+        }
+    
+        return 0;
+    }
+    ```
+
+  - 在这个例子中，客户端通过简单工厂类的静态方法 `createProduct` 来获取具体的产品对象，而不需要直接调用具体产品的构造函数。这样的做法使得客户端与具体产品的实现细节解耦，对于客户端而言，只需要知道产品接口和简单工厂的接口即可。
+
+- 一般情况下工厂类中都会有一个static静态方法来创建具体的产品，产品有一个基类，然后这个静态方法返回的是基类的指针指向子类，而基类中都会有一些虚函数，子类实现虚函数这样就可以形成多态。这样就可以弄成，接口相同，实现的细节不同，相当于一个工厂建造了很多产品，但是产品的接口都是一样的。
+- 使用简单工厂的主要意义在于，生产出来的产品接口都是一样的，这样可以通过这些公共接口简单化一些操作。
+- 简单工厂模式通常在以下情况下被使用：
+  1. **创建对象的逻辑相对简单：** 简单工厂模式适用于对象的创建逻辑相对简单，不涉及复杂的逻辑判断或多个步骤的情况。如果对象的创建过程较为复杂，可能需要考虑使用其他工厂模式，比如工厂方法模式。
+  2. **客户端不需要知道具体产品的类名：** 简单工厂模式通过工厂类来负责具体产品的创建，客户端只需知道产品的接口或抽象类，而无需知道具体产品的类名。这有助于降低客户端与具体产品的耦合。
+  3. **对象的创建频率不高：** 如果对象的创建频率很高，而且具体产品的类型经常变化，简单工厂模式可能会导致工厂类变得复杂且难以维护。在这种情况下，工厂方法模式可能更适合，因为它允许通过子类化来动态扩展工厂。
+  4. **对于产品的种类有限制：** 当具体产品的种类相对固定，不容易频繁变动时，简单工厂模式是一种简单且有效的选择。
+- 尽管简单工厂模式在某些情况下很有用，但需要注意的是，它有一些缺点，比如扩展性较差。如果系统中需要添加新的产品，可能需要修改工厂类的代码，这违反了开闭原则。在更复杂的应用中，可能需要考虑使用其他工厂模式，如工厂方法模式或抽象工厂模式。
+
+##### 工厂方法
+
+- 工厂方法模式（Factory Method Pattern）是一种创建型设计模式，其主要目的是定义一个用于创建对象的接口，但将实际的实例化工作延迟到子类。这样，客户端代码就可以在不同的子类中选择实例化的具体对象，从而实现了解耦。
+
+- 以下是工厂方法模式的主要参与者：
+
+  - **抽象产品（Abstract Product）：** 定义了产品的接口，是所有具体产品类的共同基类。
+
+    ```c++
+    class Product {
+    public:
+        virtual void display() = 0;
+        virtual ~Product() {}
+    };
+    ```
+
+  - **具体产品（Concrete Product）：** 实现了抽象产品接口的具体产品类。
+
+    ```c++
+    class ConcreteProductA : public Product {
+    public:
+        void display() override {
+            // 具体产品 A 的实现
+        }
+    };
+    
+    class ConcreteProductB : public Product {
+    public:
+        void display() override {
+            // 具体产品 B 的实现
+        }
+    };
+    ```
+
+  - **抽象工厂（Abstract Factory）：** 声明了一个创建产品对象的接口，由具体工厂类实现。
+
+    ```c++
+    class Factory {
+    public:
+        virtual Product* createProduct() = 0;
+        virtual ~Factory() {}
+    };
+    ```
+
+  - **具体工厂（Concrete Factory）：** 实现了抽象工厂接口的具体工厂类，负责创建具体产品的实例。
+
+    ```c++
+    class ConcreteFactoryA : public Factory {
+    public:
+        Product* createProduct() override {
+            return new ConcreteProductA();
+        }
+    };
+    
+    class ConcreteFactoryB : public Factory {
+    public:
+        Product* createProduct() override {
+            return new ConcreteProductB();
+        }
+    };
+    ```
+
+  - 客户端代码可以通过与抽象工厂和抽象产品进行交互，而不直接依赖于具体的产品类。具体的工厂类负责实际的对象创建，使得系统更加灵活，可以根据需求选择不同的工厂类来创建不同的产品。
+
+  - 以下是一个简单的示例，演示了工厂方法模式的用法：
+
+    ```c++
+    int main() {
+        Factory* factoryA = new ConcreteFactoryA();
+        Product* productA = factoryA->createProduct();
+        if (productA) {
+            productA->display();
+            delete productA;
+        }
+        delete factoryA;
+    
+        Factory* factoryB = new ConcreteFactoryB();
+        Product* productB = factoryB->createProduct();
+        if (productB) {
+            productB->display();
+            delete productB;
+        }
+        delete factoryB;
+    
+        return 0;
+    }
+    ```
+
+##### 抽象工厂
+
+- 抽象工厂模式（Abstract Factory Pattern）是一种创建型设计模式，它提供一个接口，用于创建一系列相关或相互依赖的对象，而无需指定它们的具体类。抽象工厂模式是工厂模式的一种扩展，旨在处理一组相关的产品，形成产品族。
+
+- 抽象工厂模式的主要优点在于它能够确保一组相关的产品被一起创建，使得客户端代码不必关心具体产品的创建细节。它还支持产品族的概念，即一组相关的产品，而不仅仅是一个单一的产品。
+
+- 使用抽象工厂模式时，客户端代码通过与抽象工厂和抽象产品进行交互，实现了与具体产品的解耦。这种方式使得系统更易于扩展，可以方便地引入新的产品系列。
+
+- 以下是抽象工厂模式的主要角色：
+
+  - **抽象工厂（Abstract Factory）：** 声明了一组用于创建产品的抽象方法，每个方法对应一个产品族。
+
+    ```c++
+    class AbstractFactory {
+    public:
+        virtual AbstractProductA* createProductA() = 0;
+        virtual AbstractProductB* createProductB() = 0;
+        virtual ~AbstractFactory() {}
+    };
+    ```
+
+  - **具体工厂（Concrete Factory）：** 实现了抽象工厂接口的具体工厂类，负责创建一组相关的产品。
+
+    ```c++
+    class ConcreteFactory1 : public AbstractFactory {
+    public:
+        AbstractProductA* createProductA() override {
+            return new ProductA1();
+        }
+    
+        AbstractProductB* createProductB() override {
+            return new ProductB1();
+        }
+    };
+    
+    class ConcreteFactory2 : public AbstractFactory {
+    public:
+        AbstractProductA* createProductA() override {
+            return new ProductA2();
+        }
+    
+        AbstractProductB* createProductB() override {
+            return new ProductB2();
+        }
+    };
+    ```
+
+  - **抽象产品（Abstract Product）：** 声明了一组产品的抽象接口，每个具体产品实现这些接口。
+
+    ```c++
+    class AbstractProductA {
+    public:
+        virtual void display() = 0;
+        virtual ~AbstractProductA() {}
+    };
+    
+    class AbstractProductB {
+    public:
+        virtual void show() = 0;
+        virtual ~AbstractProductB() {}
+    };
+    ```
+
+  - **具体产品（Concrete Product）：** 实现了抽象产品接口的具体产品类。
+
+    ```c++
+    class ProductA1 : public AbstractProductA {
+    public:
+        void display() override {
+            // 具体产品 A1 的实现
+        }
+    };
+    
+    class ProductB1 : public AbstractProductB {
+    public:
+        void show() override {
+            // 具体产品 B1 的实现
+        }
+    };
+    
+    class ProductA2 : public AbstractProductA {
+    public:
+        void display() override {
+            // 具体产品 A2 的实现
+        }
+    };
+    
+    class ProductB2 : public AbstractProductB {
+    public:
+        void show() override {
+            // 具体产品 B2 的实现
+        }
+    };
+    ```
+
+  - 简单示例
+
+    ```c++
+    #include <iostream>
+    
+    // 抽象产品 A - 按钮
+    class AbstractButton {
+    public:
+        virtual void display() = 0;
+        virtual ~AbstractButton() {}
+    };
+    
+    // 具体产品 A1 - 按钮
+    class WindowsButton : public AbstractButton {
+    public:
+        void display() override {
+            std::cout << "Windows Button\n";
+        }
+    };
+    
+    // 具体产品 A2 - 按钮
+    class MacOSButton : public AbstractButton {
+    public:
+        void display() override {
+            std::cout << "MacOS Button\n";
+        }
+    };
+    
+    // 抽象产品 B - 窗口
+    class AbstractWindow {
+    public:
+        virtual void show() = 0;
+        virtual ~AbstractWindow() {}
+    };
+    
+    // 具体产品 B1 - 窗口
+    class WindowsWindow : public AbstractWindow {
+    public:
+        void show() override {
+            std::cout << "Windows Window\n";
+        }
+    };
+    
+    // 具体产品 B2 - 窗口
+    class MacOSWindow : public AbstractWindow {
+    public:
+        void show() override {
+            std::cout << "MacOS Window\n";
+        }
+    };
+    
+    // 抽象工厂
+    class AbstractFactory {
+    public:
+        virtual AbstractButton* createButton() = 0;
+        virtual AbstractWindow* createWindow() = 0;
+        virtual ~AbstractFactory() {}
+    };
+    
+    // 具体工厂 1
+    class WindowsFactory : public AbstractFactory {
+    public:
+        AbstractButton* createButton() override {
+            return new WindowsButton();
+        }
+    
+        AbstractWindow* createWindow() override {
+            return new WindowsWindow();
+        }
+    };
+    
+    // 具体工厂 2
+    class MacOSFactory : public AbstractFactory {
+    public:
+        AbstractButton* createButton() override {
+            return new MacOSButton();
+        }
+    
+        AbstractWindow* createWindow() override {
+            return new MacOSWindow();
+        }
+    };
+    
+    int main() {
+        // 使用 Windows 工厂
+        AbstractFactory* windowsFactory = new WindowsFactory();
+        AbstractButton* windowsButton = windowsFactory->createButton();
+        AbstractWindow* windowsWindow = windowsFactory->createWindow();
+    
+        windowsButton->display();
+        windowsWindow->show();
+    
+        delete windowsButton;
+        delete windowsWindow;
+        delete windowsFactory;
+    
+        // 使用 MacOS 工厂
+        AbstractFactory* macosFactory = new MacOSFactory();
+        AbstractButton* macosButton = macosFactory->createButton();
+        AbstractWindow* macosWindow = macosFactory->createWindow();
+    
+        macosButton->display();
+        macosWindow->show();
+    
+        delete macosButton;
+        delete macosWindow;
+        delete macosFactory;
+    
+        return 0;
+    }
+    ```
+
+    - 在这个例子中，`AbstractFactory` 定义了创建按钮和窗口的接口，而 `WindowsFactory` 和 `MacOSFactory` 分别实现了这个接口，用于创建相应的具体产品。
+
+  - 抽象工厂主要是实现了多个产品线，相当于有多个产品基类，而工厂方法只有一个产品基类。抽象工厂中的抽象工厂类中有两个虚函数，每个虚函数生成一个产品，一般情况下这两个产品来自于不同的产品基类。这样就有一个额外的概念，相当于一个工厂生产出来了两个产品，这两个产品就有一种绑定到一起的概念。
+
+##### 工厂方法总结
+
+###### 工厂方法和抽象工厂区别
+
+- 关注点不同：
+  - 工厂方法模式： 关注一个产品等级结构，即一个抽象产品和其多个具体实现。每个具体工厂类负责创建特定的产品。
+  - 抽象工厂模式： 关注多个产品等级结构，即多个抽象产品和每个抽象产品的多个具体实现。一个抽象工厂负责创建一整套产品。
+- 产品等级结构数量：
+  - 工厂方法模式： 通常只有一个抽象产品和多个具体产品，形成单一的产品等级结构。
+  - 抽象工厂模式： 通常涉及多个抽象产品和每个抽象产品的多个具体产品，形成多个产品等级结构。
+- 创建对象的方式：
+  - 工厂方法模式： 每个具体工厂类负责创建一种具体产品。客户端代码通过与抽象工厂和抽象产品交互，选择并使用具体工厂创建具体产品。
+  - 抽象工厂模式： 一个抽象工厂负责创建一整套产品，每个具体工厂类负责创建一种产品族。客户端代码通过与抽象工厂和抽象产品交互，选择并使用具体工厂创建整套产品。
+- 扩展性：
+  - 工厂方法模式： 更容易扩展，因为每个具体工厂类只负责创建一种产品，添加新产品时只需要添加对应的具体工厂和产品。
+  - 抽象工厂模式： 扩展相对较复杂，因为每个抽象工厂类负责创建一整套产品，添加新产品时需要修改抽象工厂及其所有具体工厂的接口和实现。
+- 用途：
+  - 工厂方法模式： 适用于只有一个抽象产品等级结构，但存在多个具体产品实现的情况。
+  - 抽象工厂模式： 适用于有多个抽象产品等级结构，每个产品族都有多个具体产品实现的情况。
+
+###### 关于产品的说明
+
+- 同一产品基类的产品，产品接口应该都是一样的，都是实现的基类中的纯虚函数。
+- 既然是工厂方法，生产出来的产品应该看着一样，这样才是工厂，所以产品的接口都是一样的
+- 虽然产品的接口一样，但是我们可以在每个具体的产品类中添加其他的字段，然后在new的时候给这个字段赋值，然后通过这个统一的接口根据每个具体类的数据产生不同的行为
+- 实际的例子就是FEED中根据配置的数据类型不同，产生很多个类，这些类都是从一个基类中继承，每个类中的方法都一样是OutPut，但是每个类的字段可以不一样，我们在实例化的时候就可以区分，然后根据每个类中不同的字段值，实现OutPut这个方法，相当于最终都要调用OutPut这个方法，但是这个方法的实现在每个类中不同，多态来实现的。
+
 ##### 工厂方法
 
 - 定义一个用于创建对象的接口，让子类决定实例化哪一个类。Factory Method使一个类的实例化延迟到其子类。
