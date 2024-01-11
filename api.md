@@ -2992,6 +2992,268 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
 
 - 饿汉式单例是在定义类的时候直接在源文件中实例化一个类对象，这样程序一开始就会有这个对象，而懒汉式单例则是在调用GetObject的时候才会实例化一个对象。
 
+##### 建造者模式
+
+- 建造者模式（Builder Pattern）是一种创建型设计模式，旨在解决复杂对象的构建过程与其表现形式分离的问题。该模式通过将构建复杂对象的过程拆分为多个步骤，并提供一个抽象的建造者接口，使得客户端可以通过指挥者来构建具体的复杂对象，而不必了解其内部构建细节。
+
+- 建造者模式的主要角色
+
+  - **产品（Product）：** 要构建的复杂对象，它由多个部分组成。
+  - **抽象建造者（Builder）：** 定义了构建产品各个部分的抽象接口，包括创建和装配各个部分的方法。
+  - **具体建造者（Concrete Builder）：** 实现了抽象建造者接口，负责实际构建产品的各个部分，并提供一个返回最终产品的方法。
+  - **指挥者（Director）：** 负责使用建造者接口来构建产品。指挥者通常不直接创建产品，而是通过调用建造者的方法来构建产品的各个部分，然后返回最终的产品。
+
+- 总的来说就是指挥者通过具体的建造者来生产产品，根据建造者的不同，生产出来的产品不同，指挥者中有一个函数constuct返回最终的产品，具体的建造者中也有一个产品对象，然后在指挥者construct函数中通过传入的建造者调用建造者中函数来完善建造者中的产品，然后通过建造者中的返回最终产品的方法来在construct函数中返回这个具体的产品。
+
+- 建造者模式的流程
+
+  - 定义产品类，确定产品的各个部分以及它们的类型。
+  - 创建一个抽象建造者接口，声明构建产品各个部分的方法。
+  - 创建具体建造者类，实现抽象建造者接口，负责实际构建产品的各个部分。
+  - 创建指挥者类，负责使用建造者接口来构建产品。指挥者通常包含一个用于构建产品的建造者成员变量。
+  - 客户端通过指挥者和具体建造者来构建产品，可以根据需要选择不同的建造者和构建顺序，以得到不同的产品配置。
+
+- 实例
+
+  ```c++
+  #include <iostream>
+  #include <string>
+  
+  // 产品：计算机
+  class Computer {
+  public:
+      void setProcessor(const std::string& processor) {
+          processor_ = processor;
+      }
+  
+      void setMemory(const std::string& memory) {
+          memory_ = memory;
+      }
+  
+      void setStorage(const std::string& storage) {
+          storage_ = storage;
+      }
+  
+      void show() const {
+          std::cout << "Computer Configuration:\n"
+                    << "Processor: " << processor_ << "\n"
+                    << "Memory: " << memory_ << "\n"
+                    << "Storage: " << storage_ << std::endl;
+      }
+  
+  private:
+      std::string processor_;
+      std::string memory_;
+      std::string storage_;
+  };
+  
+  // 抽象建造者：计算机建造者
+  class ComputerBuilder {
+  public:
+      virtual void buildProcessor() = 0;
+      virtual void buildMemory() = 0;
+      virtual void buildStorage() = 0;
+      virtual Computer getResult() const = 0;
+  };
+  
+  // 具体建造者：高性能计算机建造者
+  class HighPerformanceComputerBuilder : public ComputerBuilder {
+  public:
+      void buildProcessor() override {
+          computer_.setProcessor("Intel Core i9");
+      }
+  
+      void buildMemory() override {
+          computer_.setMemory("32GB DDR4 RAM");
+      }
+  
+      void buildStorage() override {
+          computer_.setStorage("1TB NVMe SSD");
+      }
+  
+      Computer getResult() const override {
+          return computer_;
+      }
+  
+  private:
+      Computer computer_;
+  };
+  
+  // 具体建造者：普通计算机建造者
+  class StandardComputerBuilder : public ComputerBuilder {
+  public:
+      void buildProcessor() override {
+          computer_.setProcessor("Intel Core i5");
+      }
+  
+      void buildMemory() override {
+          computer_.setMemory("8GB DDR4 RAM");
+      }
+  
+      void buildStorage() override {
+          computer_.setStorage("500GB SATA HDD");
+      }
+  
+      Computer getResult() const override {
+          return computer_;
+      }
+  
+  private:
+      Computer computer_;
+  };
+  
+  // 指挥者：负责构建计算机
+  class Director {
+  public:
+      Computer construct(ComputerBuilder& builder) {
+          builder.buildProcessor();
+          builder.buildMemory();
+          builder.buildStorage();
+          return builder.getResult();
+      }
+  };
+  
+  int main() {
+      Director director;
+  
+      // 构建高性能计算机
+      HighPerformanceComputerBuilder highPerformanceBuilder;
+      Computer highPerformanceComputer = director.construct(highPerformanceBuilder);
+      highPerformanceComputer.show();
+  
+      std::cout << "\n";
+  
+      // 构建普通计算机
+      StandardComputerBuilder standardBuilder;
+      Computer standardComputer = director.construct(standardBuilder);
+      standardComputer.show();
+  
+      return 0;
+  }
+  ```
+
+  - 在这个例子中，`Computer` 类表示要构建的产品，而 `ComputerBuilder` 是抽象建造者接口，定义了构建产品各个部分的方法。具体建造者 `HighPerformanceComputerBuilder` 和 `StandardComputerBuilder` 实现了抽象建造者接口，分别用于构建高性能计算机和普通计算机。`Director` 负责指挥具体建造者来构建产品。客户端通过指挥者和具体建造者来构建不同配置的计算机，而不需要了解具体构建细节。这样，通过建造者模式，我们能够实现灵活地构建不同配置的计算机对象。
+  - 这个主要就是指挥者类Director中construct函数返回一个具体的产品类，而最终要生产出来的产品要根据具体传入的建造者类有关，然后通过传入的建造者中的函数来完善产品，然后通过建造者类的返回产品的函数来在construct中返回这个产品
+
+- 如果建造者构建产品的函数需要参数，可以在construct函数中来传入参数
+
+  ```c++
+  #include <iostream>
+  #include <string>
+  
+  // 产品：计算机
+  class Computer {
+  public:
+      void setProcessor(const std::string& processor) {
+          processor_ = processor;
+      }
+  
+      void setMemory(const std::string& memory) {
+          memory_ = memory;
+      }
+  
+      void setStorage(const std::string& storage) {
+          storage_ = storage;
+      }
+  
+      void show() const {
+          std::cout << "Computer Configuration:\n"
+                    << "Processor: " << processor_ << "\n"
+                    << "Memory: " << memory_ << "\n"
+                    << "Storage: " << storage_ << std::endl;
+      }
+  
+  private:
+      std::string processor_;
+      std::string memory_;
+      std::string storage_;
+  };
+  
+  // 抽象建造者：计算机建造者
+  class ComputerBuilder {
+  public:
+      virtual void buildProcessor(const std::string& processor) = 0;
+      virtual void buildMemory(const std::string& memory) = 0;
+      virtual void buildStorage(const std::string& storage) = 0;
+      virtual Computer getResult() const = 0;
+  };
+  
+  // 具体建造者：高性能计算机建造者
+  class HighPerformanceComputerBuilder : public ComputerBuilder {
+  public:
+      void buildProcessor(const std::string& processor) override {
+          computer_.setProcessor(processor);
+      }
+  
+      void buildMemory(const std::string& memory) override {
+          computer_.setMemory(memory);
+      }
+  
+      void buildStorage(const std::string& storage) override {
+          computer_.setStorage(storage);
+      }
+  
+      Computer getResult() const override {
+          return computer_;
+      }
+  
+  private:
+      Computer computer_;
+  };
+  
+  // 具体建造者：普通计算机建造者
+  class StandardComputerBuilder : public ComputerBuilder {
+  public:
+      void buildProcessor(const std::string& processor) override {
+          computer_.setProcessor(processor);
+      }
+  
+      void buildMemory(const std::string& memory) override {
+          computer_.setMemory(memory);
+      }
+  
+      void buildStorage(const std::string& storage) override {
+          computer_.setStorage(storage);
+      }
+  
+      Computer getResult() const override {
+          return computer_;
+      }
+  
+  private:
+      Computer computer_;
+  };
+  
+  // 指挥者：负责构建计算机
+  class Director {
+  public:
+      Computer construct(ComputerBuilder& builder, const std::string& processor, const std::string& memory, const std::string& storage) {
+          builder.buildProcessor(processor);
+          builder.buildMemory(memory);
+          builder.buildStorage(storage);
+          return builder.getResult();
+      }
+  };
+  
+  int main() {
+      Director director;
+  
+      // 构建高性能计算机
+      HighPerformanceComputerBuilder highPerformanceBuilder;
+      Computer highPerformanceComputer = director.construct(highPerformanceBuilder, "Intel Core i9", "32GB DDR4 RAM", "1TB NVMe SSD");
+      highPerformanceComputer.show();
+  
+      std::cout << "\n";
+  
+      // 构建普通计算机
+      StandardComputerBuilder standardBuilder;
+      Computer standardComputer = director.construct(standardBuilder, "Intel Core i5", "8GB DDR4 RAM", "500GB SATA HDD");
+      standardComputer.show();
+  
+      return 0;
+  }
+  ```
+
 #### 行为型模式
 
 ##### 策略
@@ -3761,30 +4023,10 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
     	delete pObserverDebug;
     	delete pSubject;
     }
-    
     ```
-
-  - 执行结果
-
-    ```c
-    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/observer$ make
-    g++    -c -o concrtee_observer.o concrtee_observer.cpp
-    g++    -c -o client.o client.cpp
-    g++    -c -o concrete_subject.o concrete_subject.cpp
-    g++  concrtee_observer.o  client.o  concrete_subject.o   -o output/client1.00
-    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/observer$ ./output/client1.00 
-    GUI更新数据:Hello Word
-    数据库更新数据:Hello Word
-    Debug日志输出数据:Hello Word
-    删除Debug观察者
-    再次更新数据
-    GUI更新数据:Hello Acuity
-    数据库更新数据:Hello Acuity
-    
-    ```
-
     
 
+  
   ```c++
   /**
    * Observer Design Pattern
@@ -3966,5 +4208,6 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
   Goodbye, I was the Observer "1".
   Goodbye, I was the Subject.
   ```
-
   
+
+#### 结构型模式
