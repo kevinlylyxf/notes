@@ -2025,6 +2025,46 @@ int snprintf ( char * str, size_t size, const char * format, ... );
       return 0;
   }
   
+  拷贝构造函数也是构造函数，可以通过拷贝构造函数创建一个对象
+  #include <iostream>
+  
+  class MyClass {
+  public:
+      // 构造函数
+      MyClass(int value) : data(value) {
+          std::cout << "Constructor invoked." << std::endl;
+      }
+  
+      // 拷贝构造函数
+      MyClass(const MyClass& other) : data(other.data) {
+          std::cout << "Copy constructor invoked." << std::endl;
+      }
+  
+      // 获取数据成员的值
+      int getData() const {
+          return data;
+      }
+  
+  private:
+      int data;
+  };
+  
+  int main() {
+      // 通过构造函数创建一个对象
+      MyClass sourceObject(42);
+  
+      // 通过拷贝构造函数创建新对象
+      MyClass* newObj = new MyClass(sourceObject);
+  
+      // 打印数据成员的值
+      std::cout << "Data in dynamically created object: " << newObj->getData() << std::endl;
+  
+      // 释放动态分配的内存
+      delete newObj;
+  
+      return 0;
+  }
+  通过拷贝构造函数创建一个对象时，首先已经有一个对象，然后在new 类名() ，括号中写上已经存在的类对象就可以了。
   ```
 
 - 有了对象指针后，可以通过箭头`->`来访问对象的成员变量和成员函数，这和通过[结构体指针](http://c.biancheng.net/view/246.html)来访问它的成员类似
@@ -2044,6 +2084,8 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
 - 在类的内部（定义类的代码内部），无论成员被声明为 public、protected 还是 private，都是可以互相访问的，没有访问权限的限制。
   - 这个相当于说在头文件和源文件中都不算外部，都可以访问，所以声明为private的变量和函数也可以在源文件中通过::来定义和初始化
+
+- 在C++中，类的成员函数可以直接访问同一类的其他成员函数私有成员。这种访问是在类的内部进行的。因此，拷贝构造函数、赋值构造函数（拷贝赋值操作符）、以及其他成员函数都可以在类内部直接访问同一类的其他对象的私有成员。
 
 - 在类的外部（定义类的代码之外），只能通过对象访问成员，并且通过对象只能访问 public 属性的成员，不能访问 private、protected 属性的成员。
 
@@ -4173,7 +4215,6 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   
   此时可以看到，通过父类的指针调用多态的接口，子类的接口能访问子类的自己定义的变量，这样就可以访问子类的变量，这样是通过接口访问的，这样能行
   ```
-  
 
 - 在基类中有两个虚函数func1和func2，子类均重写了，如果在子类的func1函数中调用了基类的func1，而基类的func1调用了func2，最终调用的func2是子类的
 
@@ -4220,6 +4261,44 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   ```
 
   - 从上面的执行结果可以来看，所有的虚函数都是会动态绑定的，绑定的都是指针指向的对象类型中的虚函数。在基类func1中调用了func2，而指针指向的对象是子类，所以func2最终调用的是子类的。
+
+- 在实际的软件开发中，可能会遇到子类需要在其重写（override）的虚函数中调用父类版本的虚函数的情况
+
+  - 如果子类中重写了父类的虚函数，而且在子类中的这个虚函数中需要调用父类的虚函数，可以使用 `父类名::虚函数名` 的方式来显式地调用父类的虚函数。以下是一个示例：
+
+    ```c++
+    #include <iostream>
+    
+    class Parent {
+    public:
+        virtual void virtualFunction() {
+            std::cout << "Parent's virtual function" << std::endl;
+        }
+    };
+    
+    class Child : public Parent {
+    public:
+        void virtualFunction() override {
+            std::cout << "Child's overridden virtual function" << std::endl;
+    
+            // 在子类中调用父类的虚函数
+            Parent::virtualFunction();
+        }
+    };
+    
+    int main() {
+        Child childObj;
+        childObj.virtualFunction(); // 通过子类对象调用虚函数
+    
+        return 0;
+    }
+    ```
+
+  - 在实际的软件开发中，可能会遇到子类需要在其重写（override）的虚函数中调用父类版本的虚函数的情况。这种情况通常出现在以下一些典型场景中：
+
+    1. **共享基类的实现逻辑：** 多个子类共享某个基类的实现，但每个子类可能需要在基类的虚函数中添加自己的特定逻辑。在这种情况下，子类可以通过调用 `父类名::虚函数名` 来确保执行基类的实现。
+    2. **在子类中扩展而不是替换：** 子类可能并非完全替换基类的虚函数，而是在其基础上进行一些扩展。在这种情况下，子类可以先调用父类版本的虚函数，然后再添加自己的逻辑。
+
 
 ##### 虚析构函数
 
@@ -4701,6 +4780,48 @@ stopwatch stopwatch::operator++(int n){
 
 - 默认拷贝构造函数：如果程序员没有显式地定义拷贝构造函数，那么编译器会自动生成一个默认的拷贝构造函数。这个默认的拷贝构造函数很简单，就是使用“老对象”的成员变量对“新对象”的成员变量进行一一赋值。对于简单的类，默认拷贝构造函数一般是够用的，我们也没有必要再显式地定义一个功能类似的拷贝构造函数。但是当类持有其它资源时，如动态分配的内存、打开的文件、指向其他数据的[指针](http://c.biancheng.net/c/80/)、网络连接等，默认拷贝构造函数就不能拷贝这些资源，我们必须显式地定义拷贝构造函数，以完整地拷贝对象的所有数据
 
+- c++中拷贝构造函数能直接访问传进来的对象的私有成员吗
+
+  - 在C++中，类的成员函数（包括拷贝构造函数）可以直接访问同一类的其他对象的私有成员，因为它们都属于同一个类的成员。所以，在拷贝构造函数中，可以直接访问传递进来的对象的私有成员，因为它们属于相同的类。
+
+    ```c++
+    #include <iostream>
+    
+    class MyClass {
+    private:
+        int privateVariable;
+    
+    public:
+        // 普通构造函数
+        MyClass(int value) : privateVariable(value) {}
+    
+        // 拷贝构造函数
+        MyClass(const MyClass& other) {
+            // 访问传进来的对象的私有成员
+            privateVariable = other.privateVariable;
+            std::cout << "Copy constructor invoked." << std::endl;
+        }
+    
+        // 公有方法来获取私有成员的值
+        int getPrivateVariable() const {
+            return privateVariable;
+        }
+    };
+    
+    int main() {
+        MyClass obj1(42); // 调用普通构造函数
+        MyClass obj2 = obj1; // 调用拷贝构造函数
+    
+        std::cout << "Value in obj1: " << obj1.getPrivateVariable() << std::endl;
+        std::cout << "Value in obj2: " << obj2.getPrivateVariable() << std::endl;
+    
+        return 0;
+    }
+    ```
+
+    - 这段代码在类内部定义了拷贝构造函数，因此可以直接访问传递进来的对象 `other` 的私有成员
+
+
 ##### 到底什么时候会调用拷贝构造函数
 
 - 当以拷贝的方式初始化对象时会调用拷贝构造函数。这里有两个关键点，分别是「以拷贝的方式」和「初始化对象」。
@@ -4818,6 +4939,8 @@ stopwatch stopwatch::operator++(int n){
 - Array 类就是一个典型的例子。这个类在构造函数中动态地分配了一块内存，并用一个成员变量（指针变量）指向它，默认的析构函数不会释放这块内存，所以我们需要显式地定义一个析构函数来释放内存。
 
 - 如果一个类需要一个拷贝构造函数，几乎可以肯定它也需要一个赋值运算符；反之亦然。然而，无论需要拷贝构造函数还是需要复制运算符，都不必然意味着也需要析构函数。
+
+- 在C++中，类的成员函数（包括拷贝构造函数）可以直接访问同一类的其他对象的私有成员，因为它们都属于同一个类的成员。所以，在赋值构造函数中，可以直接访问传递进来的对象的私有成员，因为它们属于相同的类。
 
 ##### 转换构造函数
 

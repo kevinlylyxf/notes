@@ -1957,13 +1957,151 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
   - 在这个例子中，客户端通过简单工厂类的静态方法 `createProduct` 来获取具体的产品对象，而不需要直接调用具体产品的构造函数。这样的做法使得客户端与具体产品的实现细节解耦，对于客户端而言，只需要知道产品接口和简单工厂的接口即可。
 
 - 一般情况下工厂类中都会有一个static静态方法来创建具体的产品，产品有一个基类，然后这个静态方法返回的是基类的指针指向子类，而基类中都会有一些虚函数，子类实现虚函数这样就可以形成多态。这样就可以弄成，接口相同，实现的细节不同，相当于一个工厂建造了很多产品，但是产品的接口都是一样的。
+
 - 使用简单工厂的主要意义在于，生产出来的产品接口都是一样的，这样可以通过这些公共接口简单化一些操作。
+
 - 简单工厂模式通常在以下情况下被使用：
-  1. **创建对象的逻辑相对简单：** 简单工厂模式适用于对象的创建逻辑相对简单，不涉及复杂的逻辑判断或多个步骤的情况。如果对象的创建过程较为复杂，可能需要考虑使用其他工厂模式，比如工厂方法模式。
-  2. **客户端不需要知道具体产品的类名：** 简单工厂模式通过工厂类来负责具体产品的创建，客户端只需知道产品的接口或抽象类，而无需知道具体产品的类名。这有助于降低客户端与具体产品的耦合。
-  3. **对象的创建频率不高：** 如果对象的创建频率很高，而且具体产品的类型经常变化，简单工厂模式可能会导致工厂类变得复杂且难以维护。在这种情况下，工厂方法模式可能更适合，因为它允许通过子类化来动态扩展工厂。
-  4. **对于产品的种类有限制：** 当具体产品的种类相对固定，不容易频繁变动时，简单工厂模式是一种简单且有效的选择。
+  1. 创建对象的逻辑相对简单：*简单工厂模式适用于对象的创建逻辑相对简单，不涉及复杂的逻辑判断或多个步骤的情况。如果对象的创建过程较为复杂，可能需要考虑使用其他工厂模式，比如工厂方法模式。
+  2. 客户端不需要知道具体产品的类名：简单工厂模式通过工厂类来负责具体产品的创建，客户端只需知道产品的接口或抽象类，而无需知道具体产品的类名。这有助于降低客户端与具体产品的耦合。
+  3. 对象的创建频率不高： 如果对象的创建频率很高，而且具体产品的类型经常变化，简单工厂模式可能会导致工厂类变得复杂且难以维护。在这种情况下，工厂方法模式可能更适合，因为它允许通过子类化来动态扩展工厂。
+  4. 对于产品的种类有限制： 当具体产品的种类相对固定，不容易频繁变动时，简单工厂模式是一种简单且有效的选择。
+
+- 简单工厂模式中也可以不设计工厂类，但是这样一般不太好，下面是一个不设计工厂类的例子
+
+  ```c++
+  #include <iostream>
+  
+  class Product {
+  public:
+      virtual void display() const = 0;
+      static Product* createProduct(int type);
+  
+      virtual ~Product() = default;
+  };
+  
+  class ConcreteProductA : public Product {
+  public:
+      void display() const override {
+          std::cout << "Concrete Product A" << std::endl;
+      }
+  };
+  
+  class ConcreteProductB : public Product {
+  public:
+      void display() const override {
+          std::cout << "Concrete Product B" << std::endl;
+      }
+  };
+  
+  Product* Product::createProduct(int type) {
+      switch (type) {
+          case 1:
+              return new ConcreteProductA();
+          case 2:
+              return new ConcreteProductB();
+          default:
+              return nullptr;
+      }
+  }
+  
+  int main() {
+      // 使用静态方法创建产品
+      Product* productA = Product::createProduct(1);
+      Product* productB = Product::createProduct(2);
+  
+      // 使用产品
+      if (productA) {
+          productA->display();
+          delete productA;
+      }
+  
+      if (productB) {
+          productB->display();
+          delete productB;
+      }
+  
+      return 0;
+  }
+  ```
+
+  - 在产品基类中写一个static函数来创建产品
+  - 在这个例子中，`Product` 类包含一个静态方法 `createProduct`，它根据传入的参数创建相应的产品对象。在 `main` 函数中，我们使用这个静态方法创建了两个不同类型的产品，并调用了它们的 `display` 方法。
+  - 这种做法可能违反了设计模式的一些原则，特别是开闭原则和单一职责原则。正式的简单工厂模式建议使用独立的工厂类，以提高代码的可维护性和灵活性。
+
 - 尽管简单工厂模式在某些情况下很有用，但需要注意的是，它有一些缺点，比如扩展性较差。如果系统中需要添加新的产品，可能需要修改工厂类的代码，这违反了开闭原则。在更复杂的应用中，可能需要考虑使用其他工厂模式，如工厂方法模式或抽象工厂模式。
+
+###### FEED例子
+
+- FEED中写了一个基类Field，基类中有一个static函数，然后根据不同的数据类型来创建子类，子类来实现Output和GetMaxSize纯虚函数，目的是根据不同的类型来向pBuffer中拼写字符，所有的目的都是一个，通过Output来向传入的pBuffer中拼写字符，子类具体实现这个函数就可以了，然后我们就可以写一个for循环来通过类来调用这个函数，传入的pBuffer是一个，这样就可以拼写好pBuffer中的内容。
+
+- 基类Field
+
+  ```c++
+  class Field
+  {
+  public:
+    static Field * CreateField(TiXmlElement * pXML, MessageText *pMessage);
+  
+    static const std::string & GetUnavailableFieldString();
+    static void SetUnavailableFieldString(const std::string strNA);
+  
+  public:
+    virtual ~Field();
+  
+    virtual unsigned int Output(u8 *pBuffer) const = 0;
+    virtual unsigned int GetMaxSize() const = 0;
+  
+    void setFunction(std::string s)
+    {
+      m_szFunction = s;
+    }
+    std::string getFunction()
+    {
+      return m_szFunction;
+    }
+  
+  protected:
+    static std::string  s_strDefaultText;
+    std::string m_szFunction;
+  };
+  ```
+
+- 具体的中间子类
+
+  ```c++
+  class FieldRecord : public Field
+  {
+  public:
+    FieldRecord(TiXmlElement *pXML, MessageText *pMessage);
+  
+  protected:
+    const Record ** m_ppRecord;
+  };
+  
+  class FieldOffset : public FieldRecord
+  {
+  public:
+    FieldOffset(TiXmlElement *pXML, MessageText *pMessage);
+  
+  protected:
+    int m_nOffset;
+  };
+  ```
+
+- 具体的实际类，关于类型的类，这种类型有很多，每个类型都会有一个类
+
+  ```c++
+  class FieldU64 : public FieldOffset
+  {
+  public:
+    FieldU64(TiXmlElement *pXML, MessageText *pMessage);
+  
+    unsigned int Output(u8 *pBuffer) const;
+    unsigned int GetMaxSize() const;
+  };
+  ```
+
+- 在实际的使用时，每一个具体的类都会有自己独特的字段和数据，但是都是通过Output来调用的。这样我们就可以写一个for循环，通过多态来实现向一个字符串里面拼写不同类型的数据，所有的类都是通过指向基类的指针调用的，但是多态最终用的是子类的实现方式。
 
 ##### 工厂方法
 
@@ -2058,6 +2196,8 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
 - 抽象工厂模式（Abstract Factory Pattern）是一种创建型设计模式，它提供一个接口，用于创建一系列相关或相互依赖的对象，而无需指定它们的具体类。抽象工厂模式是工厂模式的一种扩展，旨在处理一组相关的产品，形成产品族。
 
 - 抽象工厂模式的主要优点在于它能够确保一组相关的产品被一起创建，使得客户端代码不必关心具体产品的创建细节。它还支持产品族的概念，即一组相关的产品，而不仅仅是一个单一的产品。
+
+- 抽象工厂模式和工厂方法不太一样，它要解决的问题比较复杂，不但工厂是抽象的，产品是抽象的，而且有多个产品需要创建，因此，这个抽象工厂会对应到多个实际工厂，每个实际工厂负责创建多个实际产品
 
 - 使用抽象工厂模式时，客户端代码通过与抽象工厂和抽象产品进行交互，实现了与具体产品的解耦。这种方式使得系统更易于扩展，可以方便地引入新的产品系列。
 
@@ -2291,10 +2431,12 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
 - 虽然产品的接口一样，但是我们可以在每个具体的产品类中添加其他的字段，然后在new的时候给这个字段赋值，然后通过这个统一的接口根据每个具体类的数据产生不同的行为
 - 实际的例子就是FEED中根据配置的数据类型不同，产生很多个类，这些类都是从一个基类中继承，每个类中的方法都一样是OutPut，但是每个类的字段可以不一样，我们在实例化的时候就可以区分，然后根据每个类中不同的字段值，实现OutPut这个方法，相当于最终都要调用OutPut这个方法，但是这个方法的实现在每个类中不同，多态来实现的。
 
-##### 工厂方法
+###### 其他总结
 
 - 定义一个用于创建对象的接口，让子类决定实例化哪一个类。Factory Method使一个类的实例化延迟到其子类。
+
 - 工厂模式，指的是封装对象的创建过程，并将创建过程和操作过程分离，用户（创建者）无需关心具体过程，就像一个工厂生产产品一样，以便批量管理对象的创建，提高程序的可以维护性和扩展性。
+
 - 工厂模式根据“产品制造过程”（对象创建）不同，分为简单工厂模式 (Simple Factory) 、工厂方法模式 (Factory Method) 、抽象工厂模式 (Abstract Factory)
   - 简单工厂模式，由创建对象类根据传入的类型参数确定对象种类实例。简单工厂模式是工厂模式中最简单的模式，但该模式并未能体现出工厂模式的精髓。
   - 工厂方法模式，声明一个创建对象的抽象方法基类，子类继承基类，由子类创建具体对象类实例。与简单工厂模式不同，工厂方法模式的对象实例化过程由子类实现。
@@ -2344,416 +2486,15 @@ dup2() makes newfd be the copy of oldfd, closing newfd first if necessary  dup2(
   - 如果存在着多个等级结构（多个抽象类），且各个等级结构中的实现类之间存在着一定的关联或者约束，则考虑使用抽象工厂模式
   - 各个等级结构中的实现类之间不存在关联或约束，则考虑使用多个独立的工厂（简单工厂/工厂方法）来对产品进行创建
 
-- 简单工厂
-
-  ```c++
-  #include <iostream> 
-  #include <stdlib.h> 
-  
-  using namespace std;
-  
-  typedef enum ProductType
-  {
-  	TypeA,
-  	TypeB,
-  	TypeC
-  }ProductType_t;
-  
-  /* 产品抽象基类 */
-  class Product
-  {
-  public:
-  	virtual void printf() = 0;
-  };
-  class ProductA : public Product
-  {
-  public:
-  	void printf()
-  	{
-  		cout<<"Create productA"<<endl;
-  	}
-  };
-  class ProductB : public Product
-  {
-  public:
-  	void printf()
-  	{
-  		cout<<"Create productB"<<endl;
-  	}
-  
-  };
-  class ProductC : public Product
-  {
-  public:
-  	void printf()
-  	{
-  		cout<<"Create productC"<<endl;
-  	}
-  
-  };
-  
-  /* 工厂类 */
-  class Factory
-  {
-  public:
-  	Product* CreateProduct(ProductType_t type);
-  };
-  
-  Product* Factory::CreateProduct(ProductType_t type)
-  {
-  	Product *a = NULL;
-  	
-  	switch (type)
-  	{
-  		case TypeA:
-  			a = new ProductA();
-  		break;
-  		case TypeB:
-  			a = new ProductB();
-  		break;
-  		case TypeC:
-  			a = new ProductC();
-  		break;
-  		default:
-  		break;
-  	}
-  	return a;
-  }
-  
-  int main(int argc, char **argv)
-  {
-  	Factory productCreator;
-  	
-  	Product *productA;
-  	Product *productB;
-  	Product *productC; 
-  
-  	productA = productCreator.CreateProduct(TypeA);
-  	productB = productCreator.CreateProduct(TypeB);
-  	productC = productCreator.CreateProduct(TypeC);
-  	if(productA != NULL)
-  	{
-  		productA->printf();
-  		delete productA;
-  		productA=NULL;
-  	}
-  	if(productB != NULL)
-  	{
-  		productB->printf();
-  		delete productB;
-  		productB=NULL;
-  	}
-  	if(productC != NULL)
-  	{
-  		productC->printf();
-  		delete productC;
-  		productC=NULL;
-  	}
-  	return 0;
-  }
-  ```
-
-- 工厂方法
-
-```c++
-
-#include <iostream> 
-#include <stdlib.h> 
-
-using namespace std;
-
-
-/* 产品抽象基类 */
-class Product
-{
-public:
-	virtual void printf() = 0;
-};
-class ProductA : public Product
-{
-public:
-	void printf()
-	{
-		cout<<"Create productA"<<endl;
-	}
-};
-class ProductB : public Product
-{
-public:
-	void printf()
-	{
-		cout<<"Create productB"<<endl;
-	}
-
-};
-class ProductC : public Product
-{
-public:
-	void printf()
-	{
-		cout<<"Create productC"<<endl;
-	}
-
-};
-
-/* 工厂类 */
-class Factory
-{
-public:
-	virtual Product* CreateProduct()=0;
-};
-
-class FactoryA:public Factory
-{
-public:
-	Product *CreateProduct()
-	{
-		return new ProductA();
-	}
-};
-class FactoryB:public Factory
-{
-public:
-	Product *CreateProduct()
-	{
-		return new ProductB();
-	}
-};
-
-class FactoryC:public Factory
-{
-public:
-	Product *CreateProduct()
-	{
-		return new ProductC();
-	}
-};
-
-
-int main(int argc, char **argv)
-{
-	Factory *factoryA;
-	Factory *factoryB;
-	Factory *factoryC;
-	Product *productA;
-	Product *productB;
-	Product *productC; 
-
-	factoryA = new FactoryA(); 
-	if(factoryA != NULL)
-	{
-		productA = factoryA->CreateProduct(); 
-		if (productA != NULL)
-		{
-			productA->printf();
-			delete productA;
-			productA = NULL;
-		}
-		delete factoryA;
-		factoryA = NULL;
-	}
-	
-	factoryB = new FactoryB(); 
-	if(factoryB != NULL)
-	{
-		productB = factoryB->CreateProduct(); 
-		if (productB != NULL)
-		{
-			productB->printf();
-			delete productB;
-			productB = NULL;
-		}
-		delete factoryA;
-		factoryA = NULL;
-	}
-	
-	factoryC = new FactoryC(); 
-	if(factoryC != NULL)
-	{
-		productC = factoryC->CreateProduct(); 
-		if (productC != NULL)
-		{
-			productC->printf();
-			delete productC;
-			productC = NULL;
-		}
-		delete factoryC;
-		factoryC = NULL;
-	}
-	return 0;
-}
-
-Create productA
-Create productB
-Create productC
-```
-
-##### 抽象工厂
-
-- 提供一个创建一系列相关或相互依赖对象的接口，而无需指定它们具体的类。
-- 抽象工厂模式和工厂方法不太一样，它要解决的问题比较复杂，不但工厂是抽象的，产品是抽象的，而且有多个产品需要创建，因此，这个抽象工厂会对应到多个实际工厂，每个实际工厂负责创建多个实际产品：
-
-```c++
-
-#include <iostream> 
-#include <stdlib.h> 
-
-using namespace std;
-
-/* 产品A抽象基类 */
-class ProductA
-{
-public:
-	virtual void printf() = 0;
-};
-
-/* 产品类A0 */
-class ProductA0 : public ProductA
-{
-public:
-	void printf()
-	{
-		cout<<"Create productA0"<<endl;
-	}
-};
-
-/* 产品类A1 */
-class ProductA1 : public ProductA
-{
-public:
-	void printf()
-	{
-		cout<<"Create productA1"<<endl;
-	}
-};
-
-/* 产品B抽象基类 */
-class ProductB
-{
-public:
-	virtual void printf() = 0;
-};
-
-/* 产品类B0 */
-class ProductB0 : public ProductB
-{
-public:
-	void printf()
-	{
-		cout<<"Create productB0"<<endl;
-	}
-};
-
-/* 产品类B1 */
-class ProductB1 : public ProductB
-{
-public:
-	void printf()
-	{
-		cout<<"Create productB1"<<endl;
-	}
-};
-
-/* 工厂类 */
-class Factory
-{
-public:
-	virtual ProductA* CreateProductA()=0;
-	virtual ProductB* CreateProductB()=0;
-};
-
-/* 工厂类0，专门生产0类产品 */
-class Factory0:public Factory
-{
-public:
-	ProductA *CreateProductA()
-	{
-		return new ProductA0();
-	}
-	ProductB *CreateProductB()
-	{
-		return new ProductB0();
-	}
-};
-
-/* 工厂类1，专门生产1类产品 */
-class Factory1:public Factory
-{
-public:
-	ProductA *CreateProductA()
-	{
-		return new ProductA1();
-	}
-	ProductB *CreateProductB()
-	{
-		return new ProductB1();
-	}
-};
-
-int main(int argc, char **argv)
-{
-	Factory *factory0;
-	Factory *factory1;
-	ProductA *productA0;
-	ProductA *productA1;
-	ProductB *productB0; 
-	ProductB *productB1;
-
-	factory0 = new Factory0(); 
-	if(factory0 != NULL)
-	{
-		productA0 = factory0->CreateProductA(); 
-		if (productA0 != NULL)
-		{
-			productA0->printf();
-			delete productA0;
-			productA0 = NULL;
-		}
-
-		productB0 = factory0->CreateProductB(); 
-		if (productB0 != NULL)
-		{
-			productB0->printf();
-			delete productB0;
-			productB0 = NULL;
-		}
-		delete factory0;
-		factory0 = NULL;
-	}
-	
-	factory1 = new Factory1(); 
-	if(factory1 != NULL)
-	{
-		productA1 = factory1->CreateProductA(); 
-		if (productA1 != NULL)
-		{
-			productA1->printf();
-			delete productA1;
-			productA1 = NULL;
-		}
-
-		productB1 = factory1->CreateProductB(); 
-		if (productB1 != NULL)
-		{
-			productB1->printf();
-			delete productB1;
-			productB1 = NULL;
-		}
-		delete factory1;
-		factory1 = NULL;
-	}
-	return 0;
-}
-
-Create productA0
-Create productB0
-Create productA1
-Create productB1
-```
-
 ##### 原型
 
 - 原型模式（Prototype Pattern），是一种创建型设计模式，指的是以原型实例指定待创建对象的种类，并通过拷贝（克隆）原型对象来创建新的对象。原型模式的核心和关键字是“对象拷贝”。
+
+- 原型模式和拷贝构造函数区别
+
+  - 原型模式实现的是一个clone接口，注意是接口，也就是基于多态的clone虚函数。也就是说原型模式能够通过基类指针来复制派生类对象。拷贝构造函数完不成这样的任务。
+
+  - 原型模式的核心是克隆，构造函数只是克隆的一个办法而已。
 
 - 原型模式由抽象原型（Abstract Prototype ）、具体原型（Concrete Prototype ）、客户（Client）三个要素组成。
 
@@ -2764,6 +2505,7 @@ Create productB1
 - 原型模式作用
 
   - 原型模式的功能与拷贝构造函数一样，都是用于创建新对象。但原型模式可以动态获取当前对象运行时的状态。
+  - 原型模式能够通过基类指针来复制派生类对象。
 
 - 优点
 
@@ -2863,9 +2605,8 @@ Create productB1
     	virtual Prototye *Clone();	
     };
     #endif
-    
     ```
-
+    
   - 第四步，具体原型类`ConcretePrototye`方法实现
 
     ```c++
@@ -2882,9 +2623,8 @@ Create productB1
     	*p = *this;
     	return p;
     }
-    
     ```
-
+    
   - 第五步，客户调用不同子类对象实现指定排序功能
 
     ```c++
@@ -2917,20 +2657,68 @@ Create productB1
     }
     ```
 
-  - 执行结果
+- 上面的clone函数中使用了赋值构造函数，一般情况下拷贝构造函数除了上面new一个新的对象出来，然后在用赋值构造函数赋值，也可以用拷贝构造函数来拷贝这个对象的值
 
-    ```
-    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/prototye$ make
-    g++    -c -o prototye.o prototye.cpp
-    g++    -c -o client.o client.cpp
-    g++    -c -o concrtee_prototye.o concrtee_prototye.cpp
-    g++  prototye.o  client.o  concrtee_prototye.o   -o output/client1.00
-    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/prototye$ ./output/client1.00 
-    pConcretePrototye0属性:Init
-    pConcretePrototye0属性:Second
-    pConcretePrototye1属性:Second
-    acuity@ubuntu:/mnt/hgfs/LSW/STHB/design/prototye$ 
-    ```
+  ```c++
+  #include <iostream>
+  #include <string>
+  
+  class Prototype {
+  public:
+      virtual Prototype* clone() const = 0;
+      virtual void printInfo() const = 0;
+      virtual ~Prototype() = default;
+  };
+  
+  class ConcretePrototype : public Prototype {
+  private:
+      std::string data;
+  
+  public:
+      ConcretePrototype(const std::string& value) : data(value) {}
+  
+      // 使用拷贝构造函数实现克隆
+      ConcretePrototype(const ConcretePrototype& other) : data(other.data) {}
+  
+      // 实现 clone 方法
+      ConcretePrototype* clone() const override {
+          return new ConcretePrototype(*this);  // 调用拷贝构造函数
+      }
+  
+      // 实现 printInfo 方法
+      void printInfo() const override {
+          std::cout << "Data: " << data << std::endl;
+      }
+  };
+  
+  int main() {
+      // 创建原型对象
+      ConcretePrototype original("Hello, Prototype!");
+  
+      // 克隆原型对象
+      Prototype* cloned = original.clone();
+  
+      // 打印信息
+      std::cout << "Original object:" << std::endl;
+      original.printInfo();
+  
+      std::cout << "\nCloned object:" << std::endl;
+      cloned->printInfo();
+  
+      // 释放资源
+      delete cloned;
+  
+      return 0;
+  }
+  ```
+
+  - 上面中的clone中使用`*this`来调用拷贝构造函数，在类内调用拷贝构造函数时直接用类名就可以，和在外面new一样。
+
+- 原型模式也绕不开拷贝构造和赋值构造，因为其要弄一个和当前对象一模一样的，要不就拷贝一个，要不就赋值一个
+
+  - 如果没有自己写，就用系统默认的拷贝构造或者赋值构造，如果涉及到指针的话就得自己写一个了。
+
+- 原型模式拷贝出来的对象都在堆上，因为在栈上这个拷贝出来的对象就丢了。
 
 - 原型模式与构造函数
 
@@ -2983,7 +2771,7 @@ Create productB1
 
 - 单例模式实现
 
-  ```
+  ```c++
   class Singleton
   {
   public:
@@ -3008,13 +2796,53 @@ Create productB1
   	a.printf();
   	return 0;
   }
+  
+  上面static对象用的是对象的形式，也可以用指针的形式，因为static对象是在全局区，数据也不会丢失
+  #include <iostream>
+  
+  class Singleton {
+  private:
+      // 私有的构造函数，防止外部实例化
+      Singleton() {}
+  
+      // 静态私有的指针，指向唯一的实例
+      static Singleton* instance;
+  
+  public:
+      // 公有的方法，提供全局访问点
+      static Singleton* getInstance() {
+          // 如果实例不存在，创建一个新实例
+          if (!instance) {
+              instance = new Singleton();
+          }
+          return instance;
+      }
+  
+      // 业务方法
+      void doSomething() {
+          std::cout << "Singleton is doing something." << std::endl;
+      }
+  };
+  
+  // 静态成员变量需要在类外初始化
+  Singleton* Singleton::instance = nullptr;
+  
+  int main() {
+      // 获取单例实例
+      Singleton* singletonInstance = Singleton::getInstance();
+  
+      // 调用单例的业务方法
+      singletonInstance->doSomething();
+  
+      return 0;
+  }
   ```
 
 - 根据类的对象实例化过程的不同，单例模式又分为“懒汉式单例”和”饿汉式单例“。
 
 - 饿汉式单例指的是定义类的时候或者程序初始时执行实例化对象，使用的时候可以直接使用，无需创建。饿汉式单例，需要注意的是，采用new关键字生成的堆上对象，必须声明一个public类型的方法来主动释放对象，因为析构函数声明为private，不会在类外被调用。
 
-  ```
+  ```c++
   #include <iostream> 
   #include <stdlib.h> 
   
@@ -3085,7 +2913,7 @@ Create productB1
 
 - 与饿汉式单例一样，采用new关键字生成的堆上对象，必须声明一个public类型的方法来主动释放对象，因为析构函数声明为private，不会在类外被调用。
 
-  ```
+  ```c++
   class Singleton
   {
   public:
@@ -3161,6 +2989,8 @@ Create productB1
 - 饿汉式单例，适用于访问量大的场景，或者多个线程需要访问实例对象的场景；是一种“空间换时间”的方法
 
 - 懒汉式单例，适用于访问量少的场景；是一种以“时间换空间”的方法
+
+- 饿汉式单例是在定义类的时候直接在源文件中实例化一个类对象，这样程序一开始就会有这个对象，而懒汉式单例则是在调用GetObject的时候才会实例化一个对象。
 
 #### 行为型模式
 
