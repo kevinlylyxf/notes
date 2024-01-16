@@ -416,6 +416,92 @@ S'Scale 返回 S 类型的标度 N，使 S'Delta=10.0**(-N)。
 S'Round 函数定义为 function S'Round(X:universal_real) return S'Base;返回 X 的舍入值。
 ```
 
+###### 'Address用法
+
+- 在Ada中，`'Address` 是一个用于获取对象的地址的属性。它返回一个对应于对象内存位置的系统地址。
+
+  ```ada
+  with Ada.Text_IO;
+  
+  procedure Address_Example is
+     Value : Integer := 42;
+  
+     -- 获取整数变量的地址
+     Addr : System.Address := Value'Address;
+  
+  begin
+     Ada.Text_IO.Put_Line("Address of Value: " & System.Address'Image(Addr));
+  end Address_Example;
+  ```
+
+###### SYSTEM.ADDRESS
+
+- SYSTEM.ADDRESS和ADDRESS是相同的，就是一个package的关系，用ADDRESS相当于用use引入了package SYSTEM
+
+- 在Ada中，`System.Address` 是一个系统级别的类型，它用于表示地址。使用 `System.Address` 主要涉及与底层内存操作相关的场景，例如与外部函数、硬件交互或进行低级别的内存操作。
+
+  ```
+  with Ada.Text_IO;
+  
+  procedure System_Address_Example is
+     Value1 : Integer := 42;
+     Value2 : Integer;
+  
+     -- 获取整数变量的地址
+     Addr1 : System.Address := System'Address(Value1);
+  
+  begin
+     -- 使用地址进行内存操作（复制数据）
+     System.Storage_Elements.Copy_Block(
+        Source_Address => Addr1,
+        Target_Address => System'Address(Value2),
+        Size           => Integer'Size
+     );
+  
+     -- 打印复制后的值
+     Ada.Text_IO.Put_Line("Value1: " & Integer'Image(Value1));
+     Ada.Text_IO.Put_Line("Value2: " & Integer'Image(Value2));
+  end System_Address_Example;
+  ```
+
+- 为什么不使用ada中的指针，要使用system.address
+
+  - 在Ada中，使用指针和`System.Address`的选择通常取决于你的需求以及你是否需要更高级别的类型安全。Ada是一种类型强制的语言，而`System.Address`是一种较低级别的、不安全的类型。以下是一些使用`System.Address`的常见场景：
+    1. **与外部代码交互：** 当你需要与使用原始内存地址的外部库或代码进行交互时，可能需要使用`System.Address`。
+    2. **硬件交互：** 在与硬件进行低级别通信或访问内存映射寄存器时，`System.Address`可能是必需的。
+    3. **特殊内存操作：** 在一些需要低级别内存操作的情况下，如直接的内存复制或类似的操作，使用`System.Address`可能更为合适。
+
+- SYSTEM.ADDRESS通常用于和其他语言接口进行交互时用，而且SYSTEM.ADDRESS不支持使用.all访问数据
+
+###### .all
+
+- 在Ada中，`.all` 属性通常用于访问通过访问类型（access types）引用的数据。下面是一个简单的例子，演示如何使用 `.all` 访问指针引用的数据：
+
+  ```
+  with Ada.Text_IO;
+  
+  procedure Access_Type_Example is
+     type Int_Ptr is access Integer;  -- 定义一个整数的访问类型
+  
+     Value1 : Integer := 42;
+     Ptr : Int_Ptr;  -- 声明一个指向整数的指针
+  
+  begin
+     Ptr := new Integer'(Value1);  -- 分配并初始化指针
+  
+     -- 使用 .all 访问指针引用的数据
+     Ada.Text_IO.Put_Line("Value through pointer: " & Ptr.all'Image);
+  
+     -- 修改指针引用的数据
+     Ptr.all := 99;
+  
+     -- 再次使用 .all 访问修改后的数据
+     Ada.Text_IO.Put_Line("Updated value through pointer: " & Ptr.all'Image);
+  end Access_Type_Example;
+  ```
+
+- .all就和c语言中的*一样，用于取指针指向的数据。
+
 ##### 类型限制和类型转换
 
 - 先让我们看一下下面的例子：
