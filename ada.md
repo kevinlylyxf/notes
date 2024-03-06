@@ -2049,6 +2049,11 @@ end PutResult;
       (RECEIVED_EVENT : in     FPL_EVENT_TYPES.EVENTS) is
   ```
 
+- 分离子程序有以下几种格式
+  - 类似于上面，.a里面有函数的声明，`_b.a`里面有函数的定义，但是`_b.a`里面没有写具体的定义，直接用is separate分离到另一个文件中，然后在另一个文件中separate()，括号里面填写那个分离的package，然后在里面写这个函数的完整定义，从procedure开始写
+  - .a里面没有此函数的声明，`_b.a`里面声明了一个在.a里面定义的函数要用的内部函数，用is separate分离到另一个文件中，然后在另一个文件中separate()，括号里面填写那个分离的package，就算在.a里面没有写声明，是内部的函数，也是需要写分离的package，然后在里面写这个函数的完整定义，从procedure开始写
+  - 如果一个procedure里面写了一个procedure内部要用的函数，这个内部的函数也是可以separate的，写法也是用is separate，然后在另一个文件中separate()，括号里面填写那个分离的procedure名称。如果这个procedure是从一个package里面分出来的，separate括号里面要写明package + procedure
+
 ##### 子程序的内嵌扩展
 
 - 子程序可以在调用地点被内嵌扩展，以提高程序效率，它的格式为：
