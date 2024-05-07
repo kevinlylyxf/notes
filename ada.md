@@ -2738,6 +2738,11 @@ NUL : constant Character := Character'Val (0);
 CRCRLF : constant STRING := ASCII.CR & ASCII.CR & ASCII.LF
 ```
 
+##### 关于模板中定义类型type
+
+- 一般我们在模板package中用type定义了新类型，或者record，然后new出来了两个package，虽然这两个new出来的package都有这个type数据类型，但是一般这两个package相同的数据类型定义出来的变量是不能直接赋值的，一般只能用最底层的数据结构来赋值，例如定义了一个record，不能用这个record直接赋值，只能用record里面的subtype类型整形，字符串这些一个一个的赋值。
+- 参考dpr_common/dpr_format/dpr_format/airspace_b.a文件中procedure WRITE函数，里面好些都是用for循环赋值的，并不是一个大结构直接赋值，此函数里面new了一个package，而且赋值的是结构是另一个new出来的package，所以只能在最底层的数据结构挨个赋值。
+
 #### ADA与C的接口
 
 ```
