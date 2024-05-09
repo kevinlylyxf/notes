@@ -2439,6 +2439,34 @@ end PutResult;
   - 例如上面`Current.Data := 1;`，这个.只能用于访问对象的某一个成员，不能访问全部的值，例如将这个指针指向的值整个对象取出来，.操作符不能完成这个操作
   - .all就是用来取指针对象的全部的值的，类似于c语言中的*操作符，将这个指针的对象整个数据结构取出来。
 
+##### 定义函数指针
+
+- 函数指针意思是指向函数的指针。
+
+  ```
+  with Ada.Text_IO;
+  
+  procedure Main is
+     -- 定义一个简单的函数类型
+     type Function_Type is access function (X : Integer) return Integer;
+     
+     -- 声明一个函数
+     function Double(X : Integer) return Integer is
+     begin
+        return X * 2;
+     end Double;
+     
+     -- 声明一个函数指针变量
+     Ptr : Function_Type;
+  begin
+     -- 将函数指针指向 Double 函数
+     Ptr := Double'Access;
+     
+     -- 通过函数指针调用函数
+     Ada.Text_IO.Put_Line("Result: " & Integer'Image(Ptr(10))); -- 打印出 "Result: 20"
+  end Main;
+  ```
+
 #### 类属单元
 
 - 代码重用是多年来软件开发一直强调的重点，也是程序员们的一个希望。Ada 里提供了类属单元(Generic unit)的功能,使我们有可能创建更为通用的子程序或程序包。
