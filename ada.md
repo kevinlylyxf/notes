@@ -906,6 +906,7 @@ type array_name is array (index specification) of type;
   ```
 
   - 说明如果数组没有指明下标，被赋值的STRING就是给定值的数组下标，例如上面STR2的数组下标为3 .. 5
+  - 没有指明数组下标时，数组是从1开始的，例如上面STR1，就是从1开始的
 
 - 指定STRING的数组下标时
 
