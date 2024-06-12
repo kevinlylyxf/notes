@@ -939,6 +939,58 @@ type array_name is array (index specification) of type;
 
   - 这样倒置的话STR2为空，没有任何值。且数组没有大小，数组无任何值。
 
+###### 关于数组部分初始化
+
+- 数组下标为枚举值
+
+  ```
+  procedure MAIN is                                                                                 
+        type ICAO is                                                                                    
+            (A,                                                                          
+             B,                                                                            
+             C);                                                                                                                                                                                                     
+        type MY_ARRAY is array(ICAO) of INTEGER;                                                                            
+        TEST : constant MY_ARRAY := (A => 1, B => 3);
+    begin                                                                            
+        Put("Hello world!");                                                                             
+    end MAIN;   
+  ```
+
+  - 上面数组下标为枚举值的情况，如果在定义constant时，只初始化A和B，这样在编译时只会产生告警，不会有编译错误，告警如下
+
+    ```
+    gnatmake -o main main.adb
+    gcc -c main.adb
+    main.adb:10:33: warning: missing index value(s) in array aggregate [enabled by default]
+    main.adb:10:33: warning:   "C" [enabled by default]
+    main.adb:10:33: warning: too few elements for type "MY_ARRAY" defined at line 9 [enabled by default]
+    main.adb:10:33: warning: expected 3 elements; found 2 elements [enabled by default]
+    main.adb:10:33: warning: Constraint_Error will be raised at run time [enabled by default]
+    gnatbind -x main.ali
+    gnatlink main.ali -o main
+    ```
+
+    - 可以看到编译成功了，只产生了告警，但是在运行main程序时就会出错。产生异常，运行错误如下
+
+      ```
+      raised CONSTRAINT_ERROR : main.adb:10 range check failed
+      ```
+
+    - 所以在我们在一个枚举值里面最后面加了一个值的话，如果这个枚举值是一个数组的下标，这样在这个数组中不初始化这个也不会有编译的错误，但是在运行时会产生异常。
+
+  - 如果我们定义constant时，只初始化了A和C，B在中间没有初始化，这样编译会有报错
+
+    ```
+    gnatmake -o main main.adb
+    gcc -c main.adb
+    main.adb:10:42: error: missing index value in array aggregate
+    main.adb:10:42: error:   "B"
+    gnatmake: "main.adb" compilation error
+    make: *** [Makefile:3：main] 错误 4
+    ```
+
+    - 可以看到没有生成可执行文件，有报错。
+
 #### 记录
 
 - 记录则是由命名分量(named component)组成的复合类型，即具有不同属性的数据对象的集合，和C 下的结构(structure)、Pascal 下的记录(record) 类似。Ada 的记录比它们提供的功能更强，也就是限制更少。同时记录扩展(record extension)是 Ada95 中类型扩展(继承)机制的基础，使记录的地位更加突出，关于记录扩展详见 第6章 面向对象特性，为了避免重复，本章对此不作介绍。
