@@ -836,6 +836,14 @@
 
 ##### GDB技巧
 
+###### gdb调试动态库函数
+
+- 经过验证，只要程序编译时链接了动态库，且动态库编译时加上了-g选项生成调试信息，gdb调试时就可以直接在动态库函数上打断点，不会出现下面这句话
+
+  ```
+  Make breakpoint pending on future shared library load? (y or [n])
+  ```
+
 ###### gdb提示No such file
 
 - gdb提示的是找不到源码文件，但是不影响我们调试，源码文件找不到只是我们不能用list来查看源码了，但是可以正常调试。
