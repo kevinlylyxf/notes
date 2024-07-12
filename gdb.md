@@ -844,6 +844,8 @@
   Make breakpoint pending on future shared library load? (y or [n])
   ```
 
+- 如果动态库没有用-g编译，此时没有调试信息，此时在动态库函数中打上断点，会出现上面这句话，如果选择y，此时如果执行到动态库的函数，也是会在打断点的位置停掉的。
+
 ###### gdb提示No such file
 
 - gdb提示的是找不到源码文件，但是不影响我们调试，源码文件找不到只是我们不能用list来查看源码了，但是可以正常调试。
