@@ -379,6 +379,24 @@ ada中用image属性转换整形为字符串的时候，为什么会在字符串
 IMAGE和IMG是一样的效果，c语言不是这样的，c语言用sprintf转化为字符串，如果是正数，就是正常的正数字符，没有空格，如果是负数，会有一个-
 ```
 
+- 关于WIDTH的说明
+
+  - 在Ada中，`Width` 属性同样可以应用于枚举类型。`Width` 属性对于枚举类型来说，返回的是表示枚举类型值所需的位数
+
+    ```
+    type Color is (Red, Green, Blue);
+    
+    Width_Color : constant Positive := Color'Width;
+    
+    -- 打印宽度
+    procedure Print_Width is
+    begin
+        Ada.Text_IO.Put_Line("Width of Color: " & Positive'Image(Width_Color));
+    end Print_Width;
+    ```
+
+    - 上面的打印结果为5，width指枚举类型中最长得位数。
+
 ###### 通用离散类型属性
 
 - 离散类型包括整型和枚举型，除了上述的属性外，还有：
