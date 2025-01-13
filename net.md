@@ -551,8 +551,6 @@
 
 - TCP 其实是非常复杂的协议，我们先聊一些基础的。我们知道 TCP 是一种可靠的协议，它主要通过解决这几个问题来实现可靠性的，分别是：乱序、丢包重传、流控、拥塞控制。
 
-  ![](https://mianbaoban-assets.oss-cn-shenzhen.aliyuncs.com/2021/3/77fiE3.jpeg)
-
   ![](https://s2.51cto.com/images/blog/202108/31/524eb7ce68d3f7cc50e0d7976c9f52e5.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_30,g_se,x_10,y_10,shadow_20,type_ZmFuZ3poZW5naGVpdGk=/format,webp/resize,m_fixed,w_750)
 
 - `Sequence Number` 是记录包的序号，TCP 会按照报文字节进行编号，它是用来解决包在网络中乱序的问题。
@@ -565,15 +563,10 @@
 
 - TCP协议工作在OSI的传输层，是一种可靠的面向连接的数据流协议，TCP之所以可靠，是因为它保证了传送数据包的顺序。顺序是用一个序列号来保证的。响应包内也包括一个序列号，表示接收方准备好这个序列号的包。在TCP传送一个数据包时，它会把这个数据包放入重发队列中，同时启动计时器，如果收到了关于这个包的确认信息，便将此数据包从队列中删除，如果在计时器超时的时候仍然没有收到确认信息，则需要重新发送该数据包。另外，TCP通过数据分段中的序列号来保证所有传输的数据可以按照正常的顺序进行重组，从而保障数据传输的完整。
 
-  <img src="https://mianbaoban-assets.oss-cn-shenzhen.aliyuncs.com/2021/3/uqEjMv.png" style="zoom:67%;" />
-
 - TCP 三次握手，其实就是建立一个 TCP 连接，客户端与服务器交互需要 3 个数据包。握手的主要作用就是为了确认双方的接收和发送能力是否正常，初始序列号，交换窗口大小以及 MSS 等信息。
   - 第一次握手：客户端发送 `SYN` 报文，并进入 `SYN_SENT` 状态，等待服务器的确认；
   - 第二次握手：服务器收到 `SYN` 报文，需要给客户端发送 `ACK` 确认报文，同时服务器也要向客户端发送一个 `SYN` 报文，所以也就是向客户端发送 `SYN + ACK` 报文，此时服务器进入 `SYN_RCVD` 状态；
   - 第三次握手：客户端收到 `SYN + ACK` 报文，向服务器发送确认包，客户端进入 `ESTABLISHED` 状态。待服务器收到客户端发送的 `ACK` 包也会进入 `ESTABLISHED` 状态，完成三次握手。
-  - 我们回答时，可以先简单概述 TCP 过程，然后三次握手具体描述时，需要说明状态的基本转换。
-
-<img src="https://mianbaoban-assets.oss-cn-shenzhen.aliyuncs.com/2021/3/UzARVz.png" style="zoom:67%;" />
 
 - 当我们的应用程序不需要数据通信了，就会发起断开 TCP 连接。建立一个连接需要三次握手，而终止一个连接需要经过四次挥手。
   - 第一次挥手。客户端发起 `FIN` 包（FIN = 1）,客户端进入 `FIN_WAIT_1` 状态。TCP 规定，即使 `FIN` 包不携带数据，也要消耗一个序号。
