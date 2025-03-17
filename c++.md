@@ -2151,6 +2151,8 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   - 为了避免头文件重名，新版 C++ 库也对头文件的命名做了调整，去掉了后缀`.h`，所以老式 C++ 的`iostream.h`变成了`iostream`，`fstream.h`变成了`fstream`。而对于原来C语言的头文件，也采用同样的方法，但在每个名字前还要添加一个`c`字母，所以C语言的`stdio.h`变成了`cstdio`，`stdlib.h`变成了`cstdlib`。
   - 可以发现，对于不带`.h`的头文件，所有的符号都位于命名空间 std 中，使用时需要声明命名空间 std；对于带`.h`的头文件，没有使用任何命名空间，所有符号都位于全局作用域。这也是 C++ 标准所规定的。
   - 不过现实情况和 C++ 标准所期望的有些不同，对于原来C语言的头文件，即使按照 C++ 的方式来使用，即`#include <cstdio>`这种形式，那么符号可以位于命名空间 std 中，也可以位于全局范围中
+    - 这种行为是为了兼容旧的C代码和习惯。C++ 是从 C 发展而来的，许多C标准库的符号原本是定义在全局命名空间中的。
+    - 有些编译器严格遵循C++标准，只将符号放在 `std` 命名空间中；而有些编译器则同时将符号放在全局命名空间中。
   - 将 std 直接声明在所有函数外部，这样虽然使用方便，但在中大型项目开发中是不被推荐的，这样做增加了命名冲突的风险，我推荐在函数内部声明 std。
 
 ###### 命名空间的疑惑
@@ -2177,6 +2179,141 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     - 使用 `using` 声明来引入特定的名称，而不是整个命名空间。
     - 使用完整限定的名称，如 `std::vector`。
     - 将 `using namespace` 语句放在源文件中，而不是头文件中。
+
+###### using的使用
+
+- 如果using引入一个函数时，不需要写函数的形参吗
+
+  - 在C++中，使用 `using` 引入一个函数时，**不需要写出函数的形参列表**。只需要写出函数的名称即可。这是因为 `using` 的作用是引入符号（包括函数、变量、类型等），而不是声明或定义函数。
+
+  - `using` 的目的是将一个已经存在的符号（如函数、变量、类型等）引入当前作用域。函数的形参列表是函数声明或定义的一部分，而 `using` 只是引用已经存在的符号，因此不需要重复写出形参。
+
+  - 如果引入的函数有多个重载版本，`using` 会自动引入所有重载版本。
+
+  - 示例
+
+    - 引入单个函数
+
+      - 假设有一个命名空间 `A`，其中定义了一个函数 `foo`：
+
+      ```
+      namespace A {
+          void foo(int x) {
+              std::cout << "A::foo(int): " << x << std::endl;
+          }
+      }
+      ```
+
+      - 在另一个作用域中引入 `foo` 时，只需要写函数名，不需要写形参：
+
+      ```
+      using A::foo;  // 引入 A::foo，不需要写形参
+      
+      int main() {
+          foo(42);  // 调用 A::foo(int)
+          return 0;
+      }
+      ```
+
+    - 引入重载函数
+
+      - 如果 `foo` 有多个重载版本：
+
+        ```
+        namespace A {
+            void foo(int x) {
+                std::cout << "A::foo(int): " << x << std::endl;
+            }
+            void foo(double x) {
+                std::cout << "A::foo(double): " << x << std::endl;
+            }
+        }
+        ```
+
+      - 使用 `using` 引入时，会自动引入所有重载版本：
+
+        ```
+        using A::foo;  // 引入所有 A::foo 的重载版本
+        
+        int main() {
+            foo(42);     // 调用 A::foo(int)
+            foo(3.14);   // 调用 A::foo(double)
+            return 0;
+        }
+        ```
+
+- 关于using引入符号的说明
+
+  - /usr/include/c++中关于cstdio文件写法
+
+    ```c++
+    namespace std
+    {
+      using ::FILE;
+      using ::fpos_t;
+    
+      using ::clearerr;
+      using ::fclose;
+      using ::feof;
+      using ::ferror;
+      using ::fflush;
+      using ::fgetc;
+      using ::fgetpos;
+      using ::fgets;
+      using ::fopen;
+      using ::fprintf;
+      ......
+      using ::vsprintf;
+    } // namespace
+    ```
+
+    - 此处使用using引入全局空间的函数符号，相当于在std空间中有了这个函数符号，我们就可以用std::fopen这种写法来调用。相当于在std命名空间中增加了这个函数。
+
+  - 关于using namespace引入命名空间的写法
+
+    ```c++
+    #include <iostream>
+    
+    // 定义自己的命名空间
+    namespace MyNamespace {
+        // 将 std::cout 引入 MyNamespace
+        using namespace std;
+    }
+    
+    int main() {
+        // 通过 MyNamespace 调用 cout
+        MyNamespace::cout << "Hello, World!" << std::endl;
+    
+        return 0;
+    }
+    ```
+
+    - 上述写法正常运行。相当于使用using namespace std将std空间中的全部符号引入MyNamespace中。所以MyNamespace中有了符号，可以使用 MyNamespace::cout来调用。
+
+  - 从上面可以看到using ::fopen 和using namespace std都是在namespace MyNamespace内部写的，相当于引入了命名空间内部，如果写在外面，相当于引入到此文件中，此文件可以用，并不是引入到命名空间中。此文件中有这个符号，并不是说命名空间中有这个符号。写在外面命名空间中是找不到符号的(通过MyNamespace::cout这种命名空间+符号的方法是找不到的)
+
+    ```c++
+    #include <iostream>
+    
+    using namespace std;
+    // 定义自己的命名空间
+    namespace MyNamespace {
+        int a;
+    }
+    
+    int main() {
+        // 通过 MyNamespace 调用 cout
+        MyNamespace::cout << "Hello, World!" << std::endl;
+        return 0;
+    }
+    
+    编译报错
+    main.cpp:12:18: error: ‘cout’ is not a member of ‘MyNamespace’; did you mean ‘std::cout’?
+       12 |     MyNamespace::cout << "Hello, World!" << std::endl;
+          |                  ^~~~
+    ```
+
+    - 上述例子可以看出写在命名空间外面是不行的。
 
 ###### 其他
 
@@ -2219,6 +2356,9 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   int *p = new int;  //分配1个int型的内存空间
   delete p;  //释放内存
   建议使用 new 和 delete 来管理内存，它们可以使用C++的一些新特性，最明显的是可以自动调用构造函数和析构函数
+      
+  int* arr = new int[10];
+  delete[] arr;
   ```
 
 - 函数调用是有时间和空间开销的。如果函数体代码比较多，需要较长的执行时间，那么函数调用机制占用的时间可以忽略；如果函数只有一两条语句，那么大部分的时间都会花费在函数调用机制上，这种时间开销就就不容忽视。为了消除函数调用的时空开销，C++ 提供一种提高效率的方法，即在编译时将函数调用处用函数体替换，类似于C语言中的宏展开。这种在函数调用处直接嵌入函数体的函数称为内联函数（Inline Function），又称内嵌函数或者内置函数。指定内联函数的方法很简单，只需要在函数定义处增加 inline 关键字
