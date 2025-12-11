@@ -216,6 +216,29 @@
     }
     ```
 
+  - 为什么数组不能赋值
+
+    - 数组名在 C 语言中是 **不可修改的指针常量（地址）**，不是一个可以整体被赋值的对象。
+    - 编译器看到数组名时，会把它当成指向数组首地址的常量指针，因此：
+      - `a = b` 意味着修改数组首地址（非法）
+      - C 不提供数组级别的拷贝语义
+
+- 结构体里面存在数组时
+
+  - 如果结构体里面有数组，那结构体 **依然可以被拷贝和赋值**，并且 **数组会被完整地按字节复制**。
+
+  - 也就是说：
+
+    > **结构体的赋值是深拷贝（shallow 的字节级深拷贝），包括结构体里的数组。**
+    >
+    > 换句话说：虽然数组本身不能赋值，但把数组放到结构体里之后，结构体赋值时数组也会一起复制。
+
+  - 数组本身不能赋值，因为数组名是常量指针，但数组在结构体中时：
+
+    - 数组成为结构体的一部分
+    - 结构体可以按“内存块”整体复制（按字节拷贝）
+    - 所以结构体赋值时数组也被复制
+
 - 总结
 
   - **结构体**支持直接的拷贝和赋值操作。拷贝发生在定义时，赋值发生在定义之后。
@@ -2160,11 +2183,17 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 - 如果两个命令空间有同一个函数，而且我在同一个源文件中都使用using namespace之后会怎么样
   - 如果在同一个源文件中使用 `using namespace` 引入了两个不同的命名空间，并且这两个命名空间中有同名的函数，这时会出现名称冲突（也称为二义性）。编译器通常无法确定你调用的是哪个命名空间中的函数，因此会报错。
 - c++中如果使用了头文件，我#include头文件之后，不就相当于引入了变量和函数吗，为什么还要使用using namespace
-  - 在C++中，即使使用了头文件，你也需要在源文件中明确地声明你想要使用的任何名称，这是因为C++支持命名空间（namespaces），这是一种封装机制，用于组织代码并防止名称冲突。
-  - **命名空间**：C++标准库中的所有名称都位于 `std` 命名空间中。如果你包含了标准库头文件，但想要使用其中的名称而不必每次都使用 `std::` 前缀，你可以使用 `using` 声明来引入特定的名称，或者使用 `using` 指令来引入整个命名空间。
-  - **避免名称冲突**：在大型项目中，可能会有多个库或头文件定义了相同的名称。使用命名空间可以帮助区分这些名称，并通过 `using` 声明来明确你想要使用的特定名称。
-  - **代码清晰性**：使用 `using` 声明可以减少代码中的前缀数量，使代码更简洁、更易读。例如，如果你知道 `std::vector` 将在代码中频繁使用，你可以简单地写 `using std::vector;` 来避免重复 `std::`。
+  - `#include` 的作用：拷贝声明，不处理命名空间
+    - `#include` 只是把头文件的内容 **原封不动地拷贝** 到你的代码中。
+    - 相当于文本替换，把 `<iostream>` 文件的内容复制进来。
+    - `#include` **不会改变命名空间，也不会帮你“引入名字”。**
+  
+  - 那么问题来了：为什么 include 后还不能直接写 `cout`？
+    - 因为 **cout 在 std 命名空间里**：
+    - 你 `#include <iostream>` 后，这个声明被复制进来了，但名字仍然属于 `std` 命名空间。
+  
   - 使用 `using namespace` 指令时要谨慎，尤其是在头文件中，因为这会将整个命名空间中的所有名称引入到当前作用域，可能导致意外的名称冲突。通常推荐使用 `using` 声明来引入特定的名称，或者在源文件的较小作用域内使用 `using namespace`。
+  
 - 头文件使用using namespace会怎么样
   - 在头文件中使用 `using namespace` 语句通常不是一个好的做法，原因如下：
     1. **名称冲突**：`using namespace` 会将整个命名空间的名称导入到当前作用域，如果头文件被多个源文件包含，这可能导致名称冲突，因为所有这些源文件现在都共享相同的全局作用域。
@@ -2314,6 +2343,54 @@ int snprintf ( char * str, size_t size, const char * format, ... );
     ```
 
     - 上述例子可以看出写在命名空间外面是不行的。
+
+- 可以从上面看到，不要在一个头文件中命名空间内部using namespace，也不要在头文件中命名空间外部使用using namespace，在源文件中使用可以，此时没有引入到命名空间内部
+
+  ```c++
+  // my.h
+  namespace MyNS {
+      void func();
+  }
+  
+  // my.cpp
+  #include "my.h"
+  
+  namespace MyNS {
+      using namespace std;   // 你关心的是这一行
+  
+      void func() {
+          cout << "Hello\n";  // OK，std::cout 被引入 MyNS 作用域
+      }
+  }
+  ```
+
+  - 不会影响头文件，也不会影响别的文件。
+  - `using namespace` 的作用域只在当前编译单元（当前 .cpp 文件），源文件 `.cpp` 是一个「独立的编译单元」。
+  - 你在 .cpp 中做什么 using namespace，都不会跑到头文件去。
+
+- 为什么在头文件中一个命名空间内部using namespace是引入了命名空间，因为其他只要包含了这个头文件的，都有了using namespace
+
+  - 头文件会被 *复制* 到每一个包含它的源文件中
+
+    ```c++
+    // my.h
+    namespace MyNS {
+        using namespace std;
+        void func();
+    }
+    
+    #include "my.h"
+    int main() {}
+    
+    编译之前，它会变成：
+    namespace MyNS {
+        using namespace std;   // 这一行被复制进来了！！
+        void func();
+    }
+    
+    int main() {}
+    所以 main.cpp 被迫添加了 using namespace std;！
+    ```
 
 ###### 其他
 
@@ -3422,6 +3499,19 @@ int snprintf ( char * str, size_t size, const char * format, ... );
 
   - 即使static变量声明为private，也可以在源文件中这样初始化，只是不能通过对象或者类在外部访问(要遵循访问权限)，在声明和定义时没有外部一说，只有在使用时才有外部一说
 
+- 类的静态成员变量（`static`）不能使用构造函数的初始化列表进行初始化。
+
+  ```
+  class A {
+  public:
+      static int x;
+      A() : x(10) {}   // ❌ 不允许，static 不能出现在初始化列表中
+  };
+  
+  ```
+
+  - 构造函数的初始化列表只用于初始化对象的成员变量，而 static 成员属于类本身，不属于某个对象。
+
 - static 成员变量既可以通过对象来访问，也可以通过类来访问，尽量通过类来访问
 
 - static 成员变量不占用对象的内存，而是在所有对象之外开辟内存，即使不创建对象也可以访问。
@@ -3682,6 +3772,45 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   // 类外定义时必须提供参数
   MyClass MyClass::instance(42);  // 用 42 构造
   ```
+
+- 单例模式的不同写法对于是否在源文件中初始化的解释
+
+  - 最常见的单例写法
+
+    ```
+    class Singleton {
+    public:
+        static Singleton& getInstance() {
+            static Singleton instance;  // ⭐ 不需要你实例化
+            return instance;
+        }
+    
+    private:
+        Singleton() {}  // 构造函数私有
+    };
+    ```
+
+  - static Singleton instance;是一个 **函数内静态变量（local static）**，它具有以下特点：
+
+    - 在 **第一次调用 getInstance()** 时自动构造
+    - 只构造一次（线程安全，从 C++11 起保证）
+    - 程序结束时自动析构
+    - 不需要你在类外面写任何代码
+
+  - 为什么不需要显式实例化？
+
+    - 因为 local static 的生命周期由 C++ 语言规则保证：第一次执行到声明处时初始化，只初始化一次。
+
+  - 类内 static 成员变量是否需要实例化？
+
+    ```
+    class A {
+    public:
+        static A instance;
+    };
+    ```
+
+    - 那么你必须在类外写：A A::instance; 
 
 ###### 侯捷static理解
 
@@ -4445,7 +4574,7 @@ int snprintf ( char * str, size_t size, const char * format, ... );
         int &b = a;
       std::cout << sizeof(b) << std::endl;  // 输出的是被引用对象a的内存大小
         return 0;
-  }
+    }
     ```
 
     - 上述代码输出的是 `4`（假设 `int` 类型占用 4 个字节），这其实是变量 `a` 的内存大小，并非引用 `b` 单独占用的内存大小。
