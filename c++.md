@@ -5094,6 +5094,80 @@ int (&ref)[3][4] = arr;  // 引用整个二维数组
   - 嵌套类一般声明为私有的，可以在头文件中声明这个类，class就代表声明，这个和使用B的对象不一样，这个是声明一个类。头文件中声明好要定义这个类时，要写上外层类A，说明这个类B在类A的作用域内。
   - 在比如类B里面有一个方法，我们只是定义这个方法时要A::B::foo,不能直接写B::foo
 
+- 为什么通过类可以访问外部的私有成员
+
+  - 因为在 C++ 里：嵌套类被视为外围类的“成员”，而成员对类的 `private` 成员是有访问权限的。
+
+  - 访问权限是“以类为单位”，而不是“以对象为单位”
+
+  - 也就是说：
+
+    - `private` 限制的是 **类外**
+    - 不限制 **同一个类的成员**
+
+  - 而在 C++ 中：
+
+    > **嵌套类（nested class）本身就是外围类的一个成员**
+
+- 那为什么不能直接访问类的public成员呢
+
+  - 不是“不能访问 public 成员”，而是： 不能在“没有对象”的情况下访问“非 static 成员”，不管它是 public 还是 private。
+
+- 带迭代器的vector简单实现
+
+  ```c++
+  #include <cstddef>
+  
+  template <typename T>
+  class MyVector {
+  public:
+      /* ============ 迭代器 ============ */
+      class iterator {
+      public:
+          using reference = T&;
+          using pointer   = T*;
+  
+          explicit iterator(pointer p) : ptr_(p) {}
+  
+          // 解引用
+          reference operator*() const {
+              return *ptr_;
+          }
+  
+          // 前置 ++
+          iterator& operator++() {
+              ++ptr_;
+              return *this;
+          }
+  
+          bool operator!=(const iterator& other) const {
+              return ptr_ != other.ptr_;
+          }
+  
+      private:
+          pointer ptr_;
+      };
+  
+  public:
+      // 构造：假设外部传入一块连续内存
+      MyVector(T* data, std::size_t size)
+          : data_(data), size_(size) {}
+  
+      // 关键接口
+      iterator begin() {
+          return iterator(data_);
+      }
+  
+      iterator end() {
+          return iterator(data_ + size_);
+      }
+  
+  private:
+      T* data_;              // 连续内存
+      std::size_t size_;     // 元素个数
+  };
+  ```
+
 #### 继承与派生
 
 - 继承可以理解为一个类从另一个类获取成员变量和成员函数的过程。例如类 B 继承于类 A，那么 B 就拥有 A 的成员变量和成员函数。
@@ -6155,32 +6229,187 @@ stopwatch stopwatch::operator++(int n){
 
 ##### 重载()
 
-- 在 [C++](http://c.biancheng.net/cplus/) 中，类型的名字（包括类的名字）本身也是一种运算符，即类型强制转换运算符。
+###### 函数对象
 
-- 类型强制转换运算符是单目运算符，也可以被重载，但只能重载为成员函数，不能重载为全局函数。经过适当重载后，`(类型名)对象`这个对对象进行强制类型转换的表达式就等价于`对象.operator 类型名()`，即变成对运算符函数的调用。
+- 函数对象 = 重载了 `operator()` 的对象，它“看起来像函数，用起来像函数，但本质是对象”。
 
-  ```c
-  class Complex
-  {
-      double real, imag;
-  public:
-      Complex(double r = 0, double i = 0) :real(r), imag(i) {};
-      operator double() { return real; }  //重载强制类型转换运算符 double
-  };
-  int main()
-  {
-      Complex c(1.2, 3.4);
-      cout << (double)c << endl;  //输出 1.2
-      double n = 2 + c;  //等价于 double n = 2 + c. operator double()
-      cout << n;  //输出 3.2
+- **函数对象是“像函数一样使用的对象”，**通过重载 `operator()`，把行为 + 状态封装在一起。
+
+- 普通函数
+
+  ```c++
+  int add(int a, int b) {
+      return a + b;
   }
+  
+  add(1, 2);
   ```
 
-##### 注意事项
+- 函数对象
 
-- 必要时需要重载赋值运算符=，以避免两个对象内部的[指针](http://c.biancheng.net/c/80/)指向同一片存储空间。
-- <<和>>是在 iostream 中被重载，才成为所谓的“流插入运算符”和“流提取运算符”的。
-- 类型的名字可以作为强制类型转换运算符，也可以被重载为类的成员函数。它能使得对象被自动转换为某种类型。
+  ```c++
+  struct Add {
+      int operator()(int a, int b) const {
+          return a + b;
+      }
+  };
+  
+  Add add;
+  add(1, 2);   // 看起来像函数调用
+  ```
+
+  - `add` 是对象
+  - `add(1,2)` 实际是 `add.operator()(1,2)`
+
+- 函数对象为什么存在？（核心价值）
+
+  - 函数对象可以“带状态”
+
+    ```c++
+    struct Counter {
+        int cnt = 0;
+    
+        int operator()() {
+            return ++cnt;
+        }
+    };
+    
+    Counter c;
+    c(); // 1
+    c(); // 2
+    c(); // 3
+    ```
+
+    - 普通函数 **做不到** 这种“自带记忆”
+
+  - 性能更好（可内联）
+
+    ```
+    std::sort(v.begin(), v.end(), MyCmp{});
+    ```
+
+    - 编译器 **知道类型**
+    - `operator()` 可以 **内联**
+    - 函数指针通常 **不能内联**
+
+  - 更强的表达能力
+
+    - 函数对象可以：
+      - 有构造函数
+      - 有成员变量
+      - 模板化
+      - 重载多个 `()`
+
+- 函数对象在 STL 中的地位
+
+  - STL 算法的第三参数
+
+    ```
+    std::sort(v.begin(), v.end(), cmp);
+    std::find_if(v.begin(), v.end(), pred);
+    std::transform(v.begin(), v.end(), out, op);
+    ```
+
+    - 这些参数**本质都是函数对象**
+
+  - 现代 C++：能用函数对象就别用函数指针
+
+- 函数对象 vs lambda
+
+  - lambda 本质就是函数对象，lambda 本质是编译器自动生成的 `operator()`
+
+    ```
+    auto f = [x](int y) { return x + y; };
+    ```
+
+  - 等价于：
+
+    ```
+    class __Lambda {
+        int x;
+    public:
+        int operator()(int y) const {
+            return x + y;
+        }
+    };
+    ```
+
+  - lambda = **匿名函数对象**
+
+  - 函数对象 = **命名 lambda**
+
+-  用函数对象
+
+  - 逻辑需要 **复用**
+  - 需要 **配置 / 状态**
+  - 性能敏感
+  - STL 算法参数
+
+- 用 lambda
+
+  - 临时逻辑
+  - 使用一次
+  - 就地可读性更好
+
+###### 重载()
+
+- 重载 `()` 就是让一个对象“像函数一样被调用”
+
+- 例子
+
+  ```c++
+  class Add {
+  public:
+      int operator()(int a, int b) const {
+          return a + b;
+      }
+  };
+  
+  Add add;
+  int x = add(2, 3);   // 调用 operator()
+  ```
+
+  - `add` 是对象
+  - `add(2,3)` 看起来像函数
+  - 实际调用的是 `Add::operator()`
+
+- 基本语法
+
+  ```c++
+  返回类型 operator()(参数列表) [const] [noexcept] [-> 返回类型];
+  
+  bool operator()(int a, int b) const;
+  ```
+
+- 为什么要重载 `()`？（核心意义）
+
+  - 把“行为”封装进对象
+
+    - 普通函数：
+      - 只有行为
+      - 没有状态
+
+    - 函数对象：
+
+      - 有行为（`operator()`）
+
+      - 有状态（成员变量）
+
+  - STL 算法需要“可调用对象”
+
+    - STL 算法并不关心你是什么类型，只关心：
+
+      ```
+      obj(args...);   // 能不能这样调用
+      ```
+
+    - 所以它支持：
+
+      - 普通函数
+      - lambda
+      - **重载了 `operator()` 的对象**
+
+  - 
 
 #### 面向对象进阶
 
@@ -7135,6 +7364,8 @@ stopwatch stopwatch::operator++(int n){
   除了 template 关键字后面要指明类型参数，类名 Point 后面也要带上类型参数，只是不加 typename 关键字了。另外需要注意的是，在类外定义成员函数时，template 后面的类型参数要和类声明时的一致。
   ```
 
+- **每一个类外定义的成员函数都必须写模板头**。记住是每一个，所以在类外定义的成员函数都要先写模板头
+
 - 使用类模板创建对象
 
   - 使用类模板创建对象时，需要指明具体的数据类型
@@ -7307,7 +7538,7 @@ stopwatch stopwatch::operator++(int n){
 
 - 函数模版的显示具体化
 
-  ```
+  ```c++
   typedef struct{
       string name;
       int age;
@@ -7350,7 +7581,7 @@ stopwatch stopwatch::operator++(int n){
 
 - 类模版的显示具体化，在《[C++类模板](http://c.biancheng.net/view/2318.html)》一节中我们定义了一个 Point 类，用来输出不同类型的坐标。在输出结果中，横坐标 x 和纵坐标 y 是以逗号`,`为分隔的，但是由于个人审美的不同，我希望当 x 和 y 都是字符串时以`|`为分隔，是数字或者其中一个是数字时才以逗号`,`为分隔。为了满足我这种奇葩的要求，可以使用显示具体化技术对字符串类型的坐标做特殊处理。
 
-  ```
+  ```c++
   //类模板
   template<class T1, class T2> class Point{
   public:
@@ -8318,7 +8549,7 @@ cout << "hi!" << ends;  //输出hi和一个空字符，然后刷新缓冲区
   auto *p = &n, m = 99;
   先看前面的第一个子表达式，&n 的类型是 int*，编译器会根据 auto *p 推导出 auto 为 int。后面的 m 变量自然也为 int 类型，所以把 99 赋值给它也是正确的。
   这里我们要注意，推导的时候不能有二义性。在本例中，编译器根据第一个子表达式已经推导出 auto 为 int 类型，那么后面的 m 也只能是 int 类型，如果写作m=12.5就是错误的，因为 12.5 是double 类型，这和 int 是冲突的。
-  还有一个值得注意的地方是：使用 auto 类型推导的变量必须马上初始化，这个很容易理解，因为 auto 在 C++11 中只是“占位符”，并非如 int 一样的真正的类型声明。
+  还有一个值得注意的地方是：使用 auto 类型推导的变量必须马上初始化，这个很容易理解，因为 auto 在 C++11 中只是“占位符”，并非如 int 一样的真正的类型声明。    --auto 用于“让编译器根据初始化表达式自动推导变量类型” 所以需要初始化
   ```
 
   ```c++
@@ -8342,13 +8573,46 @@ cout << "hi!" << ends;  //输出hi和一个空字符，然后刷新缓冲区
   第 2 行代码中，n 为 const int，auto 被推导为 int。
   第 3 行代码中，n 为 const int 类型，但是 auto 却被推导为 int 类型，这说明当=右边的表达式带有 const 属性时， auto 不会使用 const 属性，而是直接推导出 non-const 类型。
   第 4 行代码中，auto 被推导为 int 类型，这个很容易理解，不再赘述。
-  第 5 行代码中，r1 是 const int & 类型，auto 也被推导为 const int 类型，这说明当 const 和引用结合时，auto 的推导将保留表达式的 const 类型。
+  第 5 行代码中，r1 是 const int & 类型，auto 也被推导为 const int 类型，这说明当 const 和引用结合时，auto 的推导将保留表达式的 const 类型。这个主要是因为写了auto &,证明这个是引用，r1是const，r2也得是const，要不然就改了原来的属性了
   ```
 
 - 最后我们来简单总结一下 auto 与 const 结合的用法：
 
-  - 当类型不为引用时，auto 的推导结果将不保留表达式的 const 属性；
-  - 当类型为引用时，auto 的推导结果将保留表达式的 const 属性。
+  - 当类型不为引用时，auto 的推导结果将不保留表达式的 const 属性； --上面的类型说的是=左边不为引用，则不保留const属性
+  - 当类型为引用时，auto 的推导结果将保留表达式的 const 属性。--上面的类型说的是=左面的是引用(例如上面auto &)的情况下，得保留const
+
+- `auto` 会保留「底层 const」，会丢弃「顶层 const」。
+
+  - 什么是顶层 / 底层 const（一句复习）
+
+    - **顶层 const**：修饰变量本身
+    - **底层 const**：修饰变量“指向/引用”的对象
+
+  - 顶层const
+
+    ```
+    int x = 10;
+    
+    int* const p = &x;
+    auto a = p;
+    
+    a : int*
+    ```
+
+    - 顶层 const 被丢弃
+
+  - 底层const
+
+    ```
+    const int* p = &x;
+    auto b = p;
+    
+    b : const int*
+    ```
+
+    - b : const int*
+
+  - 主要的思想还是底层const是修饰指针真相的对象本身的，如果丢弃底层const，相当于我们用了一个指针，可以修改指向的内容了，这样就不对了，所以需要保留底层const。顶层const是修饰指针本身的，指针本身不可以修改，但是我们不需要保留这个属性，我们完全可以用一个非const的指针接收这个const指针，相当于一个const值给一个非const赋值，在用的时候，我们可以直接将非const赋值一个其他的数据， 不用这个指针了。
 
 - auto的限制
 
@@ -8502,6 +8766,49 @@ cout << "hi!" << ends;  //输出hi和一个空字符，然后刷新缓冲区
     ```
 
   - 左值和右值：左值是指那些在表达式执行结束后依然存在的数据，也就是持久性的数据；右值是指那些在表达式执行结束后不再存在的数据，也就是临时性的数据。有一种很简单的方法来区分左值和右值，对表达式取地址，如果编译器不报错就为左值，否则为右值。
+
+- 在 `decltype` 里，`x` 是“名字”，`(x)` 是“表达式”。对应上面的规则第一个和第三个
+
+  - **名字** → 直接拿“声明类型”
+
+  - **表达式** → 按“左值 / 右值”规则推导
+
+    ```
+    int x = 10;
+    decltype(x) a;  == 给我 变量 x 的类型”
+    
+    decltype((x)) b; == “给我 这个表达式 (x) 的类型” 
+    	而 (x)：
+    		是一个左值表达式
+    		左值在 decltype 里 → T&
+    ```
+
+- 左值表达式推导出来的为什么是引用
+
+  - 因为“左值表达式”代表的是“一个已经存在的对象”，而引用正是 C++ 用来表示“指向这个已有对象”的类型。所以左值 → 用引用来表示，才不丢失“这是同一个对象”的信息
+
+  - 假设规则不是现在这样，而是：左值表达式 → 推导成 `int`
+
+    ```
+    int x = 10;
+    decltype((x)) y;  // 假设是 int
+    ```
+
+    - 这意味着什么？
+      - `y` 是一个**新的 int 对象**
+      -  和 `x` **没有关系**
+    - 但 `(x)` 明明指的就是 **x 本身**。
+
+  - 用一句非常直观的话说
+
+    - 左值表达式不是“值”，而是“位置 + 身份”
+    - 唯一能表达“这是同一个对象”的类型，就是引用
+
+  - 左值表达式之所以推导为引用，是为了保证：
+
+    - 不创建新对象
+    - 不丢失“这是已有对象”的信息
+    - 精确表达“同一个实体”
 
 - decltype的实际应用
 
