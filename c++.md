@@ -3325,6 +3325,63 @@ int snprintf ( char * str, size_t size, const char * format, ... );
   }
   ```
 
+###### 总结一下什么时候会调用析构函数
+
+- 栈对象（自动存储期）
+
+  - 离开作用域
+
+    ```
+    {
+        Obj o;
+    }   // 调用 ~Obj()
+    ```
+
+  - 函数正常结束
+
+    ```
+    void f() {
+        Obj o;
+    }   // 函数返回时析构
+    ```
+
+  - return / break / continue
+
+    ```
+    void f() {
+        Obj o;
+        return;   // 析构
+    }
+    ```
+
+- `delete` 动态对象
+
+  ```
+  Obj* p = new Obj;
+  delete p;   // ~Obj()
+  ```
+
+- 智能指针生命周期结束
+
+  ```
+  {
+      std::unique_ptr<Obj> p(new Obj);
+  }   // ~Obj()
+  ```
+
+- 容器元素被销毁
+
+  ```
+  v.clear();
+  v.erase(it);
+  v.pop_back();
+  ```
+
+- 全局 / static 对象（程序**正常结束**）
+
+  - `main` 返回
+  - 正常调用 `exit` 之前
+
 ##### 成员对象和封闭类
 
 - 封闭类是指包含其他类对象作为其成员变量的类，也称为"组合类"或"包含类"。这种类通过包含其他类的实例来构建更复杂的功能，体现了面向对象编程中的"组合"（composition）关系。
@@ -5463,6 +5520,47 @@ int (&ref)[3][4] = arr;  // 引用整个二维数组
     ```
 
     - 这样我们可以用TiXmlNode的指针调用ToElement函数返回TiXmlElement对象，因为TiXmlNode指针指向的原本就是TiXmlElement的对象，这样相当于向下转型了
+
+##### final
+
+- `final` 是 C++11 引入的关键字，**主要有两个用法**：
+   1️⃣ **禁止继承类**
+   2️⃣ **禁止重写虚函数**
+
+- 修饰类：**这个类不能被继承**
+
+  ```
+  class Base final {
+  public:
+      void foo() {}
+  };
+  
+  // ❌ 编译错误
+  class Derived : public Base {};
+  ```
+
+- 修饰虚函数：**子类不能再 override**
+
+  ```
+  class Base {
+  public:
+      virtual void func() final {
+          std::cout << "Base\n";
+      }
+  };
+  
+  class Derived : public Base {
+  public:
+      // ❌ 编译错误
+      void func() override {}
+  };
+  ```
+
+- 常见搭配（推荐）
+
+  ```
+  void func() override final;
+  ```
 
 #### 多态与虚函数
 
@@ -9254,152 +9352,314 @@ Foo bar(123);
 
   - 另外需要重点提出的是，当常量表达式中包含浮点数时，考虑到程序编译和运行所在的系统环境可能不同，常量表达式在编译阶段和运行阶段计算出的结果精度很可能会受到影响，因此 C++11 标准规定，浮点常量表达式在编译阶段计算的精度要至少等于（或者高于）运行阶段计算出的精度。
 
-- constexpr修饰函数
+###### constexpr修饰函数
 
-  - constexpr 还可以用于修饰函数的返回值，这样的函数又称为“常量表达式函数”。
+- constexpr 还可以用于修饰函数的返回值，这样的函数又称为“常量表达式函数”。
 
-  - constexpr 并非可以修改任意函数的返回值。换句话说，一个函数要想成为常量表达式函数，必须满足如下 4 个条件。
+- constexpr 并非可以修改任意函数的返回值。换句话说，一个函数要想成为常量表达式函数，必须满足如下 4 个条件。
 
-    - 整个函数的函数体中，除了可以包含 using 指令、typedef 语句以及 static_assert 断言外，只能包含一条 return 返回语句。
-
-      ```c++
-      constexpr int display(int x) {
-          int ret = 1 + 2 + x;
-          return ret;
-      }
-      这个函数是无法通过编译的，因为该函数的返回值用 constexpr 修饰，但函数内部包含多条语句。
-      如下是正确的定义 display() 常量表达式函数的写法：
-      constexpr int display(int x) {
-          //可以添加 using 执行、typedef 语句以及 static_assert 断言
-          return 1 + 2 + x;
-      }
-      ```
-
-    - 该函数必须有返回值，即函数的返回值类型不能是 void。
-
-    - 函数在使用之前，必须有对应的定义语句。我们知道，函数的使用分为“声明”和“定义”两部分，普通的函数调用只需要提前写好该函数的声明部分即可（函数的定义部分可以放在调用位置之后甚至其它文件中），但常量表达式函数在使用前，必须要有该函数的定义。普通函数在调用时，只需要保证调用位置之前有相应的声明即可；而常量表达式函数则不同，调用位置之前必须要有该函数的定义，否则会导致程序编译失败。
-
-    -  return 返回的表达式必须是常量表达式
-
-      ```c++
-      int num = 3;
-      constexpr int display(int x){
-          return num + x;
-      }
-      int main()
-      {
-          //调用常量表达式函数
-          int a[display(3)] = { 1,2,3,4 };
-          return 0;
-      }
-      该程序无法通过编译，编译器报“display(3) 的结果不是常量”的异常。
-      常量表达式函数的返回值必须是常量表达式的原因很简单，如果想在程序编译阶段获得某个函数返回的常量，则该函数的 return 语句中就不能包含程序运行阶段才能确定值的变量。
-      ```
-
-- constexpr修饰类的构造函数
-
-  - 对于 C++ 内置类型的数据，可以直接用 constexpr 修饰，但如果是自定义的数据类型（用 struct 或者 class 实现），直接用 constexpr 修饰是不行的。
-
-  - 当我们想自定义一个可产生常量的类型时，正确的做法是在该类型的内部添加一个常量构造函数
+  - 整个函数的函数体中，除了可以包含 using 指令、typedef 语句以及 static_assert 断言外，只能包含一条 return 返回语句。
 
     ```c++
-    //自定义类型的定义
-    constexpr struct myType {
-        const char* name;
-        int age;
-        //其它结构体成员
-    };
+    constexpr int display(int x) {
+        int ret = 1 + 2 + x;
+        return ret;
+    }
+    这个函数是无法通过编译的，因为该函数的返回值用 constexpr 修饰，但函数内部包含多条语句。
+    如下是正确的定义 display() 常量表达式函数的写法：
+    constexpr int display(int x) {
+        //可以添加 using 执行、typedef 语句以及 static_assert 断言
+        return 1 + 2 + x;
+    }
+    ```
+
+  - 该函数必须有返回值，即函数的返回值类型不能是 void。
+
+  - 函数在使用之前，必须有对应的定义语句。我们知道，函数的使用分为“声明”和“定义”两部分，普通的函数调用只需要提前写好该函数的声明部分即可（函数的定义部分可以放在调用位置之后甚至其它文件中），但常量表达式函数在使用前，必须要有该函数的定义。普通函数在调用时，只需要保证调用位置之前有相应的声明即可；而常量表达式函数则不同，调用位置之前必须要有该函数的定义，否则会导致程序编译失败。
+
+  - return 返回的表达式必须是常量表达式
+
+    ```c++
+    int num = 3;
+    constexpr int display(int x){
+        return num + x;
+    }
     int main()
     {
-        constexpr struct myType mt { "zhangsan", 10 };
-        cout << mt.name << " " << mt.age << endl;
+        //调用常量表达式函数
+        int a[display(3)] = { 1,2,3,4 };
         return 0;
     }
-    上面这种方法是错误的，编译器会抛出“constexpr不能修饰自定义类型”的异常。
+    该程序无法通过编译，编译器报“display(3) 的结果不是常量”的异常。
+    常量表达式函数的返回值必须是常量表达式的原因很简单，如果想在程序编译阶段获得某个函数返回的常量，则该函数的 return 语句中就不能包含程序运行阶段才能确定值的变量。
+    ```
+
+- constexpr修饰函数返回值是什么意思，传入的变量不是可以随时变化的吗
+
+  - `constexpr` 修饰函数的“含义”不是“返回值永远不变”，而是：当参数是编译期常量时，函数返回值“可以在编译期计算出来”。
+
+  - “传入的变量不是可以随时变化的吗？”
+
+    - 是的，**完全可以变化**。
+
+    ```
+    constexpr int add(int a, int b) {
+        return a + b;
+    }
+    ```
+
+  - 情况 1️⃣：参数是编译期常量
+
+    ```
+    constexpr int x = add(2, 3); // 编译期算 → 5
+    ```
+
+  - 情况 2️⃣：参数是运行期变量
+
+    ```
+    int a = 2, b = 3;
+    int y = add(a, b);           // 运行期算 → 5
+    ```
+
+  - 那 `constexpr` 到底“修饰了什么”？
+
+    - ❌ 错误理解 ,修饰返回值是常量
+    - 正确理解,修饰的是：函数是否具备“编译期可求值能力”
+
+  - 换句话说：
+
+    > **`constexpr` 是给编译器的一个“承诺”**：
+    >  如果你（编译器）能在编译期拿到所有参数，那你就可以现在算。
+
+  - 为什么语法上看起来像“修饰返回值”？
+
+    ```
+    constexpr int f(int x);
+    ```
+
+    - 语法上 `constexpr` 写在返回类型前，但**语义上它修饰的是整个函数**，而不是 `int`。
+
+###### constexpr修饰类的构造函数
+
+- 对于 C++ 内置类型的数据，可以直接用 constexpr 修饰，但如果是自定义的数据类型（用 struct 或者 class 实现），直接用 constexpr 修饰是不行的。
+
+- 当我们想自定义一个可产生常量的类型时，正确的做法是在该类型的内部添加一个常量构造函数
+
+  ```c++
+  //自定义类型的定义
+  constexpr struct myType {
+      const char* name;
+      int age;
+      //其它结构体成员
+  };
+  int main()
+  {
+      constexpr struct myType mt { "zhangsan", 10 };
+      cout << mt.name << " " << mt.age << endl;
+      return 0;
+  }
+  上面这种方法是错误的，编译器会抛出“constexpr不能修饰自定义类型”的异常。
+  
+  //自定义类型的定义
+  struct myType {
+      constexpr myType(char *name,int age):name(name),age(age){};
+      const char* name;
+      int age;
+      //其它结构体成员
+  };
+  int main()
+  {
+      constexpr struct myType mt { "zhangsan", 10 };
+      cout << mt.name << " " << mt.age << endl;
+      return 0;
+  }
+  ```
+
+- 在 myType 结构体中自定义有一个构造函数，借助此函数，用 constexpr 修饰的 myType 类型的 my 常量即可通过编译。
+
+- constexpr 修饰类的构造函数时，要求该构造函数的函数体必须为空，且采用初始化列表的方式为各个成员赋值时，必须使用常量表达式。
+
+- constexpr 可用于修饰函数，而类中的成员方法完全可以看做是“位于类这个命名空间中的函数”，所以 constexpr 也可以修饰类中的成员函数，只不过此函数必须满足前面提到的 4 个条件。
+
+  ```
+  class myType {
+  public:
+      constexpr myType(const char *name,int age):name(name),age(age){};
+      constexpr const char * getname(){
+          return name;
+      }
+      constexpr int getage(){
+          return age;
+      }
+  private:
+      const char* name;
+      int age;
+      //其它结构体成员
+  };
+  int main()
+  {
+      constexpr struct myType mt { "zhangsan", 10 };
+      constexpr const char * name = mt.getname();
+      constexpr int age = mt.getage();
+      cout << name << " " << age << endl;
+      return 0;
+  }
+  ```
+
+- C++11 标准中，不支持用 constexpr 修饰带有 virtual 的成员方法。
+
+- `constexpr` 修饰类的构造函数，表示：这个类的对象在满足条件时，可以在编译期被构造出来，从而出现在常量表达式中。
+
+  - ❌ 没有 `constexpr` 构造函数
+
+    ```
+    struct Point {
+        int x, y;
+        Point(int a, int b) : x(a), y(b) {}
+    };
     
-    //自定义类型的定义
-    struct myType {
-        constexpr myType(char *name,int age):name(name),age(age){};
-        const char* name;
-        int age;
-        //其它结构体成员
+    constexpr Point p(1, 2); // ❌ 编译错误
+    ```
+
+  - ✅ 加上 `constexpr`
+
+    ```
+    struct Point {
+        int x, y;
+        constexpr Point(int a, int b) : x(a), y(b) {}
     };
-    int main()
-    {
-        constexpr struct myType mt { "zhangsan", 10 };
-        cout << mt.name << " " << mt.age << endl;
-        return 0;
-    }
-    ```
-
-  - 在 myType 结构体中自定义有一个构造函数，借助此函数，用 constexpr 修饰的 myType 类型的 my 常量即可通过编译。
-
-  - constexpr 修饰类的构造函数时，要求该构造函数的函数体必须为空，且采用初始化列表的方式为各个成员赋值时，必须使用常量表达式。
-
-  - constexpr 可用于修饰函数，而类中的成员方法完全可以看做是“位于类这个命名空间中的函数”，所以 constexpr 也可以修饰类中的成员函数，只不过此函数必须满足前面提到的 4 个条件。
-
-    ```
-    class myType {
-    public:
-        constexpr myType(const char *name,int age):name(name),age(age){};
-        constexpr const char * getname(){
-            return name;
-        }
-        constexpr int getage(){
-            return age;
-        }
-    private:
-        const char* name;
-        int age;
-        //其它结构体成员
-    };
-    int main()
-    {
-        constexpr struct myType mt { "zhangsan", 10 };
-        constexpr const char * name = mt.getname();
-        constexpr int age = mt.getage();
-        cout << name << " " << age << endl;
-        return 0;
-    }
-    ```
-
     
+    constexpr Point p(1, 2); // ✅ 编译期构造
+    ```
 
-  - C++11 标准中，不支持用 constexpr 修饰带有 virtual 的成员方法。
+  - 编译器直接在编译期“跑”构造函数，把 `p` 的值固化。
 
-- constexpr修饰模板函数
+- `constexpr` 构造函数到底“打开了什么能力”？它让这个类型成为 **字面类型（literal type）**，从而：
 
-  - C++11 语法中，constexpr 可以修饰模板函数，但由于模板中类型的不确定性，因此模板函数实例化后的函数是否符合常量表达式函数的要求也是不确定的。
+  - 可以定义 `constexpr` 对象
+  - 可以作为模板非类型参数（C++20 前有限制）
+  - 可以放进 `constexpr std::array`
+  - 可以参与 `constexpr` 函数计算
 
-  - 针对这种情况下，C++11 标准规定，如果 constexpr 修饰的模板函数实例化结果不满足常量表达式函数的要求，则 constexpr 会被自动忽略，即该函数就等同于一个普通函数。
+- 构造函数能被 `constexpr` 修饰的前提（硬规则）
+
+  1️⃣ 构造函数体必须是 `constexpr` 允许的
+
+  - **C++11**：只能是初始化列表
+
+  - **C++14+**：可以有语句、循环、分支
 
     ```
-    //自定义类型的定义
-    struct myType {
-        const char* name;
-        int age;
-        //其它结构体成员
+    constexpr Point(int a, int b) : x(a), y(b) {}      // C++11
+    constexpr Point(int a, int b) { x=a; y=b; }        // C++14+
+    ```
+
+  2️⃣ 所有非静态成员都必须能编译期构造
+
+  ```
+  struct A {
+      int x;                // ✅
+      std::string s;        // ❌（C++20 前）
+  };
+  ```
+
+  - 什么叫“能编译期构造”？（核心）--在常量表达式中，编译器能完全确定它的初始状态
+
+  - ✅ 能编译期构造的典型类型
+
+    ```
+    int
+    double
+    enum
+    struct 只包含上述类型
+    ```
+
+  - ❌ 不能编译期构造的典型类型（C++20 之前）
+
+    ```
+    std::string
+    std::vector
+    new 出来的指针
+    FILE*
+    mutex
+    ```
+
+    - 原因很简单：
+       👉 它们**需要运行期资源**
+
+  - ❌ 例子 1：有一个“拖后腿”的成员
+
+    ```
+    #include <string>
+    
+    struct Bad {
+        int x;
+        std::string s;  // ❌
+        constexpr Bad(int v) : x(v), s("hi") {}
     };
-    //模板函数
-    template<typename T>
-    constexpr T dispaly(T t){
-        return t;
-    }
-    int main()
-    {
-        struct myType stu{"zhangsan",10};
-        //普通函数
-        struct myType ret = dispaly(stu);
-        cout << ret.name << " " << ret.age << endl;
-        //常量表达式函数
-        constexpr int ret1 = dispaly(10);
-        cout << ret1 << endl;
-        return 0;
-    }
+    
+    constexpr Bad b(1); // ❌ 编译错误
     ```
 
-    - 当模板函数中以自定义结构体 myType 类型进行实例化时，由于该结构体中没有定义常量表达式构造函数，所以实例化后的函数不是常量表达式函数，此时 constexpr 是无效的；
-    - 第 23 行代码处，模板函数的类型 T 为 int 类型，实例化后的函数符合常量表达式函数的要求，所以该函数的返回值就是一个常量表达式。
+    - `Bad` 想在编译期构造
+
+    - 但 `std::string`：
+
+      - 要动态分配内存
+      - 只能运行期构造
+
+      👉 **整个类被拖死**
+
+  3️⃣ 编译期不能做的事不能出现
+
+  ❌ `new / delete`
+   ❌ I/O
+   ❌ 系统调用
+   ❌ 未定义行为
+
+- 为什么 STL 这么依赖 constexpr 构造函数？
+
+  ```
+  constexpr std::array<int, 3> a{1, 2, 3};
+  ```
+
+  - `std::array` 是一个类
+  - 它的构造函数是 `constexpr`
+  - 所以整个数组可以存在于编译期
+
+###### constexpr修饰模板函数
+
+- C++11 语法中，constexpr 可以修饰模板函数，但由于模板中类型的不确定性，因此模板函数实例化后的函数是否符合常量表达式函数的要求也是不确定的。
+
+- 针对这种情况下，C++11 标准规定，如果 constexpr 修饰的模板函数实例化结果不满足常量表达式函数的要求，则 constexpr 会被自动忽略，即该函数就等同于一个普通函数。
+
+  ```
+  //自定义类型的定义
+  struct myType {
+      const char* name;
+      int age;
+      //其它结构体成员
+  };
+  //模板函数
+  template<typename T>
+  constexpr T dispaly(T t){
+      return t;
+  }
+  int main()
+  {
+      struct myType stu{"zhangsan",10};
+      //普通函数
+      struct myType ret = dispaly(stu);
+      cout << ret.name << " " << ret.age << endl;
+      //常量表达式函数
+      constexpr int ret1 = dispaly(10);
+      cout << ret1 << endl;
+      return 0;
+  }
+  ```
+
+  - 当模板函数中以自定义结构体 myType 类型进行实例化时，由于该结构体中没有定义常量表达式构造函数，所以实例化后的函数不是常量表达式函数，此时 constexpr 是无效的；
+  - 第 23 行代码处，模板函数的类型 T 为 int 类型，实例化后的函数符合常量表达式函数的要求，所以该函数的返回值就是一个常量表达式。
 
 #### constexpr和const的区别
 
@@ -10191,4 +10451,604 @@ void dis_2(){
 
 - 总的来说，在定义模板函数时，我们采用右值引用的语法格式定义参数类型，由此该函数既可以接收外界传入的左值，也可以接收右值；其次，还需要使用 C++11 标准库提供的 forword() 模板函数修饰被调用函数中需要维持左、右值属性的参数。由此即可轻松实现函数模板中参数的完美转发。
 
- 
+####  智能指针
+
+- 智能指针解决什么问题
+
+  - 核心：**资源的生命周期管理**（RAII）
+    - 你用 `new` 得到的对象，需要 `delete`
+    - 你打开的文件 `fopen`，需要 `fclose`
+    - 你 `malloc`，需要 `free`
+    - 你 `pthread_mutex_init`，需要 `pthread_mutex_destroy`
+    - 你 `open` 得到 fd，需要 `close`
+
+  - 智能指针的价值：把“释放资源”绑定到对象析构上，让 `return/异常/分支` 都不会漏。
+
+##### std::unique_ptr<T>
+
+- **某个资源只有一个拥有者**，离开作用域就释放。
+- **不能拷贝**（copy 被禁）
+- **可以移动**（move 转移所有权）
+- 几乎没有额外开销（不需要引用计数）
+
+###### 基本用法
+
+```c++
+#include <memory>
+
+struct Foo { ~Foo() {} };
+
+int main() {
+    auto p = std::make_unique<Foo>(); // C++14+
+    // use p
+} // 自动 delete Foo
+```
+
+- 为什么建议用 `make_unique`
+
+  - 异常安全（少写 `new`）
+  - 代码更短更清晰
+
+- 所有权转移：`std::move`
+
+  ```
+  auto p1 = std::make_unique<Foo>();
+  auto p2 = std::move(p1); // p1 变成 nullptr
+  ```
+
+- 传参/返回的最佳实践
+
+  - **只使用对象**：传 `T& / const T&` 或 `T*`（借用）
+  - **要接管所有权**：传 `unique_ptr<T>`（按值），调用方 `std::move`
+
+  - **返回所有权**：返回 `unique_ptr<T>`（按值，自动 move）
+
+- 下面主要是介绍一下上面的内容
+
+  - 函数接口要把“所有权语义”说清楚：这个函数是“借用”对象，还是“接管/转移”对象？
+
+  - 因为 `unique_ptr` 代表**独占所有权**，所以它一旦被传递，通常就意味着**所有权转移**。
+
+  - 只想用一下对象，不想接管所有权（借用），推荐：传 **引用** 或 **裸指针**
+
+    - 只读
+
+      ```
+      void print(const Foo& f);
+      ```
+
+    - 可修改
+
+      ```
+      void mutate(Foo& f);
+      ```
+
+    - 允许为空（可选参数）
+
+      ```
+      void maybe_use(Foo* f);   // f 可以是 nullptr
+      ```
+
+    - 为什么不传 `unique_ptr<Foo>&`？
+
+      - 传 `Foo&/Foo*` 就已经表达“我不拥有它，我只是用用”
+      - 传 `unique_ptr&` 会让接口语义变怪：调用方必须持有 `unique_ptr` 才能调用，不必要地“绑架”调用者
+
+    - 所以：**借用就用 `T& / T\*`**
+
+  - 函数要“接管所有权”（从调用者转到函数里），推荐：按值接收 `std::unique_ptr<T>`
+
+    ```
+    void take(std::unique_ptr<Foo> p) {
+        // 从这里开始，p 拥有 Foo
+        // 函数结束时自动析构释放
+    }
+    ```
+
+    - 调用时必须明确转移：
+
+      ```
+      auto p = std::make_unique<Foo>();
+      take(std::move(p));   // 所有权转移，p 变空
+      ```
+
+    - 这样设计的好处：
+
+      - **一眼就知道**：`take()` 会拿走对象（因为参数是 unique_ptr 按值）
+      - 调用方必须写 `std::move`，强制显式，避免误用
+      - 异常安全：进入函数后一定由 `p` 管理，不会泄漏
+
+  - 函数可能“接管”，也可能“不接管”（条件转移）
+
+    - 按值接收 + 根据条件决定留下或返回
+
+      ```
+      std::unique_ptr<Foo> maybe_take(std::unique_ptr<Foo> p, bool keep) {
+          if (keep) return p;          // 继续由返回值拥有
+          return nullptr;              // 不要了（p 析构释放）
+      }
+      ```
+
+  - 函数要“创建并返回所有权”（工厂函数）
+
+    ```
+    std::unique_ptr<Foo> make_foo() {
+        return std::make_unique<Foo>();
+    }
+    ```
+
+    - 调用
+
+      ```
+      auto p = make_foo();  // 接收所有权
+      ```
+
+    - 为什么可以高效？
+
+      - C++ 会进行返回值优化（RVO）或移动（move），几乎没有额外成本
+
+  - 函数内部临时使用 `unique_ptr` 管的对象，如何传给别的函数？
+
+    - 如果别的函数只是“借用”，就传 `p.get()` 或 `*p`：
+
+      ```
+      void use(Foo*);      // 借用
+      void use_ref(Foo&);  // 借用
+      
+      auto p = std::make_unique<Foo>();
+      use(p.get());        // 传裸指针借用
+      use_ref(*p);         // 传引用借用
+      ```
+
+    - 这里 `.get()` 只是在“拿地址”，**不会转移所有权**。
+
+  - 几种常见反例（踩坑点）
+
+    - 反例 1：用裸指针表达所有权转移（危险）
+
+      ```
+      Foo* make();     // ❌ 谁 delete？不清楚
+      ```
+
+      - 应该
+
+      ```
+      std::unique_ptr<Foo> make();  // ✅ 语义清晰
+      ```
+
+    - 把 `unique_ptr` 当普通引用传来传去
+
+      ```
+      void f(std::unique_ptr<Foo>& p);  // ❌ 多数情况没必要
+      ```
+
+      - 除非你明确要“在函数里把它 move 走或者重置”，否则不要这么设计。
+
+    - 把 `unique_ptr` 按 const 引用传（常见误用）
+
+      ```
+      void g(const std::unique_ptr<Foo>& p); // ❌ 通常不如 Foo*
+      ```
+
+      - 这会强迫调用者必须用 unique_ptr 才能调用，没必要；而且你也没表达“借用”的通用性。
+
+- 数组：`unique_ptr<T[]>`
+
+  ```
+  auto arr = std::make_unique<int[]>(10); // C++14
+  arr[0] = 1;
+  ```
+
+  - 工程里更建议 `std::vector<T>`，除非你确实需要“裸数组语义”。
+
+##### std::shared_ptr<T>
+
+- 多个地方**共同拥有**对象：最后一个 `shared_ptr` 销毁时释放对象
+
+- `shared_ptr` 背后有一个**控制块**：
+
+  - **强引用计数**（shared）
+  - **弱引用计数**（weak）
+  - 可能还包含 deleter、allocator 等
+
+- 基本用法
+
+  ```
+  #include <memory>
+  
+  auto sp1 = std::make_shared<Foo>();
+  auto sp2 = sp1; // 计数+1
+  ```
+
+- `make_shared` 的好处
+
+  - 通常一次分配（控制块+对象），性能好、碎片少
+  - 异常安全
+
+- 典型使用场景
+
+  - 对象需要被多个模块/回调/线程**同时持有**
+
+  - 异步任务中需要**延长对象寿命**直到回调结束
+
+  - 例如（异步里捕获 `shared_ptr`）：
+
+    ```
+    auto sp = std::make_shared<Foo>();
+    auto task = [sp] {
+        // sp 保证 Foo 活着
+    };
+    ```
+
+- `shared_ptr` 的常见坑（高频）
+
+  - 坑 1：用同一个裸指针构造多个 shared_ptr（会双重 delete）
+
+    ```
+    Foo* p = new Foo;
+    std::shared_ptr<Foo> a(p);
+    std::shared_ptr<Foo> b(p); // ❌ 两个控制块 -> delete 两次
+    ```
+
+    - 正确：
+
+      ```
+      auto a = std::make_shared<Foo>();
+      auto b = a; // 共享同一个控制块
+      ```
+
+  - 坑 2：循环引用（内存泄漏）
+
+    ```
+    struct B;
+    struct A { std::shared_ptr<B> b; };
+    struct B { std::shared_ptr<A> a; }; // ❌ A<->B 永不释放
+    ```
+
+    - 解决：其中一边改 `weak_ptr`（下一节）
+
+- 传参建议（更细的语义）
+
+  - 想“共享并延长生命周期”：按值传 `shared_ptr<T>`
+  - 只想“借用但不延长”：传 `T&/T*`（最清晰）
+  - 不想增减计数：可以 `const shared_ptr<T>&`（但语义更暧昧）
+  - 工程里通常更推荐：**能传引用/裸指针就别传 shared_ptr**（除非你确实要共享所有权）。
+
+##### std::weak_ptr<T>
+
+- `weak_ptr` 不增加强引用计数，不影响对象释放；需要时用 `lock()` 得到 `shared_ptr` 才能访问。
+
+- `weak_ptr` 用在：你“想知道对象是否还活着，但不想阻止它被销毁”的地方。
+
+- 用法
+
+  ```
+  std::weak_ptr<Foo> wp = sp;
+  
+  if (auto p = wp.lock()) {
+      // p 是 shared_ptr<Foo>，对象仍然活着
+      p->do_something();
+  } else {
+      // 对象已销毁
+  }
+  ```
+
+- 解决循环引用
+
+  ```
+  struct B;
+  struct A { std::shared_ptr<B> b; };
+  struct B { std::weak_ptr<A> a; }; // ✅ 打破环
+  ```
+
+- 典型场景
+  - 观察者模式（Observer）：观察者持 `weak_ptr` 指向主体
+  - 缓存：缓存里存 `weak_ptr`，对象没人用就自动释放
+- 为什么需要 `weak_ptr`（先理解动机）
+  - 如果你只用 `shared_ptr`，会遇到两个严重问题：
+    -  **循环引用 → 永久内存泄漏**
+    -  **异步 / 回调里“意外延长生命周期”**
+
+- 解决 `shared_ptr` 循环引用（最经典）
+
+  - 循环引用导致对象永远不析构
+
+    ```c++
+    #include <memory>
+    #include <iostream>
+    
+    struct B;
+    
+    struct A {
+        std::shared_ptr<B> b;
+        ~A() { std::cout << "A destroyed\n"; }
+    };
+    
+    struct B {
+        std::shared_ptr<A> a;
+        ~B() { std::cout << "B destroyed\n"; }
+    };
+    
+    int main() {
+        auto a = std::make_shared<A>();
+        auto b = std::make_shared<B>();
+    
+        a->b = b;
+        b->a = a;
+    }
+    ```
+
+  - 结果：
+
+    - 程序结束
+    - **没有任何析构输出**
+    - A ↔ B 的引用计数都 ≥ 1
+
+  - 正确做法：一边改成 `weak_ptr`
+
+    ```
+    struct B;
+    
+    struct A {
+        std::shared_ptr<B> b;
+        ~A() { std::cout << "A destroyed\n"; }
+    };
+    
+    struct B {
+        std::weak_ptr<A> a;   // 关键
+        ~B() { std::cout << "B destroyed\n"; }
+    };
+    ```
+
+  - 原理
+
+    - `A` 真正“拥有” `B`
+    - `B` **只是知道** `A`，但不拥有它
+    - 引用计数能归零
+
+- 观察者模式
+
+  - Subject（被观察者）持有多个 Observer
+
+  - Observer 可以随时销毁
+
+  - Subject 不应该“阻止 Observer 被销毁”
+
+  - 正确设计：Subject 用 `weak_ptr` 存观察者
+
+    ```c++
+    #include <vector>
+    #include <memory>
+    #include <iostream>
+    
+    struct Observer {
+        virtual void on_notify() = 0;
+        virtual ~Observer() = default;
+    };
+    
+    struct ConcreteObserver : Observer {
+        void on_notify() override {
+            std::cout << "Observer notified\n";
+        }
+    };
+    
+    struct Subject {
+        std::vector<std::weak_ptr<Observer>> observers;
+    
+        void add(std::shared_ptr<Observer> obs) {
+            observers.push_back(obs);
+        }
+    
+        void notify() {
+            for (auto it = observers.begin(); it != observers.end(); ) {
+                if (auto obs = it->lock()) {
+                    obs->on_notify();
+                    ++it;
+                } else {
+                    // Observer 已销毁，清理掉
+                    it = observers.erase(it);
+                }
+            }
+        }
+    };
+    
+    int main() {
+        Subject s;
+    
+        {
+            auto o = std::make_shared<ConcreteObserver>();
+            s.add(o);
+            s.notify();   // 正常通知
+        }   // o 离开作用域，被销毁
+    
+        s.notify();       // 不会崩溃，也不会泄漏
+    }
+    ```
+
+    - 为什么不能用 `shared_ptr`？
+      - Subject 会“强行留住” Observer
+      - Observer 永远析构不了
+      - 生命周期被反向控制（非常糟糕）
+
+##### 为什么智能指针里面不能用指针对象
+
+- **智能指针的模板参数 `T` 决定了析构时要执行 `delete T`（或者 deleter(T\*)）**
+- **`T` 写成指针类型会导致“类型错位”：你以为在删对象，实际在删指针对象**
+
+- 先明确：智能指针到底管理的是什么？
+
+  - `std::unique_ptr<T>` 的本质可以理解成：
+
+    ```
+    template<class T, class D = std::default_delete<T>>
+    class unique_ptr {
+        T* ptr;   // 注意：内部存的是 T*（指向 T 对象的指针）
+        D deleter;
+        ~unique_ptr() { deleter(ptr); }
+    };
+    ```
+
+  - 也就是说：
+
+    - **模板参数 `T` 是“被管理对象的类型”**
+
+    - `unique_ptr<T>` 内部存的是 **`T\*`**
+
+    - 析构时会调用 `default_delete<T>()(ptr)`，本质是：
+
+      ```
+      delete ptr;   // ptr 的类型是 T*
+      ```
+
+      - 重点：`delete` 会按 **T 的类型** 来调用析构并释放内存。
+
+  - 当你写 `unique_ptr<Foo>` 时，一切都对
+
+    ```
+    std::unique_ptr<Foo> p(new Foo);
+    ```
+
+    - T = Foo
+    - 内部指针类型是 `Foo*`
+    - 析构时做：
+      - 调 `Foo::~Foo()`
+      - 再释放 `Foo` 的内存
+
+  - 当你写 `unique_ptr<Foo*>` 时，语义就变了（这是关键）
+
+    ```
+    std::unique_ptr<Foo*> p;
+    ```
+
+    - `T = Foo*`（注意：**T 本身变成了指针类型**）
+    - `unique_ptr<T>` 内部存的是 `T*`，也就是：
+      - 内部指针类型变成了：`(Foo*)*` → `Foo**`
+
+    - 换句话说：
+
+      > `unique_ptr<Foo*>` 管理的对象类型是 **`Foo*`**（一个“指针对象”）
+      >  它内部存的是 **指向这个“指针对象”的地址**（`Foo**`）
+
+- 内存模型
+
+  - 你真正想要的（管理 Foo）
+
+    ```
+    p ----> [ Foo对象 ]   (new Foo)
+    
+    unique_ptr<Foo> p(new Foo);
+    ```
+
+  - 你写成 `unique_ptr<Foo*>` 实际在管理什么？
+
+    ```
+    p ----> [ Foo* 这个指针变量 ] ----> [ Foo对象 ]
+              (new Foo*)                 (new Foo)
+    ```
+
+    - 也就是说你需要两次分配：
+      - `new Foo*`：分配一个“指针变量”在堆上
+      - 这个指针变量里面再存 `new Foo` 的地址
+    - 这显然非常怪：**为什么要把一个指针变量也放到堆上去管理？**
+
+- 为什么会出事：delete 的目标变了
+
+  - `unique_ptr<Foo>` 析构时：
+    - `delete (Foo*)` ✅（删 Foo）
+
+  - `unique_ptr<Foo*>` 析构时：
+    - `delete (Foo**)` ✅（删的是“指针变量”那块内存）
+    - 它只会释放 `new Foo*` 的那块
+    - **不会释放真正的 `Foo`**
+
+##### unique_ptr创建的对象是在堆上还是栈上
+
+- 把两个“对象”严格区分开（非常重要）
+
+  - `unique_ptr` 本身
+
+    ```
+    std::unique_ptr<Foo> p;
+    ```
+
+  - 这是一个**普通的 C++ 对象**：
+
+    - 如果你在函数里定义它 → **在栈上**
+    - 如果你定义为全局变量 → **在静态区**
+    - 如果你 `new` 一个 `unique_ptr` → **在堆上**
+
+    ```
+    void f() {
+        std::unique_ptr<Foo> p;   // p 在栈上
+    }
+    ```
+
+  - `unique_ptr` 管理的对象
+
+    ```
+    auto p = std::make_unique<Foo>();
+    ```
+
+    - 这里的 `Foo`：
+
+      - 是通过 `new` 创建的
+      - **一定在堆上**
+
+      ```
+      // 本质等价于
+      Foo* raw = new Foo;
+      std::unique_ptr<Foo> p(raw);
+      ```
+
+- 场景 1：最常见（栈上的 unique_ptr + 堆对象）
+
+  ```
+  void f() {
+      auto p = std::make_unique<Foo>();
+  }
+  
+  栈：
+    p  (unique_ptr 对象，里面存着一个地址)
+  
+  堆：
+    Foo 对象
+  ```
+
+  - 当 `f()` 结束：
+    1. 栈上的 `p` 析构
+    2. `p` 析构里 delete 堆上的 `Foo`
+
+- 场景 2：unique_ptr 在堆上
+
+  ```
+  auto p = new std::unique_ptr<Foo>(std::make_unique<Foo>());
+  
+  堆：
+    unique_ptr<Foo> 对象
+    Foo 对象
+  ```
+
+  - 当你：delete p;
+    - 先析构 `unique_ptr`
+    - 再 delete `Foo`
+
+- 场景 3：unique_ptr 作为成员
+
+  ```
+  struct A {
+      std::unique_ptr<Foo> p;
+  };
+  
+  A a;   // a 在栈上
+  
+  栈：
+    a
+      └─ unique_ptr<Foo> 成员
+  
+  堆：
+    Foo 对象
+  ```
+
+  - 当 `a` 析构：
+    - 成员 `unique_ptr` 析构
+    - 堆上的 `Foo` 被 delete
