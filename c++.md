@@ -7500,6 +7500,53 @@ stopwatch stopwatch::operator++(int n){
     Point<float, float> *p = new Point(10.6, 109);
     ```
 
+##### 默认模板参数
+
+- 默认模板参数 = 模板参数的默认实参，当使用模板时**没写某个参数**，编译器就用默认值补上。
+
+- 基本语法（和函数默认参数很像）
+
+  ```c++
+  template<class T = int>
+  class A { };
+  
+  A<> a;        // 等价于 A<int>
+  A<int> b;     // 显式指定
+  A<double> c;  // 覆盖默认
+  ```
+
+- 多个模板参数时的规则（很重要）
+
+  - 多个模板参数时的规则（很重要）
+
+    ```c++
+    template<class T, class U = int>
+    class A { };
+    
+    A<double> a;      // T = double, U = int ✔
+    A<> b;            // ❌ 错：T 没默认
+    A<double, char> c;// ✔
+    ```
+
+    - 有默认值的模板参数，必须放在参数列表的右侧
+
+  - 默认值可以依赖前面的模板参数
+
+    ```c++
+    template<class T, class Alloc = std::allocator<T>>
+    class Vector { };
+    ```
+
+    - 这正是 `std::vector` 的写法。
+
+      ```
+      Vector<int> v; // Alloc 自动变成 std::allocator<int>
+      ```
+
+- 依赖前面类型参数的默认形参为什么不能看成是类的显示具体化
+  - 依赖前面类型参数的默认模板实参， 依然只是“模板参数的默认值”， 它不构成类模板的显式具体化（也不是部分特化）。
+  - 它没有创建新的模板定义，也没有改变模板的实现。
+
 ##### 函数模板的重载
 
 - 当需要对不同的类型使用同一种算法（同一个函数体）时，为了避免定义多个功能重复的函数，可以使用模板。然而，并非所有的类型都使用同一种算法，有些特定的类型需要单独处理，为了满足这种需求，C++ 允许对函数模板进行重载，程序员可以像重载常规函数那样重载模板定义。
@@ -7790,7 +7837,53 @@ stopwatch stopwatch::operator++(int n){
   ```
 
   - 模板头`template<typename T2>`中声明的是没有被具体化的类型参数；类名`Point<char*, T2>`列出了所有类型参数，包括未被具体化的和已经被具体化的。
+
   - 类名后面之所以要列出所有的类型参数，是为了让编译器确认“到底是第几个类型参数被具体化了”，如果写作`template<typename T2> class Point<char*>`，编译器就不知道char*代表的是第一个类型参数，还是第二个类型参数。
+
+  - 类模板在实例化时，编译器会根据“模板实参的类型”，在所有可用的特化中做匹配，选择“最匹配（最特化）”的那个；如果没有任何特化匹配，就使用主模板（通用模板）。
+
+    ```
+    主模板（通用）
+    template<class T1, class T2>
+    class Point { ... };
+    
+    部分特化
+    template<typename T2>
+    class Point<char*, T2> { ... };
+    
+    Point<int, int>
+    匹配检查：
+    能匹配 Point<char*, T2> 吗？❌（int != char*）
+    👉 只能用 主模板
+    
+    Point<char*, int>
+    匹配检查：
+    T1 = char* ✔
+    T2 = int ✔
+    部分特化匹配成功
+    使用Point<char*, T2>
+    ```
+
+- 因为特例是某个模板的，所以在写的时候，不管全部特例，还是部分特例都要写两个参数
+
+  ```
+  template<typename T2>
+  class Point<char*, T2> { ... };
+  ```
+
+  - 你问的“`Point` 里面的 `char*` 能不能不写（省掉）？”  --不能省。
+
+    - 原因很直接：`Point` 是一个 **有两个模板形参** 的类模板 `Point<T1, T2>`。
+
+    -  你做“部分特化”时，必须写出一个**完整的匹配模式**，也就是必须明确：
+
+      - 第 1 个参数固定成什么（这里是 `char*`）
+      - 第 2 个参数仍然是模板参数（这里是 `T2`）
+
+      ```
+      template<typename T2>
+      class Point<char*, T2> { ... };
+      ```
 
 ##### 模版中的非类型参数
 
@@ -7950,37 +8043,439 @@ stopwatch stopwatch::operator++(int n){
 
 - 类模板和类模板之间、类模板和类之间可以互相继承。它们之间的派生关系有以下四种情况。
 
-  - 类模版从类模版派生
+- 类模板 继承 普通类
+
+  ```c++
+  class Base {
+  public:
+      void f() {}
+  };
+  
+  template<class T>
+  class Derived : public Base {
+  };
+  ```
+
+  - “模板类作为派生类，基类是一个已经确定的普通类。”
+  - 特点
+    - 最简单
+    - 不涉及模板实例化问题
+    - 不存在依赖名查找麻烦
+
+- 普通类 继承 类模板（必须实例化）
+
+  ```c++
+  template<class T>
+  class Base {
+  public:
+      T value;
+  };
+  
+  class Derived : public Base<int> {
+  };
+  ```
+
+  - “普通类继承的是 **类模板的某一个具体实例**。”
+  - 类模板不能直接作为基类，必须实例化
+
+- 类模板 继承 类模板（最复杂、最重要）
+
+  - 形式 1：模板参数完全一致
 
     ```c++
-    template <class T1, class T2>
-    class A
-    {
-        Tl v1; T2 v2;
+    template<class T>
+    class Base {
     };
-    template <class T1, class T2>
-    class B : public A <T2, T1>
-    {
-        T1 v3; T2 v4;
+    
+    template<class T>
+    class Derived : public Base<T> {
     };
-    template <class T>
-    class C : public B <T, T>
-    {
-        T v5;
+    ```
+
+  - 形式 2：派生类模板参数更多
+
+    ```
+    template<class T>
+    class Base {
     };
-    int main()
-    {
-        B<int, double> obj1;
-        C<int> obj2;
-        return 0;
+    
+    template<class T, class U>
+    class Derived : public Base<T> {
+    };
+    ```
+
+  - “模板对模板的继承， 实例化时一层一层替换。”
+
+  - 特点
+
+    - 基类是 **依赖类型**
+    - 必须使用 `this->` / `Base<T>::`
+    - STL 中极其常见
+
+- 普通类 继承 普通类（对照情况）
+
+  ```c++
+  class Base {
+  };
+  
+  class Derived : public Base {
+  };
+  ```
+
+- 类模板参与继承时，
+
+  - 可以作为基类，也可以作为派生类。
+  -  当类模板作为基类时，**必须先实例化**；
+  -  当类模板作为派生类时，可以保持模板形式。
+
+
+##### 类模板与多态
+
+- 多态只发生在“具体类型”之间， 模板只是生成类型的工具。
+
+- 情况 1：模板实例 + 虚函数 → 运行时多态（可以）
+
+  ```c++
+  template<class T>
+  class Base {
+  public:
+      virtual ~Base() = default;
+      virtual void f() {
+          std::cout << "Base\n";
+      }
+  };
+  
+  class Derived : public Base<int> {
+  public:
+      void f() override {
+          std::cout << "Derived\n";
+      }
+  };
+  
+  int main() {
+      Base<int>* p = new Derived;
+      p->f();  // 输出 Derived
+  }
+  ```
+
+  - `Base<int>` 是一个**普通类**
+  - `Derived` 继承它
+  - 虚函数表生效
+  - **这是标准的运行时多态**
+  - 多态发生在 `Base<int>` ↔ `Derived`，不是 `Base<T>` ↔ `Derived`
+
+- 情况 2：不同模板实例之间 ❌ 不能多态
+
+  ```
+  Base<int>* p = new Base<double>; // ❌ 不可能
+  ```
+
+  - `Base<int>` 和 `Base<double>`
+  - 是两个**完全无关的类型**
+  - 没有继承关系
+  - 不共享虚表
+  - 模板参数不同 ≠ 多态
+
+- 情况 3：类模板的编译期多态（最常用）  CRTP（经典）
+
+  ```c++
+  template<class Derived>
+  class Base {
+  public:
+      void f() {
+          static_cast<Derived*>(this)->impl();
+      }
+  };
+  
+  class A : public Base<A> {
+  public:
+      void impl() {
+          std::cout << "A\n";
+      }
+  };
+  
+  class B : public Base<B> {
+  public:
+      void impl() {
+          std::cout << "B\n";
+      }
+  };
+  ```
+
+  - 无 `virtual`
+  - 编译期绑定
+
+  - 零运行时开销
+
+  - STL / Eigen 广泛使用
+
+- CRTP 的“使用口诀”（先背这个）
+
+  - 派生类把“自己”当模板参数传给基类， 基类通过 `static_cast` 调用派生类实现。
+
+- CRTP 的标准用法（一步一步来）
+
+  - ✅ 第 1 步：写一个“模板基类”
+
+    ```c++
+    template<class Derived>
+    class Base {
+    public:
+        void interface() {
+            // 调用派生类的实现
+            static_cast<Derived*>(this)->implementation();
+        }
+    };
+    ```
+
+    - `Base` **不知道派生类是谁**，但它假设： 👉 派生类一定有 `implementation()`。
+
+  - ✅ 第 2 步：派生类继承，并把“自己”传进去
+
+    ```c++
+    class A : public Base<A> {
+    public:
+        void implementation() {
+            std::cout << "A implementation\n";
+        }
+    };
+    
+    class B : public Base<B> {
+    public:
+        void implementation() {
+            std::cout << "B implementation\n";
+        }
+    };
+    ```
+
+  - ✅ 第 3 步：像普通类一样用
+
+    ```c++
+    int main() {
+        A a;
+        B b;
+    
+        a.interface();  // 调用 A::implementation
+        b.interface();  // 调用 B::implementation
     }
     ```
 
-  - 其余类似
+  - 
 
 ##### 类模版与友元
 
-- 类模版与函数模版在作为友元时模版头要写上，函数或者类前面在写上friend
+- 先给一个总原则（最重要）
+
+  - 友元关系永远发生在“具体类型 / 具体函数”之间，
+  -  模板本身不交朋友，模板的实例才交朋友。
+
+- 为什么“类模板 + friend”会让人困惑？
+
+  - 因为它同时涉及三层东西：
+    - **模板**（规则、蓝图）
+    - **实例化**（生成具体类型）
+    - **friend**（访问权限）
+
+
+  - 而 C++ 的规则是：
+    - friend 写在模板里，但 friend 关系在实例化之后才真正生效。
+
+- 类模板中常见的 4 种友元关系（这是重点）
+
+###### 类模板的某个实例是另一个类的友元
+
+```
+template<class T>
+class A {
+    friend class B;
+};
+```
+
+- 每一个 `A<T>` 实例，都把 `B` 当作朋友。
+- `A<int>` → B 是友元
+- `A<double>` → B 也是友元
+- 友元是“具体类 B”，不是模板
+
+###### 让另一个“类模板的所有实例”成为友元
+
+```
+template<class U>
+class B;
+
+template<class T>
+class A {
+    template<class U>
+    friend class B;
+};
+```
+
+- 每一个 `A<T>`， 都把 **所有 `B<U>`** 当作朋友。
+
+- 常用于：
+
+  ```
+   容器 ↔ 迭代器
+   容器 ↔ traits / policy
+  ```
+
+- 用前向声明合理吗，不是用模板类的时候必须要有完整的定义吗
+
+  - 只有在“使用一个类型的对象/成员/大小/继承”时，才需要完整定义；而“声明友元关系”只需要知道这个类型“存在”。
+
+  - friend ≠ 使用（use）
+
+  - 什么时候「必须」要完整定义？（这是核心对照）
+
+    | 场景            | 是否需要完整定义 |
+    | --------------- | ---------------- |
+    | 作为 friend     | ❌ 不需要         |
+    | 作为指针 / 引用 | ❌ 不需要         |
+    | 作为基类        | ✅ 需要           |
+    | 作为成员对象    | ✅ 需要           |
+    | 调用成员函数    | ✅ 需要           |
+    | `sizeof(T)`     | ✅ 需要           |
+    | 实例化模板      | ✅ 需要           |
+
+###### 让“函数模板的所有实例”成为友元
+
+```
+template<class T>
+class A {
+    template<class U>
+    friend void f(A<U>);
+};
+```
+
+- 对每一个 `A<T>` 来说： 所有 `f<U>(A<U>)` 不管 `U` 是什么，都是它的朋友。
+
+- 这是最容易和 `A<T>` / `A<U>` 搞混的地方
+
+- 但记住一句话就够：
+
+  - 你在声明一个“函数模板模式”， 所以要用 U，而不是 T。
+
+- 你现在看到的代码，处在“哪一层”？
+
+  ```
+  template<class T>
+  class A {
+      template<class U>
+      friend void f(A<U>);
+  };
+  ```
+
+  - 这一段代码：
+    - 还 **没有** `A<int>`
+    - 还 **没有** `f<int>`
+    - 只是**在定义规则**
+  - 所以它说的不是“某一个具体 friend”，而是：“将来实例化时，应该生成什么样的 friend 关系”
+
+- 为什么要写 `template<class U>`
+
+  - 如果你不写 `template<class U>`，那你声明的就不是函数模板，而是普通函数。
+
+- 为什么参数是 `A<U>`，而不是 `A<T>`
+
+  - 写成 `A<U>` 的含义是：
+    - “`f<U>` 这个函数，操作的是 `A<U>`， 而我允许它访问 `A<T>` 的私有成员。”
+
+- “`A<int>` 把所有 `f<U>(A<U>)` 都当友元”
+
+  - 于是：
+    - `f<int>(A<int>)` ✔
+    - `f<double>(A<double>)` ✔
+    - `f<char>(A<char>)` ✔
+  - 全都可以访问 `A<int>` 的私有成员
+
+- “U 不是推算出来的类型吗？怎么还能写成 `A<U>`？”
+
+  - U 在这里不是“推算结果”， 而是“函数模板正在声明时引入的模板参数”。 推导发生在以后使用函数模板时，不是现在。
+
+  - 用三步把逻辑走完
+
+    ① 现在这行代码在干什么？
+
+    ```
+    template<class U>
+    friend void f(A<U>);
+    ```
+
+    - 它在 **声明一个函数模板**，此时：
+
+      - U 只是一个**名字**
+      - 表示“某种类型”
+
+      - **还没有值、还没推导**
+
+    - 逐句翻译成“编译器视角的人话”：
+
+      - 我现在要声明一个 **函数模板**它有一个模板参数，名字叫 `U`， 这个函数的参数类型是 `A<U>`
+
+    ② 所以能不能写 `A<U>`？
+
+    - 当然能。就像你写：
+
+      ```
+      template<class T>
+      void g(T x);
+      ```
+
+      - 这里的 `T` 也还没推导，但你照样能用。
+
+    ③ 那推导什么时候发生？
+
+    - 只有在**调用时**：
+
+      ```
+      f(A<int>{});   // 这一步才推导 U = int
+      ```
+
+    - 这一步才发生：
+
+      1. 看函数模板 `template<class U> void f(A<U>)`
+      2. 实参类型是 `A<int>`
+      3. 推导得出：`U = int`
+      4. 实例化出：`void f(A<int>)`
+
+  - 为什么 `A<U>` 是完全合法的？
+
+    ```
+    template<class U>
+    ```
+
+    - template<class U>，“存在一个类型名字叫 `U`”
+
+    - 那你当然可以用它去**构造其他类型**：
+
+      ```
+      U
+      U*
+      std::vector<U>
+      ✅ A<U>
+      ```
+
+    - 这和下面的代码**没有任何本质区别**：
+
+      ```
+      template<class T>
+      struct Node {
+          Node<T>* next;
+      };
+      ```
+
+      - 这里的 `T` 也同样还没“推导”，但你照样用。
+
+###### 只让“同一 T 的函数实例”成为友元
+
+```c++
+template<class T>
+class A {
+    friend void f<T>(A<T>);
+};
+```
+
+- `A<int>` 只信任 `f<int>`， `A<double>` 只信任 `f<double>`。
+- 这是**最严格、最精确**的 friend 控制。
 
 ##### 类模板的静态成员
 
@@ -9377,6 +9872,8 @@ Foo bar(123);
 
   - 函数在使用之前，必须有对应的定义语句。我们知道，函数的使用分为“声明”和“定义”两部分，普通的函数调用只需要提前写好该函数的声明部分即可（函数的定义部分可以放在调用位置之后甚至其它文件中），但常量表达式函数在使用前，必须要有该函数的定义。普通函数在调用时，只需要保证调用位置之前有相应的声明即可；而常量表达式函数则不同，调用位置之前必须要有该函数的定义，否则会导致程序编译失败。
 
+    - 在工程实践中，`constexpr` 修饰的函数通常（几乎总是）直接在头文件中给出完整定义。
+
   - return 返回的表达式必须是常量表达式
 
     ```c++
@@ -9440,6 +9937,8 @@ Foo bar(123);
     - 语法上 `constexpr` 写在返回类型前，但**语义上它修饰的是整个函数**，而不是 `int`。
 
 ###### constexpr修饰类的构造函数
+
+- constexpr修饰类的函数时，不管是构造函数函数还是普通成员函数，都要定义在头文件中，写在源文件中不对。
 
 - 对于 C++ 内置类型的数据，可以直接用 constexpr 修饰，但如果是自定义的数据类型（用 struct 或者 class 实现），直接用 constexpr 修饰是不行的。
 
@@ -10419,6 +10918,49 @@ void dis_2(){
     - 当实参为左值或者左值引用（A&）时，函数模板中 T&& 将转变为 A&（A& && = A&）；说的是函数模板，不是实际的参数
     - 当实参为右值或者右值引用（A&&）时，函数模板中 T&& 将转变为 A&&（A&& && = A&&）。
     - 读者只需要知道，在实现完美转发时，只要函数模板的参数类型为 T&&，则 C++ 可以自行准确地判定出实际传入的实参是左值还是右值。
+
+- 完美转发的情况下，T的类型是什么
+
+  ```
+  template<typename T>
+  void f(T&& t) {
+      g(std::forward<T>(t));
+  }
+  ```
+
+  - `T` 的类型取决于你传进来的**实参的值类别**
+
+    | 你传入的东西             | 实参本身的类型 | 实参值类别 | **T 被推导成** |
+    | ------------------------ | -------------- | ---------- | -------------- |
+    | `int a`                  | `int`          | 左值       | `int&`         |
+    | `const int a`            | `const int`    | 左值       | `const int&`   |
+    | `std::move(a)`           | `int`          | 右值       | `int`          |
+    | `10`                     | `int`          | 右值       | `int`          |
+    | `std::string s`          | `std::string`  | 左值       | `std::string&` |
+    | `std::string&&` 临时对象 | `std::string`  | 右值       | `std::string`  |
+
+  - 左值传入的时候，T被推断为T&是编译器强制规定的吗
+
+    - 左值传入 `T&&` 时，`T` 被推导为 `U&` ——这是 C++ 标准明确规定的强制规则，不是编译器自由选择。
+
+- 引用折叠是两个&&折叠就没了吗
+
+  - 引用折叠不是“两个 `&&` 折叠就没了”，而是“多个引用叠在一起，按固定规则合并成一个引用”
+
+  - 完整的引用折叠规则（只有这 4 条）
+
+    | 原始形式 | 折叠结果 |
+    | -------- | -------- |
+    | `T& &`   | `T&`     |
+    | `T& &&`  | `T&`     |
+    | `T&& &`  | `T&`     |
+    | `T&& &&` | `T&&`    |
+
+  - “有左必左，全右才右”
+
+  - 只要出现一个 `&` → 结果是 `&`
+
+  - 只有 `&& &&` → 才是 `&&`
 
 - 通过将函数模板的形参类型设置为 T&&，我们可以很好地解决接收左、右值的问题。但除此之外，还需要解决一个问题，即无论传入的形参是左值还是右值，对于函数模板内部来说，形参既有名称又能寻址，因此它都是左值。那么如何才能将函数模板接收到的形参连同其左、右值属性，一起传递给被调用的函数呢？C++11 标准的开发者已经帮我们想好的解决方案，该新标准还引入了一个模板函数 forword<T>()，我们只需要调用该函数，就可以很方便地解决此问题。仍以 function 模板函数为例，如下演示了该函数模板的用法：
 
