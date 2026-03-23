@@ -2660,6 +2660,151 @@ git merge --squash dev
 
 - merge 不会删除分支
 
+
+##### git merge产生的merge commit是默认的？
+
+- 是的，`git merge` 在需要时会自动创建一个 merge commit（默认行为），
+- 但注意：
+  -  **不是“每次都会产生”**
+
+###### 什么时候会产生 merge commit
+
+- 分叉了（最常见）
+
+  ```
+  A---B---C   (main)
+       \
+        D---E (feature)
+  ```
+
+- 执行：
+
+  ```
+  git merge feature
+  ```
+
+- 结果：
+
+  ```
+  A---B---C-------M
+       \         /
+        D---E---/
+  ```
+
+  -  这里的 `M`：就是 **自动生成的 merge commit**
+
+###### 什么时候不会产生 merge commit
+
+- Fast-forward（快进）
+
+  ```
+  main:    A---B---C
+  feature: A---B---C---D---E
+  ```
+
+- 执行：
+
+  ```
+  git merge feature
+  ```
+
+- 结果：
+
+  ```
+  main: A---B---C---D---E
+  ```
+
+  - **没有 merge commit ❗**
+
+###### 为什么默认会产生 merge commit
+
+- Git 的设计是：**保留分支历史结构**
+
+  ```
+  你从哪分出来
+  什么时候合并回来
+  ```
+
+- 所以： 默认策略：
+
+  ```
+  能快进就快进
+  不能快进就创建 merge commit
+  ```
+
+###### 强制生成 merge commit
+
+```
+git merge --no-ff feature
+```
+
+- 常用于：
+  - 保留 feature 分支的存在感
+  - 团队规范（很常见）
+
+###### 禁止 merge commit（只允许快进）
+
+```
+git merge --ff-only feature
+```
+
+- 如果不能快进 → 直接失败
+
+###### merge commit 是谁创建的
+
+- **是 Git 自动帮你创建的 commit**，但你可以：
+
+  ```
+  git merge feature
+  ```
+
+- 然后会弹出编辑器：让你写 commit message
+
+  - 默认是：
+
+  ```
+  Merge branch 'feature'
+  ```
+
+- 默认情况下，`git merge` 产生 merge commit 时会“弹出编辑器让你修改提交信息”
+
+  - Git 会打开编辑器（通常是 `vim`）：
+
+    ```
+    Merge branch 'feature'
+    
+    # Please enter a commit message...
+    ```
+
+    - 你可以：
+      - 修改 commit message 
+      - 直接保存退出 
+
+- 不想弹编辑器怎么办
+
+  - 直接用默认信息（推荐）
+
+    ```
+    git merge --no-edit feature
+    ```
+
+  - 不弹编辑器，直接生成：
+
+    ```
+    Merge branch 'feature'
+    ```
+
+  - 自己写 message
+
+    ```
+    git merge -m "merge login feature" feature
+    ```
+
+  -  完全不会弹
+
+- 什么时候不会弹
+  - fast-forward
+
 #### reset
 
 - 移动 HEAD 指针 + 可选地修改暂存区（index）和工作区（working tree）
@@ -3297,3 +3442,543 @@ git push -f   -- 只对自己分支用！
     - ✅ 但它们还存在（对象库里）
     - ✅ reflog 还能找到
 - feature 分支的历史中已经不包含 D、E 了，用git commit已经看不到了
+
+### 协同
+
+#### fetch
+
+- 只从远程仓库下载数据到本地仓库，但不修改你的工作区和当前分支
+
+##### 核心作用
+
+- 当你执行：
+
+  ```
+  git fetch
+  ```
+
+- Git 会做这几件事：
+
+  1. 连接远程仓库（默认是 `origin`）
+  2. 下载最新的提交（commit）、分支信息
+  3. 更新本地的**远程跟踪分支**
+
+##### 执行后发生了什么
+
+- 假设远程仓库：
+
+  ```
+  origin/main: A---B---C---D
+  ```
+
+- 你本地：
+
+  ```
+  main: A---B---C
+  ```
+
+- 执行：
+
+  ```
+  git fetch
+  ```
+
+- 结果：
+
+  ```
+  origin/main: A---B---C---D   （更新了）
+  main:        A---B---C       （没变）
+  ```
+
+  - **你的代码一点没变，只是知道远程多了 D**
+
+##### 经常用法
+
+###### 获取所有远程更新
+
+```
+git fetch
+```
+
+- `git fetch`（不带参数）默认会拉取远程的“所有分支信息”，但不是把所有分支都变成本地分支
+
+- 拉取远程所有分支的最新提交
+
+  - 比如远程有：
+
+    ```
+    origin/main
+    origin/dev
+    origin/feature/login
+    ```
+
+  - fetch 后，本地会更新：
+
+    ```
+    origin/main
+    origin/dev
+    origin/feature/login
+    ```
+
+    - 上面的例子中为什么分支还有三层目录的这种
+
+      - 看起来像“**三层目录**”，其实本质上不是目录，而是**分支名里带了 `/`**。
+
+    - Git 的分支名本质是一个字符串，可以包含 `/`
+
+      ```
+      feature/login
+      bugfix/api/v2
+      ```
+
+      - `/` 只是**命名约定中的分隔符**，不是目录结构
+
+    - 这是团队开发中非常常见的一种规范，用来“分类分支”。
+
+      常见命名方式：
+
+      | 分支名                 | 含义           |
+      | ---------------------- | -------------- |
+      | `feature/login`        | 登录功能开发   |
+      | `bugfix/api`           | 修 API bug     |
+      | `hotfix/payment/crash` | 修支付崩溃问题 |
+      | `release/v1.2.0`       | 发布版本       |
+
+      - 好处：
+        - 一眼看出用途
+        - 便于团队协作
+        - Git 工具（如 `git branch`）显示更清晰
+
+- 不会创建本地分支，本地仍然可能只有：
+
+  ```
+  main
+  ```
+
+  - 不会自动变成：
+
+    ```
+    main
+    dev
+    feature/login   ❌（不会自动创建）
+    ```
+
+- 如果远程新增了分支呢？
+
+  - 比如远程新建：
+
+    ```
+    origin/feature/payment
+    ```
+
+  - 你执行：
+
+    ```
+    git fetch
+    ```
+
+  - 本地会出现：
+
+    ```
+    origin/feature/payment
+    ```
+
+  - 但不会自动创建：
+
+    ```
+    feature/payment   ❌
+    ```
+
+- 想用这个新分支怎么办？
+
+  - 你需要手动：
+
+    ```
+    git checkout -b feature/payment origin/feature/payment
+    ```
+
+  - 或者（新写法）：
+
+    ```
+    git switch -c feature/payment origin/feature/payment
+    ```
+
+###### 指定远程
+
+```
+git fetch origin
+```
+
+###### 只抓某个分支
+
+```
+git fetch origin main
+```
+
+###### 查看差异（常见组合）
+
+```
+git fetch
+git diff main origin/main
+```
+
+- 看你本地和远程差多少
+
+###### 查看远程提交
+
+```
+git log origin/main
+```
+
+###### fetch + merge
+
+```
+git fetch
+git merge origin/main
+```
+
+- 优点：
+  - 不会自动改代码
+  - 可以先检查再合并
+  - 更适合生产环境
+
+###### 远程删除分支
+
+- 默认：
+
+  ```
+  git fetch
+  ```
+
+- 不会删除你本地的 `origin/xxx`，需要：
+
+  ```
+  git fetch --prune
+  ```
+
+  - 才会同步删除
+
+##### fetch 的本质
+
+- Git 有三个区域：
+
+  ```
+  工作区 (Working Directory)
+  暂存区 (Index)
+  本地仓库 (Repository)
+  ```
+
+- `git fetch` **只操作：本地仓库**
+- 不会影响：
+  - 工作区 ❌
+  - 暂存区 ❌
+  - 当前分支 ❌
+
+##### 什么时候必须用 fetch？
+
+✔ 想看远程更新但不想改代码
+ ✔ 做代码评审
+ ✔ 避免 `pull` 带来的自动合并冲突
+ ✔ 和 `rebase` 配合
+
+##### git fetch拉下来的远程分支，为什么用的时候还要加origin
+
+- **因为 `origin/main` 和 `main` 是两个完全不同的“引用（ref）”**
+
+  - `main` 👉 你本地分支
+  - `origin/main` 👉 远程分支在你本地的“镜像”
+
+- fetch 后实际发生了什么
+
+  - 执行：
+
+    ```
+    git fetch
+    ```
+
+  - Git 做的是：
+
+    ```
+    更新：origin/main
+    不动：main
+    ```
+
+  - 状态变成：
+
+    ```
+    HEAD → main → A---B---C
+    origin/main → A---B---C---D
+    ```
+
+    - 注意：
+      - 新提交 D 在 `origin/main`
+      - 你的 `main` 还停在 C
+
+- 为什么不能直接用 `main`？
+
+  -  `main` 代表的是“你当前的代码状态”
+
+  -  `origin/main` 才是“远程最新状态”
+
+- Git 强制把这两个东西分开：
+
+  ```
+  你当前的工作（main）
+  远程的最新状态（origin/main）
+  ```
+
+  - 这样你可以：
+    - ✔ 先看远程改了什么
+    - ✔ 决定怎么合并
+    - ✔ 避免自动冲突
+
+- 为什么必须写 `origin/`？
+
+  -  Git 可能有多个远程仓库
+
+  - 现在你有：
+
+    ```
+    origin/main
+    upstream/main
+    ```
+
+  -  所以必须写清楚：
+
+    ```
+    git merge origin/main
+    ```
+
+    - 否则 Git 不知道你要哪个远程
+
+- 什么时候可以不写 origin？只有一种情况：
+
+  -  **本地分支“跟踪”了远程分支**，比如：
+
+  ```
+  git branch -vv
+  ```
+
+  - 看到：
+
+  ```
+  main  abc123 [origin/main]
+  ```
+
+  - 这时可以：
+
+    ```
+    git pull
+    git push
+    ```
+
+    - Git 自动知道对应的是 `origin/main`
+
+#### push
+
+- `git push` = 把本地分支的提交，上传到远程仓库，并更新远程分支指针
+
+##### 例子
+
+- 本地：
+
+  ```
+  main: A---B---C---D
+  ```
+
+- 远程：
+
+  ```
+  origin/main: A---B---C
+  ```
+
+- 执行：
+
+  ```
+  git push origin main
+  ```
+
+- 结果：
+
+  ```
+  远程 origin/main: A---B---C---D ✔
+  ```
+
+- D 被上传，并且远程指针前进
+
+##### 常见用法
+
+###### 推送当前分支（最常用）
+
+```
+git push
+```
+
+- 前提：当前分支已经绑定远程（tracking）
+
+###### 指定远程 + 分支
+
+```
+git push origin main
+```
+
+- 明确把本地 `main` 推到远程 `origin/main`
+
+###### 第一次推送（建立关联）
+
+```
+git push -u origin main
+```
+
+- 作用：
+
+  - 推送
+
+  - 建立 tracking 关系
+
+- 以后就可以直接：
+
+  ```
+  git push
+  ```
+
+###### 查看关联的远程分支
+
+```
+git branch -u origin/main
+
+输出
+* main abc123 [origin/main] commit message
+```
+
+- `[origin/main]` 就是关联的远程分支
+
+###### 推送所有分支
+
+```
+git push --all
+```
+
+###### push 不是“覆盖”，而是“快进（fast-forward）”
+
+- 默认情况下：
+
+  ```
+  只允许：
+  远程分支 是 本地分支 的祖先
+  ```
+
+- 正常情况
+
+  ```
+  远程: A---B---C
+  本地: A---B---C---D
+  ```
+
+  - 可以 push 
+
+- 被拒绝情况
+
+  ```
+  远程: A---B---C---E
+  本地: A---B---C---D
+  ```
+
+  - push 会失败：
+
+  ```
+  rejected (non-fast-forward)
+  ```
+
+- 解决方式：
+
+  ```
+  git pull --rebase
+  git push
+  ```
+
+###### 强制 push
+
+```
+git push --force
+```
+
+- 会直接改写远程历史 
+
+#### pull
+
+- `git pull` = `git fetch` + `git merge`（默认）
+
+- 执行：
+
+  ```
+  git pull
+  ```
+
+- 等价于：
+
+  ```
+  git fetch
+  git merge origin/当前分支
+  ```
+
+##### 过程拆解
+
+- 假设当前在 `main`：
+
+  ```
+  本地 main:        A---B---C
+  远程 origin/main: A---B---C---D
+  ```
+
+- 执行：
+
+  ```
+  git pull
+  ```
+
+- 第一步：fetch
+
+  ```
+  origin/main → A---B---C---D
+  main        → A---B---C
+  HEAD        → main
+  ```
+
+- 第二步：merge
+
+  ```
+  main → A---B---C---D
+  HEAD → main
+  ```
+
+  - 本地分支前进了
+
+##### 常见用法
+
+###### 默认用法
+
+```
+git pull
+```
+
+- 前提：当前分支已经绑定远程（tracking）
+
+###### 指定远程 + 分支
+
+```
+git pull origin main
+```
+
+###### 推荐用法
+
+```
+git pull --rebase
+```
+
+- 等价：
+
+  ```
+  git fetch
+  git rebase origin/main
+  ```
