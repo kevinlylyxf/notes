@@ -236,6 +236,29 @@ git init
   - 配置（remote、user等）
   - 暂存区（index）
 
+##### 重新在git init，以前的是不是会丢失
+
+- 在同一个目录里再次执行 **git init**，**不会丢失以前的 Git 历史**，只是“重新初始化（其实是复用原来的仓库）”
+
+- Git 的所有数据都在：
+
+  ```
+  .git/
+  ```
+
+  - 如果 .git 已存在 → 直接复用
+
+- 什么时候会“真的丢”
+
+  - 你把 `.git` 删除了
+
+    ```
+    rm -rf .git
+    git init
+    ```
+
+  - 历史全没了，仓库全新
+
 ##### 常用参数
 
 ###### 指定默认分支（推荐）
@@ -971,6 +994,15 @@ git restore file.txt
 - 撤销你对 `file.txt` 的修改
 - 回到上一次 commit 的状态
 - 修改会丢失！
+- 主要作用是将暂存区的内容替换到工作区，工作区未提交的修改会丢失。
+
+  ```
+  暂存区 → 工作区
+  
+  如果原始文件为AAA，现在我添加了BBB，git add之后，我在修改文件添加了CCC，此时restore是将暂存区的内容替换到工作区，即此时工作区的内容为AAA和BBB
+  ```
+
+  - 从感官上来看是撤销了工作区的修改，如果暂存区没有提交，就相当于回到原始状态了。如果暂存区有提交，相当于回到上一次提交的状态。
 
 ###### 恢复所有文件
 
@@ -994,10 +1026,20 @@ git restore --staged file.txt
   git reset HEAD file.txt
   ```
 
-- 效果：
+-  效果：
 
   - 从暂存区移除
   - 文件还在工作区
+
+-  主要作用是将HEAD的内容替换到暂存区，相当于暂存区是原始的数据
+
+   ```
+   HEAD → 暂存区
+   
+   如果原始文件为AAA，现在我添加了BBB，git add之后，我在修改文件添加了CCC，此时restore --staged是将HEAD的内容替换到暂存区，此时工作区的内容是不变的，还是AAA BBB和CCC，因为add之后工作区的内容还是那部分数据，不会因为add之后，新添加的就在工作区丢失了。此时相当于暂存区只有AAA，此时可以git add，相当于新添加了BBB和CCC，是一次添加的，而不是分两次git add添加的
+   ```
+
+   - 从感官上来看撤销了暂存区的修改，此时可以重新git add
 
 ##### 同时恢复暂存区 + 工作区
 
@@ -1344,6 +1386,12 @@ git log filename.c
 
 - 只看这个文件的变更记录
 
+- 或者使用`--`
+
+  ```
+  git log -- path/to/file
+  ```
+
 ###### 查看详细改动
 
 ```
@@ -1591,6 +1639,14 @@ git show a1b2c3d
 
 - 会显示这次提交改了什么代码
 
+- 只看某个文件：
+
+  ```
+  git show <commit_hash> -- path/to/file
+  ```
+
+  - 这个不是“完整文件”，而是 diff
+
 ##### 输出内容结构（重点理解）
 
 ```
@@ -1617,6 +1673,91 @@ git show a1b2c3d:login.c
 ```
 
 - 查看这个提交时的 `login.c` 内容（不是 diff，是完整文件）
+
+- 直接用vim打开文件
+
+  ```
+  git show 3f2a1c:src/main.c | vim -
+  ```
+
+  - 直接查看该 commit 时，这个文件的完整内容
+
+- git show commit:这种为什么要填写绝对路径，或者写上./这种相对路径
+
+  - `git show <commit>:<path>` 里的 path 是“相对于谁”的？
+
+    - 个路径 **不是相对于你当前 shell 目录**
+    - 而是 **相对于 Git 仓库根目录（repo root）**
+
+  - 为什么不能随便写相对路径？
+
+    - 比如你现在目录结构：
+
+    ```
+    repo/
+     ├── src/
+     │    └── main.c
+     └── README.md
+    ```
+
+    - 你当前在：
+
+    ```
+    cd repo/src
+    ```
+
+    - 然后你执行：
+
+    ```
+    git show HEAD:main.c
+    ```
+
+    - 会报错（找不到）
+
+    - 因为 Git 在找：
+
+    ```
+    repo/main.c   ❌（不存在）
+    ```
+
+  - 正确写法（必须从仓库根开始）
+
+    ```
+    git show HEAD:src/main.c
+    ```
+
+    - 这里的 `src/main.c` 是：
+
+      - 从 repo 根目录算起
+
+      - 和你当前在哪个目录 **无关**
+
+  - 或者可以写当前的目录./
+
+    ```
+    git show HEAD:./main.c
+    ```
+
+- 和普通 Git 命令的区别（重点）
+
+  - 你平时用：
+
+  ```
+  git add main.c
+  git diff main.c
+  ```
+
+  - 这些命令：**路径是相对于当前目录的**，但：
+
+  ```
+  git show <commit>:<path>
+  ```
+
+  - 这个语法是特殊的（访问对象数据库）：
+
+    - 直接操作 Git 内部对象（tree / blob）
+
+    - **必须用 repo-root 路径**
 
 ###### 查看 HEAD 上的文件版本
 
@@ -2224,6 +2365,46 @@ git diff HEAD
 git diff file.c
 ```
 
+###### 比较当前文件和某个版本文件
+
+- 比较“当前工作区文件” vs “某个 commit 里的版本”
+
+  ```
+  git diff <commit> -- path/to/file
+  
+  git diff 3f2a1c -- src/main.c
+  ```
+
+  - 如果你当前就在该目录
+
+    ```
+    git diff <commit> -- main.c
+    ```
+
+    - 这里路径是：
+      - 相对于当前目录（不是 repo root）
+      - 和 `git add / git diff` 一样
+
+- 比较“暂存区 vs commit”
+
+  ```
+  git diff --cached <commit> -- file
+  ```
+
+- 不加 `--`
+
+  ```
+  git difftool 3f2a1c src/main.c
+  ```
+
+  - 有时候会被误解析（尤其文件名像 commit）
+
+  - 正确写法：
+
+    ```
+    git difftool 3f2a1c -- src/main.c
+    ```
+
 ###### 只看文件名
 
 ```
@@ -2247,6 +2428,12 @@ git diff -w
 ```
 git diff commit1 commit2
 ```
+
+- 这是比较全部，如果比较单个文件
+
+  ```
+  git diff <commit1> <commit2> -- file
+  ```
 
 ###### 比较两个分支
 
@@ -3126,6 +3313,144 @@ git reset <commit> file.c
 
   - 2️⃣ 被 Git GC 清理
     - 默认大约：reflog 保留 ~90 天
+
+##### git reset回退版本会产生冲突
+
+-  **git reset 本身不会像 merge 那样“产生冲突提示”**
+- 但在某些情况下：
+  - 会**拒绝执行**
+  - 或**直接覆盖代码（更危险）**
+
+###### 三种 reset 行为完全不同
+
+- `--soft`（最安全）
+
+  ```
+  git reset --soft HEAD~1
+  ```
+
+  - 作用：
+
+    ```
+    只移动 HEAD
+    ```
+
+    - 不动：
+
+      - 工作区
+
+      - 暂存区
+
+    - 所以：
+
+      -  不可能冲突，非常安全
+
+- `--mixed`（默认）
+
+  ```
+  git reset HEAD~1
+  ```
+
+  - 作用：
+
+  ```
+  HEAD 回退
+  暂存区 ← HEAD
+  工作区 不动
+  ```
+
+  - 结果：
+    - 你会看到一堆“修改文件”
+    - 但这些只是状态变化
+
+  - 所以：不会冲突，只是“变成未暂存修改”
+
+- `--hard`（危险）
+
+  ```
+  git reset --hard HEAD~1
+  ```
+
+  - 作用：
+
+  ```
+  HEAD 回退
+  暂存区 ← HEAD
+  工作区 ← HEAD
+  ```
+
+  - 结果：
+
+    - 直接覆盖所有文件
+
+    - 本地修改消失 ❌
+
+  - 所以：不会冲突，但会直接丢代码（比冲突更狠）
+
+###### 什么时候“看起来像冲突”
+
+- 场景1：你有未提交修改
+
+  ```
+  vim file.txt   # 改了
+  git reset --hard HEAD~1
+  ```
+
+  - Git 不会提示冲突 而是：
+
+    ```
+    直接覆盖 ❌
+    ```
+
+##### reset之后可以提交吗
+
+- 你本地 `reset` 到前几个提交后：
+
+  - **普通 `git push`**：通常**不可以**
+  - **强制 push**：**可以**
+
+- 为什么普通 push 通常不行
+
+  - 比如原来是：
+
+    ```
+    A - B - C - D   (本地, 远程)
+    ```
+
+  - 你本地执行：
+
+    ```
+    git reset --hard B
+    ```
+
+  - 变成：
+
+    ```
+    A - B           (本地)
+    A - B - C - D   (远程)
+    ```
+
+  - 这时候你本地分支比远程“更短”了，属于**改历史**，不是 fast-forward。
+
+  - 所以这时：
+
+    ```
+    git push
+    ```
+
+  - 一般会被拒绝。
+
+- 真想推上去，要这样
+
+  ```
+  git push --force-with-lease
+  ```
+
+  - 或者：
+
+  ```
+  git push --force
+  ```
 
 #### switch
 
