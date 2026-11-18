@@ -421,6 +421,46 @@ git config --global core.autocrlf true
 
 - Windows 常用
 
+- 不同操作系统使用的换行符有所区别：
+
+  | 系统          | 换行符           | 十六进制 |
+  | ------------- | ---------------- | -------- |
+  | Windows       | `CRLF`（`\r\n`） | `0D 0A`  |
+  | Linux         | `LF`（`\n`）     | `0A`     |
+  | macOS（现代） | `LF`（`\n`）     | `0A`     |
+
+- core.autocrlf 的三个配置
+
+  | 配置    | Git 提交时 | Git 检出时 |
+  | ------- | ---------- | ---------- |
+  | `true`  | CRLF → LF  | LF → CRLF  |
+  | `input` | CRLF → LF  | 不转换     |
+  | `false` | 不自动转换 | 不自动转换 |
+
+- 查看文件的换行符状态：
+
+  ```
+  git ls-files --eol
+  
+  i/lf    w/crlf  attr/    main.c
+  ```
+
+  - 含义：
+
+    - `i/lf`：Git 暂存区中使用 LF。
+    - `w/crlf`：工作目录中使用 CRLF。
+    - `attr/`：没有显示明确的换行符属性。
+
+  - 在 `git ls-files --eol` 命令的输出中，`attr` **是 attribute（属性）的缩写**，表示 Git 根据 `.gitattributes` 为文件确定的换行符处理规则。
+
+    - 三个字段分别表示：
+
+      | 字段     | 含义                                   |
+      | -------- | -------------------------------------- |
+      | `i/lf`   | Git 暂存区（Index）中的换行符格式      |
+      | `w/crlf` | 工作目录（Working Tree）中的换行符格式 |
+      | `attr/`  | Git 属性规则，控制文件的换行符转换     |
+
 ##### 设置别名
 
 ```
@@ -760,6 +800,7 @@ git add .
 - 包括：
   - 新文件
   - 修改的文件
+  - 删除的文件
 
 ###### 添加所有
 
@@ -779,6 +820,19 @@ git add -u
 ```
 
 - 不包含新文件
+
+###### 常见 git add 命令区别
+
+| 命令             | 作用                                     |
+| ---------------- | ---------------------------------------- |
+| `git add -A`     | 暂存整个仓库的所有变更                   |
+| `git add .`      | 暂存当前目录及子目录的所有变更           |
+| `git add -u`     | 暂存已跟踪文件的修改和删除，不包括新文件 |
+| `git add 文件名` | 暂存指定文件                             |
+
+- 在现代 Git 中，如果你位于仓库根目录，`git add .` 和 `git add -A` 的效果基本相同。但如果你位于某个子目录：
+  - `git add -A`：暂存整个仓库的变更。
+  - `git add .`：只暂存当前目录及其子目录的变更。
 
 ##### 为什么需要 git add
 
@@ -835,7 +889,7 @@ git add -p
   git add -p file.c
   ```
 
-  - Git 会一段一段问你：Git 会一段一段问你：
+  - Git 会一段一段问你
 
 - 使用场景
 
@@ -901,6 +955,8 @@ git add -p
 
   ```
   git add -A
+  或者
+  git add file.txt
   ```
 
 - 否则不会记录删除
@@ -910,6 +966,7 @@ git add -p
 #### mv
 
 - 移动或重命名文件，并让 Git 记录这个操作
+- 相当于add到暂存区了，不用自己git add了
 
 ##### 基本用法
 
@@ -970,6 +1027,8 @@ git status
   ```
   renamed: a.txt -> b.txt
   ```
+  
+  - mv然后git add -A，显示的效果和上面一样，也是显示重命名
 
 #### restore
 
@@ -1053,16 +1112,67 @@ git restore --staged --worktree file.txt
 
 ##### 从指定版本恢复
 
-###### 从某个 commit 恢复
+- `git restore --source` 用于**从指定的提交（Commit）、分支或标签中恢复文件内容**。
+
+  ```
+  git restore --source=<提交或分支> [选项] -- <文件>
+  ```
+
+###### 从指定提交恢复文件
 
 ```
-git restore --source=<commit> file.txt
-
-例子：
-git restore --source=HEAD~1 file.txt
+git restore --source=abc123 -- test.c
 ```
 
-- 把文件恢复到上一个版本
+- 将 `test.c` 恢复为提交 `abc123` 中的内容。
+
+- 注意：默认只修改工作区，不修改暂存区，也不会自动生成新的提交。
+
+###### 从 HEAD 恢复文件
+
+```
+git restore --source=HEAD -- test.c
+```
+
+- 将工作区中的 `test.c` 恢复为当前最新提交中的版本。
+
+- 等价于：
+
+  ```
+  git restore test.c
+  ```
+
+  - **但有一个区别：** 不指定 `--source` 时，`git restore` 默认从暂存区恢复，而不是从 `HEAD` 恢复。
+
+###### 从其他分支恢复文件
+
+```
+git restore --source=dev -- test.c
+```
+
+- 将 `dev` 分支中的 `test.c` 恢复到当前工作区。
+
+- 不会切换分支，也不会改变当前分支的提交历史。
+
+###### 恢复到上一个提交的版本
+
+```
+git restore --source=HEAD~1 -- test.c
+```
+
+###### 同时恢复工作区和暂存区
+
+- 默认情况下，`git restore --source` 只恢复工作区。
+
+- 如果希望同时恢复暂存区：
+
+  ```
+  git restore --source=HEAD --staged --worktree -- test.c
+  ```
+
+  - `--source=HEAD`：指定恢复来源。
+  - `--staged`：恢复暂存区。
+  - `--worktree`：恢复工作区。
 
 ##### 命令对比
 
@@ -1122,8 +1232,18 @@ git rm -r dir/
 git rm --cached file.txt
 ```
 
-- Git 不再跟踪这个文件
-- 本地文件还在
+- 执行后：
+
+  - **工作区**：文件仍然存在。
+  - **暂存区**：移除跟踪记录。
+  - **Git 仓库**：下次提交后，Git 不再跟踪这个文件。
+- 取消跟踪整个目录
+
+  ```
+  git rm -r --cached logs/
+  ```
+
+  - 将 `logs/` 目录中的文件从 Git 索引中移除，但保留本地文件。
 
 ###### 强制删除（修改过的文件）
 
